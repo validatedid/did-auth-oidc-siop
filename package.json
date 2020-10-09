@@ -1,0 +1,68 @@
+{
+  "name": "@cef-ebsi/did-auth",
+  "version": "0.0.1",
+  "description": "Experimental EBSI DID Auth library",
+  "author": "",
+  "license": "EUPL-1.2",
+  "repository": {
+    "type": "bitbucket",
+    "url": "https://ec.europa.eu/cefdigital/code/scm/ebsi/ebsi-did-authentication.git",
+    "directory": "packages/ebsi-did-auth"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prepare": "npm run build",
+    "build": "npm run clean && tsc -p tsconfig-build.json",
+    "clean": "rm -rf ./dist ./coverage ./log ./build",
+    "compile": "tsc",
+    "compile:dev": "tsc -w",
+    "coverage": "jest --coverage",
+    "lint": "eslint 'src/**/*.{js,ts,tsx}' 'tests/**/*.{js,ts,tsx}' --quiet",
+    "full-lint": "tsc --noEmit && eslint 'src/**/*.{js,ts,tsx}' --quiet --fix && prettier --write 'src/**/*.{js,ts,tsx}'",
+    "format": "prettier --write 'src/**/*.{js,ts,tsx}' 'tests/**/*.{js,ts,tsx}'",
+    "test": "jest --clearCache && jest --runInBand --verbose false",
+    "test:e2e": "jest --clearCache && jest --config ./tests/jest-e2e.json --runInBand --verbose false",
+    "test:all": "jest --clearCache && jest --config ./jest-all.json --runInBand --verbose false",
+    "clearCache": "jest --clearCache"
+  },
+  "devDependencies": {
+    "@types/elliptic": "^6.4.12",
+    "@types/jest": "^25.2.1",
+    "@types/node": "^12.12.38",
+    "@types/uuid": "^7.0.3",
+    "@typescript-eslint/eslint-plugin": "^2.27.0",
+    "@typescript-eslint/parser": "^2.25.0",
+    "dotenv": "^8.2.0",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-typescript": "^7.2.0",
+    "eslint-config-prettier": "^6.10.1",
+    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-jest": "^23.8.2",
+    "eslint-plugin-prettier": "^3.1.2",
+    "jest": "^25.5.4",
+    "jest-sonar": "^0.2.7",
+    "jose": "^1.27.0",
+    "lint-staged": "^10.1.3",
+    "moment": "^2.25.3",
+    "prettier": "^2.0.5",
+    "ts-jest": "^25.5.0",
+    "ts-loader": "^7.0.3",
+    "ts-node": "^8.10.1",
+    "typescript": "^3.8.3"
+  },
+  "dependencies": {
+    "@validated-id/vid-did-resolver": "0.0.7",
+    "axios": "^0.19.2",
+    "did-jwt": "^4.3.2",
+    "did-resolver": "^1.1.0",
+    "elliptic": "^6.5.3",
+    "ethers": "^4.0.47",
+    "i": "^0.3.6",
+    "npm": "^6.14.8",
+    "uuid": "^7.0.3"
+  }
+}

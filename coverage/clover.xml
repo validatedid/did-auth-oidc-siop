@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1602236402619" clover="3.2.0">
+  <project timestamp="1602236402619" name="All files">
+    <metrics statements="131" coveredstatements="0" conditionals="58" coveredconditionals="0" methods="38" coveredmethods="0" elements="227" coveredelements="0" complexity="0" loc="131" ncloc="131" packages="2" files="5" classes="5"/>
+    <package name="src">
+      <metrics statements="104" coveredstatements="0" conditionals="58" coveredconditionals="0" methods="28" coveredmethods="0"/>
+      <file name="DIDAuth.ts" path="/Users/maurolucchini/Desktop/code/did-auth/src/DIDAuth.ts">
+        <metrics statements="14" coveredstatements="0" conditionals="12" coveredconditionals="0" methods="6" coveredmethods="0"/>
+        <line num="5" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="6" count="0" type="stmt"/>
+        <line num="9" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="10" count="0" type="stmt"/>
+        <line num="13" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="14" count="0" type="stmt"/>
+        <line num="15" count="0" type="stmt"/>
+        <line num="18" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="19" count="0" type="stmt"/>
+        <line num="22" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="23" count="0" type="stmt"/>
+        <line num="26" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="27" count="0" type="stmt"/>
+        <line num="30" count="0" type="stmt"/>
+      </file>
+      <file name="Errors.ts" path="/Users/maurolucchini/Desktop/code/did-auth/src/Errors.ts">
+        <metrics statements="12" coveredstatements="0" conditionals="2" coveredconditionals="0" methods="1" coveredmethods="0"/>
+        <line num="1" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="2" count="0" type="stmt"/>
+        <line num="3" count="0" type="stmt"/>
+        <line num="4" count="0" type="stmt"/>
+        <line num="5" count="0" type="stmt"/>
+        <line num="6" count="0" type="stmt"/>
+        <line num="7" count="0" type="stmt"/>
+        <line num="8" count="0" type="stmt"/>
+        <line num="9" count="0" type="stmt"/>
+        <line num="10" count="0" type="stmt"/>
+        <line num="11" count="0" type="stmt"/>
+        <line num="14" count="0" type="stmt"/>
+      </file>
+      <file name="VidDIDAuth.ts" path="/Users/maurolucchini/Desktop/code/did-auth/src/VidDIDAuth.ts">
+        <metrics statements="67" coveredstatements="0" conditionals="44" coveredconditionals="0" methods="12" coveredmethods="0"/>
+        <line num="1" count="0" type="stmt"/>
+        <line num="2" count="0" type="stmt"/>
+        <line num="3" count="0" type="stmt"/>
+        <line num="4" count="0" type="stmt"/>
+        <line num="18" count="0" type="stmt"/>
+        <line num="19" count="0" type="stmt"/>
+        <line num="29" count="0" type="stmt"/>
+        <line num="31" count="0" type="stmt"/>
+        <line num="39" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="40" count="0" type="stmt"/>
+        <line num="41" count="0" type="stmt"/>
+        <line num="44" count="0" type="stmt"/>
+        <line num="46" count="0" type="stmt"/>
+        <line num="56" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="57" count="0" type="stmt"/>
+        <line num="58" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="59" count="0" type="stmt"/>
+        <line num="60" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="61" count="0" type="stmt"/>
+        <line num="62" count="0" type="stmt"/>
+        <line num="63" count="0" type="stmt"/>
+        <line num="66" count="0" type="stmt"/>
+        <line num="68" count="0" type="stmt"/>
+        <line num="73" count="0" type="stmt"/>
+        <line num="88" count="0" type="stmt"/>
+        <line num="97" count="0" type="stmt"/>
+        <line num="98" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="99" count="0" type="stmt"/>
+        <line num="100" count="0" type="stmt"/>
+        <line num="110" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="117" count="0" type="stmt"/>
+        <line num="119" count="0" type="stmt"/>
+        <line num="123" count="0" type="stmt"/>
+        <line num="128" count="0" type="stmt"/>
+        <line num="142" count="0" type="stmt"/>
+        <line num="145" count="0" type="stmt"/>
+        <line num="146" count="0" type="stmt"/>
+        <line num="147" count="0" type="cond" truecount="0" falsecount="5"/>
+        <line num="148" count="0" type="stmt"/>
+        <line num="150" count="0" type="stmt"/>
+        <line num="153" count="0" type="stmt"/>
+        <line num="154" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="155" count="0" type="stmt"/>
+        <line num="157" count="0" type="stmt"/>
+        <line num="165" count="0" type="stmt"/>
+        <line num="166" count="0" type="stmt"/>
+        <line num="178" count="0" type="stmt"/>
+        <line num="193" count="0" type="stmt"/>
+        <line num="198" count="0" type="stmt"/>
+        <line num="208" count="0" type="stmt"/>
+        <line num="216" count="0" type="stmt"/>
+        <line num="222" count="0" type="stmt"/>
+        <line num="223" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="231" count="0" type="stmt"/>
+        <line num="232" count="0" type="stmt"/>
+        <line num="236" count="0" type="stmt"/>
+        <line num="237" count="0" type="stmt"/>
+        <line num="247" count="0" type="stmt"/>
+        <line num="248" count="0" type="stmt"/>
+        <line num="254" count="0" type="stmt"/>
+        <line num="257" count="0" type="stmt"/>
+        <line num="261" count="0" type="stmt"/>
+        <line num="262" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="263" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="264" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="265" count="0" type="stmt"/>
+        <line num="266" count="0" type="stmt"/>
+      </file>
+      <file name="index.ts" path="/Users/maurolucchini/Desktop/code/did-auth/src/index.ts">
+        <metrics statements="11" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="9" coveredmethods="0"/>
+        <line num="1" count="0" type="stmt"/>
+        <line num="2" count="0" type="stmt"/>
+        <line num="4" count="0" type="stmt"/>
+        <line num="9" count="0" type="stmt"/>
+        <line num="10" count="0" type="stmt"/>
+        <line num="11" count="0" type="stmt"/>
+        <line num="12" count="0" type="stmt"/>
+        <line num="13" count="0" type="stmt"/>
+        <line num="14" count="0" type="stmt"/>
+        <line num="19" count="0" type="stmt"/>
+        <line num="21" count="0" type="stmt"/>
+      </file>
+    </package>
+    <package name="src.util">
+      <metrics statements="27" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="10" coveredmethods="0"/>
+      <file name="Util.ts" path="/Users/maurolucchini/Desktop/code/did-auth/src/util/Util.ts">
+        <metrics statements="27" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="10" coveredmethods="0"/>
+        <line num="1" count="0" type="stmt"/>
+        <line num="2" count="0" type="stmt"/>
+        <line num="3" count="0" type="stmt"/>
+        <line num="4" count="0" type="stmt"/>
+        <line num="8" count="0" type="stmt"/>
+        <line num="12" count="0" type="stmt"/>
+        <line num="16" count="0" type="stmt"/>
+        <line num="20" count="0" type="stmt"/>
+        <line num="24" count="0" type="stmt"/>
+        <line num="28" count="0" type="stmt"/>
+        <line num="31" count="0" type="stmt"/>
+        <line num="32" count="0" type="stmt"/>
+        <line num="35" count="0" type="stmt"/>
+        <line num="36" count="0" type="stmt"/>
+        <line num="42" count="0" type="stmt"/>
+        <line num="43" count="0" type="stmt"/>
+        <line num="44" count="0" type="stmt"/>
+        <line num="45" count="0" type="stmt"/>
+        <line num="56" count="0" type="stmt"/>
+        <line num="61" count="0" type="stmt"/>
+        <line num="62" count="0" type="stmt"/>
+        <line num="66" count="0" type="stmt"/>
+        <line num="67" count="0" type="stmt"/>
+        <line num="68" count="0" type="stmt"/>
+        <line num="69" count="0" type="stmt"/>
+        <line num="70" count="0" type="stmt"/>
+        <line num="71" count="0" type="stmt"/>
+      </file>
+    </package>
+  </project>
+</coverage>

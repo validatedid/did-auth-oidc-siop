@@ -1,0 +1,6 @@
+<testExecutions version="1">
+<file path="tests/EbsiDidAuth.spec.ts">
+</file>
+<file path="tests/EbsiDidAuth.verify.spec.ts">
+</file>
+</testExecutions>
