@@ -14,7 +14,7 @@ import {
   DIAUTHScope,
   DIAUTHResponseType,
   DIDAUTH_RESPONSE_ISS,
-  EbsiDidAuth,
+  VidDidAuth,
   DidAuthRequestCall,
   DidAuthRequestPayload,
   getNonce,
@@ -30,7 +30,7 @@ dotenv.config();
 
 jest.setTimeout(10000);
 
-describe("ebsiDidAuth", () => {
+describe("VidDidAuth", () => {
   describe("eBSI DID Auth Request", () => {
     it("should throw BAD_PARAMS when no client_id is present", async () => {
       expect.assertions(1);
@@ -41,7 +41,7 @@ describe("ebsiDidAuth", () => {
       };
 
       await expect(
-        EbsiDidAuth.createUriRequest(didAuthRequestCall as any)
+        VidDidAuth.createUriRequest(didAuthRequestCall as any)
       ).rejects.toThrow(DIDAUTH_ERRORS.BAD_PARAMS);
     });
 
@@ -49,7 +49,7 @@ describe("ebsiDidAuth", () => {
       expect.assertions(1);
 
       await expect(
-        EbsiDidAuth.createUriRequest(undefined as any)
+        VidDidAuth.createUriRequest(undefined as any)
       ).rejects.toThrow(DIDAUTH_ERRORS.BAD_PARAMS);
     });
 
@@ -60,6 +60,7 @@ describe("ebsiDidAuth", () => {
       const entityAA = await mockedGetEnterpriseAuthToken("COMPANY AA INC");
       const tokenEntityAA = entityAA.jwt;
       const didAuthRequestCall: DidAuthRequestCall = {
+        requestUri: "https://dev.vidchain.net/siop/jwts/N7A8u4VmZfMGGdAtAAFV",
         redirectUri: "http://localhost:8080/demo/spanish-university",
         signatureUri: `${WALLET_API_BASE_URL}/wallet/v1/signatures`,
         authZToken: tokenEntityAA,
@@ -95,13 +96,13 @@ describe("ebsiDidAuth", () => {
         };
       });
 
-      const { uri, nonce } = await EbsiDidAuth.createUriRequest(
+      const { uri, nonce } = await VidDidAuth.createUriRequest(
         didAuthRequestCall
       );
       expect(uri).toContain(`openid://&scope=${DIAUTHScope.OPENID_DIDAUTHN}`);
       expect(uri).toContain(`?response_type=${DIAUTHResponseType.ID_TOKEN}`);
       expect(uri).toContain(`&client_id=${didAuthRequestCall.redirectUri}`);
-      expect(uri).toContain("&request=");
+      expect(uri).toContain(`&requestUri=${didAuthRequestCall.requestUri}`);
       expect(nonce).toBeDefined();
       jest.clearAllMocks();
     });
@@ -113,6 +114,7 @@ describe("ebsiDidAuth", () => {
       const entityAA = await mockedGetEnterpriseAuthToken("COMPANY AA INC");
       const tokenEntityAA = entityAA.jwt;
       const didAuthRequestCall: DidAuthRequestCall = {
+        requestUri: "https://dev.vidchain.net/siop/jwts/N7A8u4VmZfMGGdAtAAFV",
         redirectUri: "http://localhost:8080/demo/spanish-university",
         signatureUri: `${WALLET_API_BASE_URL}/wallet/v1/signatures`,
         authZToken: tokenEntityAA,
@@ -125,7 +127,7 @@ describe("ebsiDidAuth", () => {
       });
 
       await expect(
-        EbsiDidAuth.createDidAuthRequest(didAuthRequestCall)
+        VidDidAuth.createDidAuthRequest(didAuthRequestCall)
       ).rejects.toThrow(DIDAUTH_ERRORS.MALFORMED_SIGNATURE_RESPONSE);
       jest.clearAllMocks();
     });
@@ -137,7 +139,7 @@ describe("ebsiDidAuth", () => {
         authZToken: "",
       };
       await expect(
-        EbsiDidAuth.createDidAuthRequest(didAuthRequestCall as any)
+        VidDidAuth.createDidAuthRequest(didAuthRequestCall as any)
       ).rejects.toThrow(DIDAUTH_ERRORS.BAD_PARAMS);
       jest.clearAllMocks();
     });
@@ -149,7 +151,7 @@ describe("ebsiDidAuth", () => {
         authZToken: "",
       };
       await expect(
-        EbsiDidAuth.createDidAuthRequest(didAuthRequestCall as any)
+        VidDidAuth.createDidAuthRequest(didAuthRequestCall as any)
       ).rejects.toThrow(DIDAUTH_ERRORS.KEY_SIGNATURE_URI_ERROR);
       jest.clearAllMocks();
     });
@@ -161,7 +163,7 @@ describe("ebsiDidAuth", () => {
         signatureUri: `/wallet/v1/signatures`,
       };
       await expect(
-        EbsiDidAuth.createDidAuthRequest(didAuthRequestCall as any)
+        VidDidAuth.createDidAuthRequest(didAuthRequestCall as any)
       ).rejects.toThrow(DIDAUTH_ERRORS.AUTHZTOKEN_UNDEFINED);
       jest.clearAllMocks();
     });
@@ -174,6 +176,7 @@ describe("ebsiDidAuth", () => {
       const didEntityAA = entityAA.did;
       const tokenEntityAA = entityAA.jwt;
       const didAuthRequestCall: DidAuthRequestCall = {
+        requestUri: "https://dev.vidchain.net/siop/jwts/N7A8u4VmZfMGGdAtAAFV",
         redirectUri: "http://localhost:8080/demo/spanish-university",
         signatureUri: `${WALLET_API_BASE_URL}/wallet/v1/signatures`,
         authZToken: tokenEntityAA,
@@ -209,7 +212,7 @@ describe("ebsiDidAuth", () => {
         };
       });
 
-      const { jwt, nonce } = await EbsiDidAuth.createDidAuthRequest(
+      const { jwt, nonce } = await VidDidAuth.createDidAuthRequest(
         didAuthRequestCall
       );
       expect(nonce).toBeDefined();
@@ -233,7 +236,9 @@ describe("ebsiDidAuth", () => {
 
     it("should return a valid payload on DID Auth request validation", async () => {
       expect.assertions(3);
-      const RPC_PROVIDER = "https://api.intebsi.xyz/ledger/v1/blockchains/besu";
+      const RPC_PROVIDER =
+        process.env.DID_PROVIDER_RPC_URL ||
+        "https://api.intebsi.xyz/ledger/v1/blockchains/besu";
       const RPC_ADDRESS = process.env.DID_REGISTRY_SC_ADDRESS || "0x00000000";
       const WALLET_API_BASE_URL =
         process.env.WALLET_API_URL || "http://localhost:9000";
@@ -241,6 +246,7 @@ describe("ebsiDidAuth", () => {
       const didEntityAA = entityAA.did;
       const tokenEntityAA = entityAA.jwt;
       const didAuthRequestCall: DidAuthRequestCall = {
+        requestUri: "https://dev.vidchain.net/siop/jwts/N7A8u4VmZfMGGdAtAAFV",
         redirectUri: "http://localhost:8080/demo/spanish-university",
         signatureUri: `${WALLET_API_BASE_URL}/wallet/v1/signatures`,
         authZToken: tokenEntityAA,
@@ -276,10 +282,8 @@ describe("ebsiDidAuth", () => {
         };
       });
 
-      const { jwt } = await EbsiDidAuth.createDidAuthRequest(
-        didAuthRequestCall
-      );
-      const payload: DidAuthRequestPayload = await EbsiDidAuth.verifyDidAuthRequest(
+      const { jwt } = await VidDidAuth.createDidAuthRequest(didAuthRequestCall);
+      const payload: DidAuthRequestPayload = await VidDidAuth.verifyDidAuthRequest(
         jwt,
         RPC_ADDRESS,
         RPC_PROVIDER
@@ -302,7 +306,9 @@ describe("ebsiDidAuth", () => {
 
     it("should throw INVALID_AUDIENCE", async () => {
       expect.assertions(1);
-      const RPC_PROVIDER = "https://api.intebsi.xyz/ledger/v1/blockchains/besu";
+      const RPC_PROVIDER =
+        process.env.DID_PROVIDER_RPC_URL ||
+        "https://api.intebsi.xyz/ledger/v1/blockchains/besu";
       const RPC_ADDRESS = process.env.DID_REGISTRY_SC_ADDRESS || "0x00000000";
       const entityAA = await mockedGetEnterpriseAuthToken("COMPANY AA INC");
       const payload = {
@@ -315,7 +321,7 @@ describe("ebsiDidAuth", () => {
         },
       });
       await expect(
-        EbsiDidAuth.verifyDidAuthRequest(jwt, RPC_ADDRESS, RPC_PROVIDER)
+        VidDidAuth.verifyDidAuthRequest(jwt, RPC_ADDRESS, RPC_PROVIDER)
       ).rejects.toThrow(DIDAUTH_ERRORS.INVALID_AUDIENCE);
       jest.clearAllMocks();
     });
@@ -332,7 +338,7 @@ describe("ebsiDidAuth", () => {
       };
 
       await expect(
-        EbsiDidAuth.createDidAuthResponse(didAuthResponseCall as any)
+        VidDidAuth.createDidAuthResponse(didAuthResponseCall as any)
       ).rejects.toThrow(DIDAUTH_ERRORS.BAD_PARAMS);
     });
 
@@ -346,7 +352,7 @@ describe("ebsiDidAuth", () => {
         nonce: requestDIDAuthNonce,
         redirectUri: "http://localhost:8080/demo/spanish-university", // just assuming that we know that
       };
-      const didAuthJwt = await EbsiDidAuth.createDidAuthResponse(
+      const didAuthJwt = await VidDidAuth.createDidAuthResponse(
         didAuthResponseCall
       );
       const { header, payload } = didJwt.decodeJWT(didAuthJwt);
@@ -388,10 +394,10 @@ describe("ebsiDidAuth", () => {
         redirectUri: "http://localhost:8080/demo/spanish-university", // just assuming that we know that
       };
       jest.spyOn(axios, "post").mockResolvedValue({ status: 204 });
-      const didAuthJwt = await EbsiDidAuth.createDidAuthResponse(
+      const didAuthJwt = await VidDidAuth.createDidAuthResponse(
         didAuthResponseCall
       );
-      const response = await EbsiDidAuth.verifyDidAuthResponse(
+      const response = await VidDidAuth.verifyDidAuthResponse(
         didAuthJwt,
         `${WALLET_API_BASE_URL}/wallet/v1/signature-validations`,
         tokenEntityAA,
@@ -418,11 +424,11 @@ describe("ebsiDidAuth", () => {
         redirectUri: "http://localhost:8080/demo/spanish-university", // just assuming that we know that
       };
       jest.spyOn(axios, "post").mockResolvedValue({ status: 204 });
-      const didAuthJwt = await EbsiDidAuth.createDidAuthResponse(
+      const didAuthJwt = await VidDidAuth.createDidAuthResponse(
         didAuthResponseCall
       );
       await expect(
-        EbsiDidAuth.verifyDidAuthResponse(
+        VidDidAuth.verifyDidAuthResponse(
           didAuthJwt,
           `${WALLET_API_BASE_URL}/wallet/v1/signature-validations`,
           tokenEntityAA,
@@ -447,11 +453,11 @@ describe("ebsiDidAuth", () => {
         redirectUri: "http://localhost:8080/demo/spanish-university", // just assuming that we know that
       };
       jest.spyOn(axios, "post").mockResolvedValue({ status: 400 });
-      const didAuthJwt = await EbsiDidAuth.createDidAuthResponse(
+      const didAuthJwt = await VidDidAuth.createDidAuthResponse(
         didAuthResponseCall
       );
       await expect(
-        EbsiDidAuth.verifyDidAuthResponse(
+        VidDidAuth.verifyDidAuthResponse(
           didAuthJwt,
           `${WALLET_API_BASE_URL}/wallet/v1/signature-validations`,
           tokenEntityAA,
@@ -478,11 +484,11 @@ describe("ebsiDidAuth", () => {
       jest
         .spyOn(axios, "post")
         .mockRejectedValue(new Error("Invalid Signature"));
-      const didAuthJwt = await EbsiDidAuth.createDidAuthResponse(
+      const didAuthJwt = await VidDidAuth.createDidAuthResponse(
         didAuthResponseCall
       );
       await expect(
-        EbsiDidAuth.verifyDidAuthResponse(
+        VidDidAuth.verifyDidAuthResponse(
           didAuthJwt,
           `${WALLET_API_BASE_URL}/wallet/v1/signature-validations`,
           tokenEntityAA,

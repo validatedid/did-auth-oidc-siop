@@ -17,11 +17,11 @@ import moment = require("moment");
 export const DIDAUTH_HEADER = {
   typ: "JWT",
   alg: "ES256K-R",
-  kid: "did:ebsi:0x416e6e6162656c2e4c65652e452d412d506f652e#key1",
+  kid: "did:vid:0x416e6e6162656c2e4c65652e452d412d506f652e#key1",
 };
 
 export const DIDAUTH_REQUEST_PAYLOAD = {
-  iss: "did:ebsi:0x416e6e6162656c2e4c65652e452d412d506f652e", // DID of the RP (kid must point to a key in this DID Document)
+  iss: "did:vid:0x416e6e6162656c2e4c65652e452d412d506f652e", // DID of the RP (kid must point to a key in this DID Document)
   scope: "openid did_authn", // MUST be "openid did_authn"
   response_type: "id_token", // MUST be ID Token
   client_id: "redirect-uri", // Redirect URI after successful authentication
@@ -39,7 +39,7 @@ export const DIDAUTH_RESPONSE_PAYLOAD = {
   nonce: "6a6b57a9d4e1a130b0edbe1ec4ae8823",
   sub_jwk: {
     crv: "secp256k1",
-    kid: "did:ebsi:0x226e2e2223333c2e4c65652e452d412d50611111#key-1",
+    kid: "did:vid:0x226e2e2223333c2e4c65652e452d412d50611111#key-1",
     kty: "EC",
     x: "7KEKZa5xJPh7WVqHJyUpb2MgEe3nA8Rk7eUlXsmBl-M",
     y: "3zIgl_ml4RhapyEm5J7lvU-4f5jiBvZr4KgxUjEhl9o",
@@ -93,7 +93,7 @@ const testEntityAuthNToken = async (
   const jwk = JWK.generateSync("EC", "secp256k1", { use: "sig" });
   const privKeyString = Buffer.from(jwk.d as string, "base64").toString("hex");
   const wallet: ethers.Wallet = new ethers.Wallet(privKeyString);
-  const did = `did:ebsi:${wallet.address}`;
+  const did = `did:vid:${wallet.address}`;
 
   const payload: LegalEntityAuthNToken = {
     iss: enterpiseName || "Test Legal Entity",

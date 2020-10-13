@@ -1,6 +1,6 @@
 import { JWT, JWK } from "jose";
 import { verifyJWT, decodeJWT } from "did-jwt";
-import { EbsiDidAuth, DIDAUTH_ERRORS } from "../src";
+import { VidDidAuth, DIDAUTH_ERRORS } from "../src";
 
 jest.mock("did-jwt");
 const mockVerifyJwt = verifyJWT as jest.Mock;
@@ -22,7 +22,7 @@ describe("eBSI DID Auth Request Validation", () => {
     mockVerifyJwt.mockResolvedValue(undefined as any);
     mockDecodeJWT.mockReturnValue({ payload: { aud: "" } });
     await expect(
-      EbsiDidAuth.verifyDidAuthRequest(jwt, RPC_ADDRESS, RPC_PROVIDER)
+      VidDidAuth.verifyDidAuthRequest(jwt, RPC_ADDRESS, RPC_PROVIDER)
     ).rejects.toThrow(DIDAUTH_ERRORS.ERROR_VERIFYING_SIGNATURE);
     jest.clearAllMocks();
   });
@@ -41,7 +41,7 @@ describe("eBSI DID Auth Request Validation", () => {
     mockVerifyJwt.mockResolvedValue(undefined as any);
     mockDecodeJWT.mockReturnValue({} as any);
     await expect(
-      EbsiDidAuth.verifyDidAuthRequest(jwt, RPC_ADDRESS, RPC_PROVIDER)
+      VidDidAuth.verifyDidAuthRequest(jwt, RPC_ADDRESS, RPC_PROVIDER)
     ).rejects.toThrow(DIDAUTH_ERRORS.NO_AUDIENCE);
     jest.clearAllMocks();
   });
@@ -62,7 +62,7 @@ describe("eBSI DID Auth Request Validation", () => {
     });
     mockVerifyJwt.mockResolvedValue({ payload } as any);
     mockDecodeJWT.mockReturnValue({ payload } as any);
-    const response = await EbsiDidAuth.verifyDidAuthRequest(
+    const response = await VidDidAuth.verifyDidAuthRequest(
       jwt,
       RPC_ADDRESS,
       RPC_PROVIDER

@@ -13,7 +13,7 @@ import {
   DIAUTHScope,
   DIAUTHResponseType,
   DIDAUTH_RESPONSE_ISS,
-  EbsiDidAuth,
+  VidDidAuth,
   DidAuthRequestCall,
   DidAuthRequestPayload,
   getNonce,
@@ -26,7 +26,7 @@ dotenv.config();
 
 jest.setTimeout(10000);
 
-describe("ebsiDidAuth", () => {
+describe("VidDidAuth", () => {
   describe("eBSI DID Auth Request", () => {
     it("should create a DID Auth Request URL with a JWT embedded", async () => {
       expect.assertions(5);
@@ -40,7 +40,7 @@ describe("ebsiDidAuth", () => {
         authZToken: tokenEntityAA,
       };
 
-      const { uri, nonce } = await EbsiDidAuth.createUriRequest(
+      const { uri, nonce } = await VidDidAuth.createUriRequest(
         didAuthRequestCall
       );
       expect(uri).toContain(`openid://&scope=${DIAUTHScope.OPENID_DIDAUTHN}`);
@@ -64,7 +64,7 @@ describe("ebsiDidAuth", () => {
         authZToken: tokenEntityAA,
       };
 
-      const { jwt, nonce } = await EbsiDidAuth.createDidAuthRequest(
+      const { jwt, nonce } = await VidDidAuth.createDidAuthRequest(
         didAuthRequestCall
       );
       expect(nonce).toBeDefined();
@@ -101,10 +101,10 @@ describe("ebsiDidAuth", () => {
         authZToken: tokenEntityAA,
       };
 
-      const { jwt } = await EbsiDidAuth.createDidAuthRequest(
+      const { jwt } = await VidDidAuth.createDidAuthRequest(
         didAuthRequestCall
       );
-      const payload: DidAuthRequestPayload = await EbsiDidAuth.verifyDidAuthRequest(
+      const payload: DidAuthRequestPayload = await VidDidAuth.verifyDidAuthRequest(
         jwt,
         RPC_ADDRESS,
         RPC_PROVIDER
@@ -137,7 +137,7 @@ describe("ebsiDidAuth", () => {
         nonce: requestDIDAuthNonce,
         redirectUri: "http://localhost:8080/demo/spanish-university", // just assuming that we know that
       };
-      const didAuthJwt = await EbsiDidAuth.createDidAuthResponse(
+      const didAuthJwt = await VidDidAuth.createDidAuthResponse(
         didAuthResponseCall
       );
       const { header, payload } = decodeJWT(didAuthJwt);
@@ -179,10 +179,10 @@ describe("ebsiDidAuth", () => {
         redirectUri: "http://localhost:8080/demo/spanish-university", // just assuming that we know that
       };
 
-      const didAuthJwt = await EbsiDidAuth.createDidAuthResponse(
+      const didAuthJwt = await VidDidAuth.createDidAuthResponse(
         didAuthResponseCall
       );
-      const response = await EbsiDidAuth.verifyDidAuthResponse(
+      const response = await VidDidAuth.verifyDidAuthResponse(
         didAuthJwt,
         `${WALLET_API_BASE_URL}/wallet/v1/signature-validations`,
         tokenEntityAA,
