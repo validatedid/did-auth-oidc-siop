@@ -35,7 +35,7 @@ export default class VidDidAuth {
    */
   static async createUriRequest(
     didAuthRequestCall: DidAuthRequestCall
-  ): Promise<{ uri: string; nonce: string, jwt: string }> {
+  ): Promise<{ uri: string; nonce: string; jwt: string }> {
     if (!didAuthRequestCall || !didAuthRequestCall.redirectUri)
       throw new Error(DIDAUTH_ERRORS.BAD_PARAMS);
     const { jwt, nonce } = await VidDidAuth.createDidAuthRequest(
@@ -59,11 +59,9 @@ export default class VidDidAuth {
       throw new Error(DIDAUTH_ERRORS.KEY_SIGNATURE_URI_ERROR);
     if (!didAuthRequestCall.authZToken)
       throw new Error(DIDAUTH_ERRORS.AUTHZTOKEN_UNDEFINED);
-      console.log("didAuthrequestPayload");
     const payload: DidAuthRequestPayload = this.createDidAuthRequestPayload(
       didAuthRequestCall
     );
-    console.log("didAuthrequestPayload2");
     // signs payload calling the provided signatureUri
     const jwt = await this.signDidAuthExternal(
       payload,
@@ -76,8 +74,8 @@ export default class VidDidAuth {
   /**
    * Verifies a DidAuth ID Request Token
    * @param didAuthJwt signed DidAuth Request Token
-   * @param registry hexadecimal ddress where it is deployed the EBSI DID Smart Contract
-   * @param rpcUrl URL for the EBSI DID Provider
+   * @param registry hexadecimal ddress where it is deployed the VID DID Smart Contract
+   * @param rpcUrl URL for the VID DID Provider
    */
   static async verifyDidAuthRequest(
     didAuthJwt: string,
@@ -223,8 +221,7 @@ export default class VidDidAuth {
     if (
       !response ||
       !response.status ||
-      (response.status !== 200 &&
-      response.status !== 201) ||
+      (response.status !== 200 && response.status !== 201) ||
       !response.data ||
       !response.data.jws
     )

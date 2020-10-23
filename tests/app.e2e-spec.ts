@@ -20,13 +20,14 @@ describe("test DID Auth End to end flow", () => {
     expect.assertions(8);
     const WALLET_API_BASE_URL =
       process.env.WALLET_API_URL || "http://localhost:9000";
-    const RPC_PROVIDER = process.env.DID_PROVIDER_RPC_URL || "https://api.intebsi.xyz/ledger/v1/blockchains/besu";
+    const RPC_PROVIDER = process.env.DID_PROVIDER_RPC_URL;
     const RPC_ADDRESS = process.env.DID_REGISTRY_SC_ADDRESS || "0x00000000";
     const testKeyUser: TESTKEY = generateTestKey(DIDAUTH_KEY_TYPE.EC);
     const entityAA = await getEnterpriseAuthZToken("COMPANY E2E INC");
     const tokenEntity = entityAA.jwt;
     // CREATE A DID-AUTH REQUEST URI
     const didAuthRequestCall: DidAuthRequestCall = {
+      requestUri: "https://dev.vidchain.net/siop/jwts/N7A8u4VmZfMGGdAtAAFV",
       redirectUri: "http://localhost:8080/demo/spanish-university",
       signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
       authZToken: tokenEntity,

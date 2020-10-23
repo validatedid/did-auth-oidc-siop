@@ -20,8 +20,8 @@ export default class VidDidAuth {
     /**
      * Verifies a DidAuth ID Request Token
      * @param didAuthJwt signed DidAuth Request Token
-     * @param registry hexadecimal ddress where it is deployed the EBSI DID Smart Contract
-     * @param rpcUrl URL for the EBSI DID Provider
+     * @param registry hexadecimal ddress where it is deployed the VID DID Smart Contract
+     * @param rpcUrl URL for the VID DID Provider
      */
     static verifyDidAuthRequest(didAuthJwt: string, registry: string, rpcUrl: string): Promise<DidAuthRequestPayload>;
     /**

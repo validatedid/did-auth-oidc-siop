@@ -26,8 +26,8 @@ dotenv.config();
 
 jest.setTimeout(10000);
 
-describe("VidDidAuth", () => {
-  describe("eBSI DID Auth Request", () => {
+describe("vidDidAuth", () => {
+  describe("vid DID Auth Request", () => {
     it("should create a DID Auth Request URL with a JWT embedded", async () => {
       expect.assertions(5);
       const WALLET_API_BASE_URL =
@@ -35,6 +35,7 @@ describe("VidDidAuth", () => {
       const entityAA = await getEnterpriseAuthZToken("COMPANY AA INC");
       const tokenEntityAA = entityAA.jwt;
       const didAuthRequestCall: DidAuthRequestCall = {
+        requestUri: "https://dev.vidchain.net/siop/jwts/N7A8u4VmZfMGGdAtAAFV",
         redirectUri: "http://localhost:8080/demo/spanish-university",
         signatureUri: `${WALLET_API_BASE_URL}/wallet/v1/signatures`,
         authZToken: tokenEntityAA,
@@ -59,6 +60,7 @@ describe("VidDidAuth", () => {
       const didEntityAA = entityAA.did;
       const tokenEntityAA = entityAA.jwt;
       const didAuthRequestCall: DidAuthRequestCall = {
+        requestUri: "https://dev.vidchain.net/siop/jwts/N7A8u4VmZfMGGdAtAAFV",
         redirectUri: "http://localhost:8080/demo/spanish-university",
         signatureUri: `${WALLET_API_BASE_URL}/wallet/v1/signatures`,
         authZToken: tokenEntityAA,
@@ -90,20 +92,19 @@ describe("VidDidAuth", () => {
       expect.assertions(3);
       const WALLET_API_BASE_URL =
         process.env.WALLET_API_URL || "http://localhost:9000";
-      const RPC_PROVIDER = "https://api.intebsi.xyz/ledger/v1/blockchains/besu";
+      const RPC_PROVIDER = process.env.DID_PROVIDER_RPC_URL;
       const RPC_ADDRESS = process.env.DID_REGISTRY_SC_ADDRESS || "0x00000000";
       const entityAA = await getEnterpriseAuthZToken("COMPANY AA INC");
       const didEntityAA = entityAA.did;
       const tokenEntityAA = entityAA.jwt;
       const didAuthRequestCall: DidAuthRequestCall = {
+        requestUri: "https://dev.vidchain.net/siop/jwts/N7A8u4VmZfMGGdAtAAFV",
         redirectUri: "http://localhost:8080/demo/spanish-university",
         signatureUri: `${WALLET_API_BASE_URL}/wallet/v1/signatures`,
         authZToken: tokenEntityAA,
       };
 
-      const { jwt } = await VidDidAuth.createDidAuthRequest(
-        didAuthRequestCall
-      );
+      const { jwt } = await VidDidAuth.createDidAuthRequest(didAuthRequestCall);
       const payload: DidAuthRequestPayload = await VidDidAuth.verifyDidAuthRequest(
         jwt,
         RPC_ADDRESS,
@@ -126,7 +127,7 @@ describe("VidDidAuth", () => {
     });
   });
 
-  describe("eBSI DID Auth Response", () => {
+  describe("vid DID Auth Response", () => {
     it('should create a JWT DID Auth Response token with "ES256K-R" algo and random keys generated', async () => {
       expect.assertions(4);
       const requestDIDAuthNonce: string = getNonce();
@@ -152,7 +153,7 @@ describe("VidDidAuth", () => {
       expectedPayload.nonce = expect.any(String);
       expectedPayload.iat = expect.any(Number);
       expectedPayload.exp = expect.any(Number);
-      expectedPayload.sub_jwk.kid = expect.stringContaining("did:ebsi:");
+      expectedPayload.sub_jwk.kid = expect.stringContaining("did:vid:");
       expectedPayload.sub_jwk.x = expect.any(String);
       expectedPayload.sub_jwk.y = expect.any(String);
       expectedPayload.sub = expect.any(String);

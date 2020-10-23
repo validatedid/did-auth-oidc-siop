@@ -25,7 +25,7 @@ function getEthAddress(key: JWK.ECKey): string {
 }
 
 function getDIDFromKey(key: JWK.ECKey): string {
-  return `did:ebsi:${getEthAddress(key)}`;
+  return `did:vid:${getEthAddress(key)}`;
 }
 
 const fromBase64 = (base64: string) => {

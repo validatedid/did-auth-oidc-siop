@@ -34,9 +34,7 @@ class VidDidAuth {
             throw new Error(Errors_1.default.KEY_SIGNATURE_URI_ERROR);
         if (!didAuthRequestCall.authZToken)
             throw new Error(Errors_1.default.AUTHZTOKEN_UNDEFINED);
-        console.log("didAuthrequestPayload");
         const payload = this.createDidAuthRequestPayload(didAuthRequestCall);
-        console.log("didAuthrequestPayload2");
         // signs payload calling the provided signatureUri
         const jwt = await this.signDidAuthExternal(payload, didAuthRequestCall.signatureUri, didAuthRequestCall.authZToken);
         return { jwt, nonce: payload.nonce };
@@ -44,8 +42,8 @@ class VidDidAuth {
     /**
      * Verifies a DidAuth ID Request Token
      * @param didAuthJwt signed DidAuth Request Token
-     * @param registry hexadecimal ddress where it is deployed the EBSI DID Smart Contract
-     * @param rpcUrl URL for the EBSI DID Provider
+     * @param registry hexadecimal ddress where it is deployed the VID DID Smart Contract
+     * @param rpcUrl URL for the VID DID Provider
      */
     static async verifyDidAuthRequest(didAuthJwt, registry, rpcUrl) {
         // as audience is set in payload as a DID, it is required to be set as options
@@ -145,8 +143,7 @@ class VidDidAuth {
         const response = await Util_1.doPostCallWithToken(signatureUri, data, authZToken);
         if (!response ||
             !response.status ||
-            (response.status !== 200 &&
-                response.status !== 201) ||
+            (response.status !== 200 && response.status !== 201) ||
             !response.data ||
             !response.data.jws)
             throw new Error(Errors_1.default.MALFORMED_SIGNATURE_RESPONSE);

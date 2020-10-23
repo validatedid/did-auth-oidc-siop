@@ -1,4 +1,4 @@
-import VidDidAuth from "./VidDIDAuth";
+import VidDidAuth from "./vidDIDAuth";
 import DIDAUTH_ERRORS from "./Errors";
 
 export {

@@ -26,7 +26,7 @@ function getEthAddress(key) {
     return getEthWallet(key).address;
 }
 function getDIDFromKey(key) {
-    return `did:ebsi:${getEthAddress(key)}`;
+    return `did:vid:${getEthAddress(key)}`;
 }
 exports.getDIDFromKey = getDIDFromKey;
 const fromBase64 = (base64) => {

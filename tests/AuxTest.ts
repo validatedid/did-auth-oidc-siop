@@ -97,7 +97,7 @@ const testEntityAuthNToken = async (
 
   const payload: LegalEntityAuthNToken = {
     iss: enterpiseName || "Test Legal Entity",
-    aud: "ebsi-wallet",
+    aud: "vidchain-api",
     iat: moment().unix(),
     exp: moment().add(15, "minutes").unix(),
     nonce: uuidv4(),
@@ -133,7 +133,7 @@ export async function getEnterpriseAuthZToken(
   const payload = {
     grantType: "urn:ietf:params:oauth:grant-type:jwt-bearer",
     assertion: testAuth.jwt,
-    scope: "ebsi profile entity",
+    scope: "vidchain profile entity",
   };
   const WALLET_API_BASE_URL =
     process.env.WALLET_API_URL || "http://localhost:9000";
@@ -165,17 +165,17 @@ export async function mockedGetEnterpriseAuthToken(
     nonce: payload.nonce,
   };
 
-  const ebsiPayload = {
+  const vidPayload = {
     ...inputPayload,
     ...{
       sub: payload.iss, // Should be the id of the app that is requesting the token
       iat: moment().unix(),
       exp: moment().add(15, "minutes").unix(),
-      aud: "ebsi-wallet",
+      aud: "vidchain-api",
     },
   };
 
-  const jwt = JWT.sign(ebsiPayload, testAuth.jwk, {
+  const jwt = JWT.sign(vidPayload, testAuth.jwk, {
     header: {
       alg: "ES256K",
       typ: "JWT",

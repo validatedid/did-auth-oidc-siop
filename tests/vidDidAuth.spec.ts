@@ -30,8 +30,8 @@ dotenv.config();
 
 jest.setTimeout(10000);
 
-describe("VidDidAuth", () => {
-  describe("eBSI DID Auth Request", () => {
+describe("vidDidAuth", () => {
+  describe("vid DID Auth Request", () => {
     it("should throw BAD_PARAMS when no client_id is present", async () => {
       expect.assertions(1);
 
@@ -238,7 +238,7 @@ describe("VidDidAuth", () => {
       expect.assertions(3);
       const RPC_PROVIDER =
         process.env.DID_PROVIDER_RPC_URL ||
-        "https://api.intebsi.xyz/ledger/v1/blockchains/besu";
+        "https://ropsten.infura.io/v3/f03e98e0dc2b855be647c39abe984fcf";
       const RPC_ADDRESS = process.env.DID_REGISTRY_SC_ADDRESS || "0x00000000";
       const WALLET_API_BASE_URL =
         process.env.WALLET_API_URL || "http://localhost:9000";
@@ -308,7 +308,7 @@ describe("VidDidAuth", () => {
       expect.assertions(1);
       const RPC_PROVIDER =
         process.env.DID_PROVIDER_RPC_URL ||
-        "https://api.intebsi.xyz/ledger/v1/blockchains/besu";
+        "https://ropsten.infura.io/v3/f03e98e0dc2b855be647c39abe984fcf";
       const RPC_ADDRESS = process.env.DID_REGISTRY_SC_ADDRESS || "0x00000000";
       const entityAA = await mockedGetEnterpriseAuthToken("COMPANY AA INC");
       const payload = {
@@ -327,7 +327,7 @@ describe("VidDidAuth", () => {
     });
   });
 
-  describe("eBSI DID Auth Response", () => {
+  describe("vid DID Auth Response", () => {
     it("should throw BAD_PARAMS when no hexPrivateKey is present", async () => {
       expect.assertions(1);
 
@@ -367,7 +367,7 @@ describe("VidDidAuth", () => {
       expectedPayload.nonce = expect.any(String);
       expectedPayload.iat = expect.any(Number);
       expectedPayload.exp = expect.any(Number);
-      expectedPayload.sub_jwk.kid = expect.stringContaining("did:ebsi:");
+      expectedPayload.sub_jwk.kid = expect.stringContaining("did:vid:");
       expectedPayload.sub_jwk.x = expect.any(String);
       expectedPayload.sub_jwk.y = expect.any(String);
       expectedPayload.sub = expect.any(String);

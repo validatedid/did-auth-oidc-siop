@@ -1,13 +1,12 @@
 {
-  "name": "@cef-ebsi/did-auth",
+  "name": "@validatedid/did-auth",
   "version": "0.0.1",
-  "description": "Experimental EBSI DID Auth library",
-  "author": "",
-  "license": "EUPL-1.2",
+  "description": "VID DID Auth library",
+  "author": "Validated ID",
   "repository": {
     "type": "bitbucket",
-    "url": "https://ec.europa.eu/cefdigital/code/scm/ebsi/ebsi-did-authentication.git",
-    "directory": "packages/ebsi-did-auth"
+    "url": "https://github.com/validatedid/did-auth.git",
+    "directory": "did-auth"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.js",
