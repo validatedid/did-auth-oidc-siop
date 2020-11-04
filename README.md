@@ -1,8 +1,8 @@
-# DID Auth Library
+# Validated ID DID SIOP Auth Library
 
 > This is a ValidatedID version of did-auth protocol to authenticate a user and a Relaying Party using vid DIDs.
 
-The current DID Auth implementation follows EBSI's DID Auth, i.e. [DID Auth RFC Section 4](https://ec.europa.eu/cefdigital/wiki/pages/viewpage.action?spaceKey=BLOCKCHAININT&title=RFC+DID+Auth+in+EBSI+V1#RFCDIDAuthinEBSIV1-UserAuthenticationusingVerifiableID), which uses two JSON Web Tokens (JWT) signed by both two parties DID keys in a double challenge-response authentication.
+The current DID Auth implementation follows [DID SIOP Auth](https://identity.foundation/did-siop/), which uses two JSON Web Tokens (JWT) signed by both two parties DID keys in a double challenge-response authentication.
 
 Current version supports only `ES256k-R` algorithm (the EC secp256k1).
 
@@ -14,7 +14,6 @@ Current version supports only `ES256k-R` algorithm (the EC secp256k1).
 2. [Authentication Flow](#Authentication-Flow)
 3. [Usage](#Usage)
 4. [Library Test](#Library-Test)
-5. [Licensing](#Licensing)
 
 ## Installation
 
@@ -56,7 +55,6 @@ openid://?scope=openid%20did_authn&response_type=id_token&client_id=<redirectUri
 
 > _Note 1_: RP needs to store embbeded jwt in requestUri endpoint so the entity can retrieve it. For example, when a user scans this information from QR code using a wallet.
 > _Note 2_: RP needs to store `nonce`, found inside the Request token to be used on the response validation process.
-
 
 - RP redirects to the wallet front-end passing the DID-Auth URI as a parameter:
 <!-- prettier-ignore -->
@@ -211,12 +209,12 @@ To run `e2e` you need to set these two environment variables either in a `.env` 
 You can use the `.env.example` from the repo and renamed it to `.env`.
 
 ```bash
-# unit tests
+# run tests
 $ npm run test
+
+# unit tests
+$ npm run test:unit
 
 # e2e tests
 $ npm run test:e2e
-
-# all tests
-$ npm run test:all
 ```
