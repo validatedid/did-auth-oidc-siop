@@ -56,24 +56,30 @@ openid://?scope=openid%20did_authn&response_type=id_token&client_id=<redirectUri
 > _Note 1_: RP needs to store embbeded jwt in requestUri endpoint so the entity can retrieve it. For example, when a user scans this information from QR code using a wallet.
 > _Note 2_: RP needs to store `nonce`, found inside the Request token to be used on the response validation process.
 
-- RP redirects to the wallet front-end passing the DID-Auth URI as a parameter:
+- RP sends the Uri Request to the SIOP client either via a QR code or deeplink:
 <!-- prettier-ignore -->
 
 <!-- prettier-ignore-start -->
 ```html
-https://app.example.net/demo/wallet?did-auth=openid://?scope=openid%20did_authn&response_type=id_token&client_id=<redirectUri>&request=<requestUri>
+https://app.example.net/demo/wallet?did-auth=openid://?scope=openid%20did_authn&response_type=id_token&client_id=<redirectUri>&requestUri=<requestUri>
 ```
 <!-- prettier-ignore-end -->
 
-- Entity wallet frontend parses the received a DID Auth Request URI to obtain `client_id` and `request` URL parameters and then the library is again used on this side to verify the token and create the Response token:
+- SIOP client wallet parses the received a DID Auth Request URI to obtain `client_id` and `requestUri` URL parameters:
 
 ```javascript
-const params = new URLSearchParams(didAuthUri);
-const redirectUri = params.get("client_id");
-const didAuthRequestJwt = params.get("request");
+import { parse } from "querystring";
+
+const data = parse(uri);
+const redirectUri = data.client_id;
+const { requestUri } = data;
 const RPC_ADDRESS = process.env.DID_REGISTRY_SC_ADDRESS;
 const RPC_PROVIDER = process.env.DID_PROVIDER_RPC_URL;
+```
 
+- User needs to do a GET REST API call to `redirectUri` to receive the Jwt. This is out of scope of this library. Once the user has the Jwt, then the library is again used on this side to verify the token and create the Response token:
+
+```javascript
 // VERIFY DID-AUTH REQUEST
 const requestPayload: DidAuthRequestPayload = await vidDidAuth.verifyDidAuthRequest(
   didAuthRequestJwt,
@@ -97,7 +103,7 @@ const didAuthResponseJwt = await vidDidAuth.createDidAuthResponse(
 );
 ```
 
-- User redirects to the RP `redirectUri` URI passing the Response token as a parameter:
+- User does a POST REST API call to the RP `redirectUri` URI passing the Response token as a parameter:
 
 <!-- prettier-ignore-start -->
 ```html
