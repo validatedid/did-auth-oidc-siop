@@ -30,7 +30,7 @@
     "test:watch": "jest --watch",
     "test:unit": "jest --testPathIgnorePatterns=e2e",
     "test:e2e": "jest --testPathPattern=e2e",
-    "test:ci": "yarn test:unit --coverage --reporters=default --reporters=jest-junit",
+    "test:ci": "jest test --testPathIgnorePatterns=e2e --coverage --reporters=default --reporters=jest-junit",
     "clearCache": "jest --clearCache"
   },
   "devDependencies": {
