@@ -3,16 +3,16 @@ import { DIDDocument } from "did-resolver";
 import { ethers } from "ethers";
 import { v4 as uuidv4 } from "uuid";
 import { decodeJWT } from "did-jwt";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
+import moment from "moment";
+
 import {
-  DIDAUTH_ERRORS,
+  DidAuthErrors,
   JWTClaims,
   getDIDFromKey,
-  DIDAUTH_KEY_TYPE,
-  DIDAUTH_KEY_CURVE,
+  DidAuthKeyType,
+  DidAuthKeyCurve,
 } from "../src";
-
-import moment = require("moment");
 
 export const DIDAUTH_HEADER = {
   typ: "JWT",
@@ -52,17 +52,28 @@ export interface TESTKEY {
   didDoc?: DIDDocument;
 }
 
+enum TokenType {
+  bearer = "Bearer",
+}
+
+interface AccessTokenResponseBody {
+  accessToken: string;
+  tokenType: TokenType.bearer;
+  expiresIn: number; // 15 minutes
+  issuedAt: number;
+}
+
 export function generateTestKey(kty: string): TESTKEY {
   let key: JWK.ECKey;
 
   switch (kty) {
-    case DIDAUTH_KEY_TYPE.EC:
-      key = JWK.generateSync(DIDAUTH_KEY_TYPE.EC, DIDAUTH_KEY_CURVE.SECP256k1, {
+    case DidAuthKeyType.EC:
+      key = JWK.generateSync(DidAuthKeyType.EC, DidAuthKeyCurve.SECP256k1, {
         use: "sig",
       });
       break;
     default:
-      throw new Error(DIDAUTH_ERRORS.NO_ALG_SUPPORTED);
+      throw new Error(DidAuthErrors.NO_ALG_SUPPORTED);
   }
 
   const did = getDIDFromKey(key);
@@ -86,12 +97,12 @@ export interface LegalEntityAuthNToken extends JWTClaims {
   nonce: string;
 }
 
-const testEntityAuthNToken = async (
+const testEntityAuthNToken = (
   enterpiseName?: string
-): Promise<{ jwt: string; jwk: JWK.ECKey; did: string }> => {
+): { jwt: string; jwk: JWK.ECKey; did: string } => {
   // generate a new keypair
   const jwk = JWK.generateSync("EC", "secp256k1", { use: "sig" });
-  const privKeyString = Buffer.from(jwk.d as string, "base64").toString("hex");
+  const privKeyString = Buffer.from(jwk.d, "base64").toString("hex");
   const wallet: ethers.Wallet = new ethers.Wallet(privKeyString);
   const did = `did:vid:${wallet.address}`;
 
@@ -118,7 +129,7 @@ export function getEnterpriseDID(token: string): string {
   return (payload as IEnterpriseAuthZToken).did;
 }
 
-async function doPostCall(url: string, data: any): Promise<any> {
+async function doPostCall(url: string, data: unknown): Promise<AxiosResponse> {
   const response = await axios.post(url, data);
   return response;
 }
@@ -129,7 +140,7 @@ export async function getEnterpriseAuthZToken(
   jwt: string;
   did: string;
 }> {
-  const testAuth = await testEntityAuthNToken(enterpiseName);
+  const testAuth = testEntityAuthNToken(enterpiseName);
   const payload = {
     grantType: "urn:ietf:params:oauth:grant-type:jwt-bearer",
     assertion: testAuth.jwt,
@@ -142,27 +153,28 @@ export async function getEnterpriseAuthZToken(
     `${WALLET_API_BASE_URL}/wallet/v1/sessions`,
     payload
   );
+  const { accessToken } = result.data as AccessTokenResponseBody;
 
   return {
-    jwt: result.data.accessToken,
-    did: getEnterpriseDID(result.data.accessToken),
+    jwt: accessToken,
+    did: getEnterpriseDID(accessToken),
   };
 }
 
-export async function mockedGetEnterpriseAuthToken(
+export function mockedGetEnterpriseAuthToken(
   enterpiseName?: string
-): Promise<{
+): {
   jwt: string;
   did: string;
   jwk: JWK.ECKey;
-}> {
-  const testAuth = await testEntityAuthNToken(enterpiseName);
+} {
+  const testAuth = testEntityAuthNToken(enterpiseName);
   const { payload } = decodeJWT(testAuth.jwt);
 
   const inputPayload: IEnterpriseAuthZToken = {
     did: testAuth.did,
     aud: payload?.iss ? payload.iss : "Test Legal Entity",
-    nonce: payload.nonce,
+    nonce: (payload as IEnterpriseAuthZToken).nonce,
   };
 
   const vidPayload = {

@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import { ethers } from "ethers";
 import { ec as EC } from "elliptic";
 import * as JWK from "./JWK";
@@ -13,7 +13,7 @@ function toHex(data: string): string {
 }
 
 function getEthWallet(key: JWK.Key): ethers.Wallet {
-  return new ethers.Wallet(toHex(key.d as string));
+  return new ethers.Wallet(toHex(key.d));
 }
 
 function getHexPrivateKey(key: JWK.Key): string {
@@ -32,7 +32,9 @@ const fromBase64 = (base64: string) => {
   return base64.replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
 };
 
-const base64urlEncodeBuffer = (buf: { toString: (arg0: string) => any }) => {
+const base64urlEncodeBuffer = (buf: {
+  toString: (arg0: string) => string;
+}): string => {
   return fromBase64(buf.toString("base64"));
 };
 
@@ -50,9 +52,9 @@ function getECKeyfromHexPrivateKey(
 
 async function doPostCallWithToken(
   url: string,
-  data: any,
+  data: unknown,
   token: string
-): Promise<any> {
+): Promise<AxiosResponse> {
   const config = {
     headers: {
       Authorization: `Bearer ${token}`,

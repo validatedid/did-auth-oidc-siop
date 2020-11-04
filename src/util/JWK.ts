@@ -1,6 +1,8 @@
 import { KeyObject } from "crypto";
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export type use = "sig" | "enc";
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export type keyOperation =
   | "sign"
   | "verify"
@@ -9,8 +11,11 @@ export type keyOperation =
   | "wrapKey"
   | "unwrapKey"
   | "deriveKey";
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export type asymmetricKeyObjectTypes = "private" | "public";
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export type keyObjectTypes = asymmetricKeyObjectTypes | "secret";
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export type keyType = "RSA" | "EC" | "OKP" | "oct";
 
 export interface BasicParameters {

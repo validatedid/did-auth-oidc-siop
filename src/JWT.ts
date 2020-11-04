@@ -1,12 +1,4 @@
-import { Resolver, DIDDocument } from "did-resolver";
-
-export interface VerifiedJwt {
-  payload: any;
-  doc?: DIDDocument;
-  issuer?: string;
-  signer?: object;
-  jwt: string;
-}
+import { Resolver } from "did-resolver";
 
 export interface JWTVerifyOptions {
   auth?: boolean;

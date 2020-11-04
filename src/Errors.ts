@@ -1,4 +1,4 @@
-enum DIDAUTH_ERRORS {
+enum DidAuthErrors {
   BAD_PARAMS = "Wrong parameters provided.",
   KEY_SIGNATURE_URI_ERROR = "Either Key or signature_uri MUST be provided.",
   AUTHZTOKEN_UNDEFINED = "AuthZToken MUST be defined.",
@@ -11,4 +11,4 @@ enum DIDAUTH_ERRORS {
   INVALID_AUDIENCE = "Audience is invalid. Should be a string value.",
 }
 
-export default DIDAUTH_ERRORS;
+export default DidAuthErrors;

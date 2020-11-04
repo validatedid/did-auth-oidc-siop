@@ -2,28 +2,28 @@ import { DIDDocument } from "did-resolver";
 import { JWTClaims } from "./JWT";
 import { JWKECKey } from "./util/JWK";
 
-export enum DIDAUTH_KEY_TYPE {
+export enum DidAuthKeyType {
   EC = "EC",
 }
 
-export enum DIDAUTH_KEY_CURVE {
+export enum DidAuthKeyCurve {
   SECP256k1 = "secp256k1",
 }
 
-export enum DIDAUTH_KEY_ALGO {
+export enum DidAuthKeyAlgo {
   ES256KR = "ES256K-R",
   ES256K = "ES256K",
 }
 
-export enum DIAUTHScope {
+export enum DidAuthScope {
   OPENID_DIDAUTHN = "openid did_authn",
 }
 
-export enum DIAUTHResponseType {
+export enum DIdAuthResponseType {
   ID_TOKEN = "id_token",
 }
 
-export enum DIDAUTH_RESPONSE_ISS {
+export enum DidAuthResponseIss {
   SELF_ISSUE = "https://self-issued.me",
 }
 
@@ -31,15 +31,15 @@ export const expirationTime = 5 * 60; // token expires in 5 minutes (in seconds)
 
 export interface DidAuthRequestPayload extends JWTClaims {
   iss: string;
-  scope: DIAUTHScope;
-  response_type: DIAUTHResponseType;
+  scope: DidAuthScope;
+  response_type: DIdAuthResponseType;
   client_id: string;
   nonce: string;
   did_doc?: DIDDocument;
 }
 
 export interface DidAuthResponsePayload extends JWTClaims {
-  iss: DIDAUTH_RESPONSE_ISS.SELF_ISSUE;
+  iss: DidAuthResponseIss.SELF_ISSUE;
   sub: string;
   aud: string;
   exp?: number;
@@ -64,4 +64,8 @@ export interface DidAuthResponseCall {
 
 export interface DidAuthValidationResponse {
   signatureValidation: boolean;
+}
+
+export interface SignatureResponse {
+  jws: string;
 }
