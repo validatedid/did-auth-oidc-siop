@@ -5,7 +5,7 @@
     "allowSyntheticDefaultImports": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "declaration": false,
+    "declaration": true,
     "sourceMap": true,
     "incremental": true,
     "strict": false,
