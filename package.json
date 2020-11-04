@@ -16,8 +16,8 @@
   "scripts": {
     "audit": "audit-ci --moderate",
     "prepare": "npm run build",
-    "build": "npm run clean && tsc -p tsconfig-build.json",
-    "clean": "rm -rf ./dist ./coverage ./log ./build",
+    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "clean": "rm -rf ./dist ./coverage ./build",
     "compile": "tsc",
     "compile:dev": "tsc -w",
     "coverage": "jest --coverage",
