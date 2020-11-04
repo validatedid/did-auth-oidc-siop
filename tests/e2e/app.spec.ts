@@ -1,7 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import * as dotenv from "dotenv";
+import { parse } from "querystring";
 
 import {
   VidDidAuth,
@@ -20,7 +18,7 @@ jest.setTimeout(10000);
 
 describe("test DID Auth End to end flow", () => {
   it("should test a whole DID-Auth flow using Enterprise wallet keys and User keys", async () => {
-    expect.assertions(8);
+    expect.assertions(9);
     const WALLET_API_BASE_URL =
       process.env.WALLET_API_URL || "http://localhost:9000";
     const RPC_PROVIDER = process.env.DID_PROVIDER_RPC_URL;
@@ -37,20 +35,21 @@ describe("test DID Auth End to end flow", () => {
       authZToken: tokenEntity,
     };
     // Create URI using the wallet backend that manages entity DID keys
-    const { uri, nonce } = await VidDidAuth.createUriRequest(
+    const { uri, nonce, jwt } = await VidDidAuth.createUriRequest(
       didAuthRequestCall
     );
     // Parsing URI parameters to get the Request Object and Redirect URI as client_id
-    const params: URLSearchParams = new URLSearchParams(uri);
-    const redirectUri = params.get("client_id");
-    const didAuthRequestJwt = params.get("request");
+    const data = parse(uri);
+    const redirectUri = data.client_id;
+    const { requestUri } = data;
     // const redirectUri = params.
     expect(redirectUri).toMatch(didAuthRequestCall.redirectUri);
-    expect(didAuthRequestJwt).toBeDefined();
+    expect(requestUri).toMatch(didAuthRequestCall.requestUri);
+    expect(jwt).toBeDefined();
     expect(nonce).toBeDefined();
     // VERIFY DID-AUTH REQUEST
     const requestPayload: DidAuthRequestPayload = await VidDidAuth.verifyDidAuthRequest(
-      didAuthRequestJwt as string,
+      jwt,
       RPC_ADDRESS,
       RPC_PROVIDER
     );

@@ -16,6 +16,6 @@ module.exports = {
     "!jest.config.js",
     "!lint-staged.config.js",
   ],
-  collectCoverage: false,
+  collectCoverage: true,
   reporters: ["default", ["jest-junit", { outputDirectory: "./coverage" }]],
 };

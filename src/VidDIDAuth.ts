@@ -259,9 +259,8 @@ export default class VidDidAuth {
       x: jwk.x,
       y: jwk.y,
     };
-    const thumbprint = base64urlEncodeBuffer(
-      createHash("sha256").update(JSON.stringify(fields)).digest()
-    );
+    const buff = createHash("sha256").update(JSON.stringify(fields)).digest();
+    const thumbprint = base64urlEncodeBuffer(buff);
     return thumbprint;
   }
 

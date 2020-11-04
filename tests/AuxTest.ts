@@ -1,10 +1,10 @@
 import { JWT, JWK } from "jose";
 import { DIDDocument } from "did-resolver";
-import { ethers } from "ethers";
 import { v4 as uuidv4 } from "uuid";
 import { decodeJWT } from "did-jwt";
 import axios, { AxiosResponse } from "axios";
 import moment from "moment";
+import { ethers } from "ethers";
 
 import {
   DidAuthErrors,
@@ -98,7 +98,7 @@ export interface LegalEntityAuthNToken extends JWTClaims {
   nonce: string;
 }
 
-const testEntityAuthNToken = (
+const mockedEntityAuthNToken = (
   enterpiseName?: string
 ): { jwt: string; jwk: JWK.ECKey; did: string } => {
   // generate a new keypair
@@ -124,6 +124,19 @@ const testEntityAuthNToken = (
   return { jwt, jwk, did };
 };
 
+const testEntityAuthNToken = (enterpiseName?: string): { jwt: string } => {
+  const payload: LegalEntityAuthNToken = {
+    iss: enterpiseName || "Test Legal Entity",
+    aud: "vidchain-api",
+    iat: moment().unix(),
+    exp: moment().add(15, "minutes").unix(),
+    nonce: uuidv4(),
+  };
+
+  const jwt = Buffer.from(JSON.stringify(payload)).toString("base64");
+  return { jwt };
+};
+
 export function getEnterpriseDID(token: string): string {
   const { payload } = JWT.decode(token, { complete: true });
 
@@ -145,13 +158,13 @@ export async function getEnterpriseAuthZToken(
   const payload = {
     grantType: "urn:ietf:params:oauth:grant-type:jwt-bearer",
     assertion: testAuth.jwt,
-    scope: "vidchain profile entity",
+    scope: "vidchain profile test entity",
   };
   const WALLET_API_BASE_URL =
     process.env.WALLET_API_URL || "http://localhost:9000";
   // Create and sign JWT
   const result = await doPostCall(
-    `${WALLET_API_BASE_URL}/wallet/v1/sessions`,
+    `${WALLET_API_BASE_URL}/api/v1/sessions`,
     payload
   );
   const { accessToken } = result.data as AccessTokenResponseBody;
@@ -169,7 +182,7 @@ export function mockedGetEnterpriseAuthToken(
   did: string;
   jwk: JWK.ECKey;
 } {
-  const testAuth = testEntityAuthNToken(enterpiseName);
+  const testAuth = mockedEntityAuthNToken(enterpiseName);
   const { payload } = decodeJWT(testAuth.jwt);
 
   const inputPayload: IEnterpriseAuthZToken = {

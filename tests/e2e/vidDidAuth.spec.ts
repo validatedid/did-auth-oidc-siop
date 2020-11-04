@@ -29,7 +29,7 @@ jest.setTimeout(10000);
 describe("vidDidAuth", () => {
   describe("vid DID Auth Request", () => {
     it("should create a DID Auth Request URL with a JWT embedded", async () => {
-      expect.assertions(5);
+      expect.assertions(6);
       const WALLET_API_BASE_URL =
         process.env.WALLET_API_URL || "http://localhost:9000";
       const entityAA = await getEnterpriseAuthZToken("COMPANY AA INC");
@@ -37,19 +37,19 @@ describe("vidDidAuth", () => {
       const didAuthRequestCall: DidAuthRequestCall = {
         requestUri: "https://dev.vidchain.net/siop/jwts/N7A8u4VmZfMGGdAtAAFV",
         redirectUri: "http://localhost:8080/demo/spanish-university",
-        signatureUri: `${WALLET_API_BASE_URL}/wallet/v1/signatures`,
+        signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
         authZToken: tokenEntityAA,
       };
 
       const { uri, nonce } = await VidDidAuth.createUriRequest(
         didAuthRequestCall
       );
-      expect(uri).toContain(`openid://&scope=${DidAuthScope.OPENID_DIDAUTHN}`);
+      expect(uri).toContain(`openid://`);
       expect(uri).toContain(`?response_type=${DIdAuthResponseType.ID_TOKEN}`);
       expect(uri).toContain(`&client_id=${didAuthRequestCall.redirectUri}`);
-      expect(uri).toContain("&request=");
+      expect(uri).toContain(`&scope=${DidAuthScope.OPENID_DIDAUTHN}`);
+      expect(uri).toContain(`&requestUri=${didAuthRequestCall.requestUri}`);
       expect(nonce).toBeDefined();
-      jest.clearAllMocks();
     });
 
     it('should create a JWT DID Auth Request token with "ES256K-R" algo using wallet keys from a random Enterprise', async () => {
@@ -62,7 +62,7 @@ describe("vidDidAuth", () => {
       const didAuthRequestCall: DidAuthRequestCall = {
         requestUri: "https://dev.vidchain.net/siop/jwts/N7A8u4VmZfMGGdAtAAFV",
         redirectUri: "http://localhost:8080/demo/spanish-university",
-        signatureUri: `${WALLET_API_BASE_URL}/wallet/v1/signatures`,
+        signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
         authZToken: tokenEntityAA,
       };
 
@@ -100,7 +100,7 @@ describe("vidDidAuth", () => {
       const didAuthRequestCall: DidAuthRequestCall = {
         requestUri: "https://dev.vidchain.net/siop/jwts/N7A8u4VmZfMGGdAtAAFV",
         redirectUri: "http://localhost:8080/demo/spanish-university",
-        signatureUri: `${WALLET_API_BASE_URL}/wallet/v1/signatures`,
+        signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
         authZToken: tokenEntityAA,
       };
 
@@ -185,7 +185,7 @@ describe("vidDidAuth", () => {
       );
       const response = await VidDidAuth.verifyDidAuthResponse(
         didAuthJwt,
-        `${WALLET_API_BASE_URL}/wallet/v1/signature-validations`,
+        `${WALLET_API_BASE_URL}/api/v1/signature-validations`,
         tokenEntityAA,
         requestDIDAuthNonce
       );
