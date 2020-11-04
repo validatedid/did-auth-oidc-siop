@@ -27,6 +27,7 @@ import {
 
 // importing .env variables
 dotenv.config();
+jest.mock("axios");
 
 describe("vidDidAuth", () => {
   describe("vid DID Auth Request", () => {
