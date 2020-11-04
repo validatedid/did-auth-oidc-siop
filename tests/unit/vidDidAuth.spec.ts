@@ -28,8 +28,6 @@ import {
 // importing .env variables
 dotenv.config();
 
-jest.setTimeout(10000);
-
 describe("vidDidAuth", () => {
   describe("vid DID Auth Request", () => {
     it("should throw BAD_PARAMS when no client_id is present", async () => {
@@ -53,8 +51,8 @@ describe("vidDidAuth", () => {
       ).rejects.toThrow(DidAuthErrors.BAD_PARAMS);
     });
 
-    it("should create a DID Auth Request URL with a JWT embedded", async () => {
-      expect.assertions(5);
+    it("should create a DID Auth Request URL with a JWT as reference", async () => {
+      expect.assertions(6);
       const WALLET_API_BASE_URL =
         process.env.WALLET_API_URL || "http://localhost:9000";
       const entityAA = mockedGetEnterpriseAuthToken("COMPANY AA INC");
@@ -99,9 +97,10 @@ describe("vidDidAuth", () => {
       const { uri, nonce } = await VidDidAuth.createUriRequest(
         didAuthRequestCall
       );
-      expect(uri).toContain(`openid://&scope=${DidAuthScope.OPENID_DIDAUTHN}`);
+      expect(uri).toContain(`openid://`);
       expect(uri).toContain(`?response_type=${DIdAuthResponseType.ID_TOKEN}`);
       expect(uri).toContain(`&client_id=${didAuthRequestCall.redirectUri}`);
+      expect(uri).toContain(`&scope=${DidAuthScope.OPENID_DIDAUTHN}`);
       expect(uri).toContain(`&requestUri=${didAuthRequestCall.requestUri}`);
       expect(nonce).toBeDefined();
       jest.clearAllMocks();

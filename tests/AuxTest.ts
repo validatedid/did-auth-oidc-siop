@@ -13,6 +13,7 @@ import {
   DidAuthKeyType,
   DidAuthKeyCurve,
 } from "../src";
+import { prefixWith0x } from "../src/util/Util";
 
 export const DIDAUTH_HEADER = {
   typ: "JWT",
@@ -103,7 +104,7 @@ const testEntityAuthNToken = (
   // generate a new keypair
   const jwk = JWK.generateSync("EC", "secp256k1", { use: "sig" });
   const privKeyString = Buffer.from(jwk.d, "base64").toString("hex");
-  const wallet: ethers.Wallet = new ethers.Wallet(privKeyString);
+  const wallet: ethers.Wallet = new ethers.Wallet(prefixWith0x(privKeyString));
   const did = `did:vid:${wallet.address}`;
 
   const payload: LegalEntityAuthNToken = {
