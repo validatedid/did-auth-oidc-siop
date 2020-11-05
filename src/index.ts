@@ -1,21 +1,21 @@
 import VidDidAuth from "./VidDIDAuth";
-import DIDAUTH_ERRORS from "./Errors";
+import DidAuthErrors from "./interfaces/Errors";
 
 export {
   DidAuthRequestCall,
   DidAuthRequestPayload,
   DidAuthResponseCall,
   DidAuthResponsePayload,
-  DIDAUTH_KEY_TYPE,
-  DIDAUTH_KEY_CURVE,
-  DIDAUTH_KEY_ALGO,
-  DIAUTHScope,
-  DIAUTHResponseType,
-  DIDAUTH_RESPONSE_ISS,
-} from "./DIDAuth";
+  DidAuthKeyType,
+  DidAuthKeyCurve,
+  DidAuthKeyAlgo,
+  DidAuthScope,
+  DidAuthResponseType,
+  DidAuthResponseIss,
+} from "./interfaces/DIDAuth";
 
-export { JWTClaims, JWTHeader } from "./JWT";
+export { JWTClaims, JWTHeader } from "./interfaces/JWT";
 
 export { getHexPrivateKey, getDIDFromKey, getNonce } from "./util/Util";
 
-export { VidDidAuth, DIDAUTH_ERRORS };
+export { VidDidAuth, DidAuthErrors };

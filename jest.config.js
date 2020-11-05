@@ -17,15 +17,5 @@ module.exports = {
     "!lint-staged.config.js",
   ],
   collectCoverage: true,
-  reporters: ["default", "jest-sonar"],
-  globals: {
-    "ts-jest": {
-      diagnostics: true,
-      warnOnly: true,
-      ignoreCodes: [
-        18002, // The ‘files’ list in config file is empty. (it is strongly recommended to include this one)
-      ],
-      pretty: true,
-    },
-  },
+  reporters: ["default", ["jest-junit", { outputDirectory: "./coverage" }]],
 };

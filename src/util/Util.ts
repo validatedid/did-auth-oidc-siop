@@ -1,8 +1,12 @@
 import { v4 as uuidv4 } from "uuid";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import { ethers } from "ethers";
 import { ec as EC } from "elliptic";
-import * as JWK from "./JWK";
+import * as JWK from "../interfaces/JWK";
+
+export const prefixWith0x = (key: string): string => {
+  return key.startsWith("0x") ? key : `0x${key}`;
+};
 
 function getNonce(): string {
   return uuidv4();
@@ -13,7 +17,7 @@ function toHex(data: string): string {
 }
 
 function getEthWallet(key: JWK.Key): ethers.Wallet {
-  return new ethers.Wallet(toHex(key.d as string));
+  return new ethers.Wallet(prefixWith0x(toHex(key.d)));
 }
 
 function getHexPrivateKey(key: JWK.Key): string {
@@ -25,14 +29,16 @@ function getEthAddress(key: JWK.ECKey): string {
 }
 
 function getDIDFromKey(key: JWK.ECKey): string {
-  return `did:ebsi:${getEthAddress(key)}`;
+  return `did:vid:${getEthAddress(key)}`;
 }
 
 const fromBase64 = (base64: string) => {
   return base64.replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
 };
 
-const base64urlEncodeBuffer = (buf: { toString: (arg0: string) => any }) => {
+const base64urlEncodeBuffer = (buf: {
+  toString: (arg0: "base64") => string;
+}): string => {
   return fromBase64(buf.toString("base64"));
 };
 
@@ -50,9 +56,9 @@ function getECKeyfromHexPrivateKey(
 
 async function doPostCallWithToken(
   url: string,
-  data: any,
+  data: unknown,
   token: string
-): Promise<any> {
+): Promise<AxiosResponse> {
   const config = {
     headers: {
       Authorization: `Bearer ${token}`,

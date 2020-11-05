@@ -1,25 +1,17 @@
 {
-  "version": "3.8.3",
+  "extends": "@tsconfig/node12/tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "lib": ["dom", "es6", "es7", "es2017", "es2015.promise"],
-    "target": "ES2018",
-    "module": "commonjs",
-    "declaration": true,
-    "declarationMap": true,
-    "strict": true,
     "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "noImplicitAny": false,
-    "moduleResolution": "node",
-    "sourceMap": true,
+    "allowSyntheticDefaultImports": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "typeRoots": ["./node_modules/@types"],
-    "allowJs": true,
-    "types": ["jest"],
-    "allowSyntheticDefaultImports": true
+    "declaration": true,
+    "sourceMap": true,
+    "incremental": true,
+    "strict": false,
+    "outDir": "./dist",
+    "baseUrl": "./"
   },
-  "include": ["src"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }
