@@ -1,32 +1,43 @@
-import { createJWT, SimpleSigner, decodeJWT, verifyJWT } from "did-jwt";
+import {
+  createJWT,
+  SimpleSigner,
+  decodeJWT,
+  verifyJWT,
+  JWTVerified,
+} from "did-jwt";
 import { Resolver } from "did-resolver";
-import { createHash } from "crypto";
+import VidDidResolver from "@validated-id/vid-did-resolver";
+import { AxiosResponse } from "axios";
+import SHA from "sha.js";
 import {
   DidAuthRequestCall,
-  DIDAUTH_KEY_ALGO,
-  DIDAUTH_KEY_TYPE,
-  DIDAUTH_KEY_CURVE,
+  DidAuthKeyAlgo,
+  DidAuthKeyType,
+  DidAuthKeyCurve,
   DidAuthRequestPayload,
   DidAuthResponsePayload,
   DidAuthResponseCall,
-  DIAUTHScope,
-  DIAUTHResponseType,
-  DIDAUTH_RESPONSE_ISS,
+  DidAuthScope,
+  DidAuthResponseType,
+  DidAuthResponseIss,
   expirationTime,
   DidAuthValidationResponse,
-} from "./DIDAuth";
-import DIDAUTH_ERRORS from "./Errors";
+  SignatureResponse,
+} from "./interfaces/DIDAuth";
+import DidAuthErrors from "./interfaces/Errors";
 import {
   getNonce,
   doPostCallWithToken,
   getECKeyfromHexPrivateKey,
   base64urlEncodeBuffer,
 } from "./util/Util";
-import { VerifiedJwt, JWTVerifyOptions, JWTHeader } from "./JWT";
+import {
+  JWTVerifyOptions,
+  JWTHeader,
+  EnterpriseAuthZToken,
+} from "./interfaces/JWT";
 
-import * as JWK from "./util/JWK";
-
-const VidDidResolver = require("@validated-id/vid-did-resolver");
+import * as JWK from "./interfaces/JWK";
 
 export default class VidDidAuth {
   /**
@@ -37,11 +48,11 @@ export default class VidDidAuth {
     didAuthRequestCall: DidAuthRequestCall
   ): Promise<{ uri: string; nonce: string; jwt: string }> {
     if (!didAuthRequestCall || !didAuthRequestCall.redirectUri)
-      throw new Error(DIDAUTH_ERRORS.BAD_PARAMS);
+      throw new Error(DidAuthErrors.BAD_PARAMS);
     const { jwt, nonce } = await VidDidAuth.createDidAuthRequest(
       didAuthRequestCall
     );
-    const responseUri = `openid://&scope=${DIAUTHScope.OPENID_DIDAUTHN}?response_type=${DIAUTHResponseType.ID_TOKEN}&client_id=${didAuthRequestCall.redirectUri}&requestUri=${didAuthRequestCall.requestUri}`;
+    const responseUri = `openid://?response_type=${DidAuthResponseType.ID_TOKEN}&client_id=${didAuthRequestCall.redirectUri}&scope=${DidAuthScope.OPENID_DIDAUTHN}&requestUri=${didAuthRequestCall.requestUri}`;
     // returns a URI with Request JWT embedded
     return { uri: responseUri, nonce, jwt };
   }
@@ -54,11 +65,11 @@ export default class VidDidAuth {
     didAuthRequestCall: DidAuthRequestCall
   ): Promise<{ jwt: string; nonce: string }> {
     if (!didAuthRequestCall || !didAuthRequestCall.redirectUri)
-      throw new Error(DIDAUTH_ERRORS.BAD_PARAMS);
+      throw new Error(DidAuthErrors.BAD_PARAMS);
     if (!didAuthRequestCall.signatureUri)
-      throw new Error(DIDAUTH_ERRORS.KEY_SIGNATURE_URI_ERROR);
+      throw new Error(DidAuthErrors.KEY_SIGNATURE_URI_ERROR);
     if (!didAuthRequestCall.authZToken)
-      throw new Error(DIDAUTH_ERRORS.AUTHZTOKEN_UNDEFINED);
+      throw new Error(DidAuthErrors.AUTHZTOKEN_UNDEFINED);
     const payload: DidAuthRequestPayload = this.createDidAuthRequestPayload(
       didAuthRequestCall
     );
@@ -92,10 +103,10 @@ export default class VidDidAuth {
         })
       ),
     };
-    const verifiedJWT: VerifiedJwt = await verifyJWT(didAuthJwt, options);
+    const verifiedJWT: JWTVerified = await verifyJWT(didAuthJwt, options);
     if (!verifiedJWT || !verifiedJWT.payload)
-      throw Error(DIDAUTH_ERRORS.ERROR_VERIFYING_SIGNATURE);
-    return verifiedJWT.payload;
+      throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
+    return verifiedJWT.payload as DidAuthRequestPayload;
   }
 
   /**
@@ -112,7 +123,7 @@ export default class VidDidAuth {
       !didAuthResponseCall.nonce ||
       !didAuthResponseCall.redirectUri
     )
-      throw new Error(DIDAUTH_ERRORS.BAD_PARAMS);
+      throw new Error(DidAuthErrors.BAD_PARAMS);
 
     const payload: DidAuthResponsePayload = this.createDidAuthResponsePayload(
       didAuthResponseCall
@@ -141,16 +152,20 @@ export default class VidDidAuth {
       jws: didAuthJwt,
     };
     try {
-      const response = await doPostCallWithToken(verifyUri, data, authZToken);
+      const response: AxiosResponse = await doPostCallWithToken(
+        verifyUri,
+        data,
+        authZToken
+      );
       if (!response || !response.status || response.status !== 204)
-        throw Error(DIDAUTH_ERRORS.ERROR_VERIFYING_SIGNATURE);
+        throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
     } catch (error) {
-      throw Error(DIDAUTH_ERRORS.ERROR_VERIFYING_SIGNATURE);
+      throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
     }
 
     const { payload } = decodeJWT(didAuthJwt);
     if (payload.nonce !== nonce)
-      throw Error(DIDAUTH_ERRORS.ERROR_VALIDATING_NONCE);
+      throw Error(DidAuthErrors.ERROR_VALIDATING_NONCE);
 
     return {
       signatureValidation: true,
@@ -162,11 +177,12 @@ export default class VidDidAuth {
   ): DidAuthRequestPayload {
     const { payload } = decodeJWT(input.authZToken);
     return {
-      iss: payload.did,
-      scope: DIAUTHScope.OPENID_DIDAUTHN,
-      response_type: DIAUTHResponseType.ID_TOKEN,
+      iss: (payload as EnterpriseAuthZToken).did,
+      scope: DidAuthScope.OPENID_DIDAUTHN,
+      response_type: DidAuthResponseType.ID_TOKEN,
       client_id: input.redirectUri,
       nonce: getNonce(),
+      claims: input.claims,
     };
   }
 
@@ -174,11 +190,12 @@ export default class VidDidAuth {
     input: DidAuthResponseCall
   ): DidAuthResponsePayload {
     return {
-      iss: DIDAUTH_RESPONSE_ISS.SELF_ISSUE,
+      iss: DidAuthResponseIss.SELF_ISSUE,
       sub: this.getThumbprint(input.hexPrivatekey),
       aud: input.redirectUri,
       nonce: input.nonce,
       sub_jwk: this.getJWK(input.hexPrivatekey, `${input.did}#key-1`),
+      vp: input.vp,
     };
   }
 
@@ -189,15 +206,15 @@ export default class VidDidAuth {
   ): Promise<string> {
     // assign specific JWT header
     const header: JWTHeader = {
-      alg: DIDAUTH_KEY_ALGO.ES256KR,
+      alg: DidAuthKeyAlgo.ES256KR,
       typ: "JWT",
       kid: `${issuer}#key-1`,
     };
     const response = await createJWT(
       payload,
       {
-        issuer: DIDAUTH_RESPONSE_ISS.SELF_ISSUE,
-        alg: DIDAUTH_KEY_ALGO.ES256KR,
+        issuer: DidAuthResponseIss.SELF_ISSUE,
+        alg: DidAuthKeyAlgo.ES256KR,
         signer: SimpleSigner(hexPrivateKey.replace("0x", "")), // Removing 0x from private key as input of SimpleSigner
         expiresIn: expirationTime,
       },
@@ -223,18 +240,18 @@ export default class VidDidAuth {
       !response.status ||
       (response.status !== 200 && response.status !== 201) ||
       !response.data ||
-      !response.data.jws
+      !(response.data as SignatureResponse).jws
     )
-      throw new Error(DIDAUTH_ERRORS.MALFORMED_SIGNATURE_RESPONSE);
-    return response.data.jws;
+      throw new Error(DidAuthErrors.MALFORMED_SIGNATURE_RESPONSE);
+    return (response.data as SignatureResponse).jws;
   }
 
   private static getJWK(hexPrivateKey: string, kid?: string): JWK.JWKECKey {
     const { x, y } = getECKeyfromHexPrivateKey(hexPrivateKey);
     return {
       kid,
-      kty: DIDAUTH_KEY_TYPE.EC,
-      crv: DIDAUTH_KEY_CURVE.SECP256k1,
+      kty: DidAuthKeyType.EC,
+      crv: DidAuthKeyCurve.SECP256k1,
       x,
       y,
     };
@@ -248,18 +265,17 @@ export default class VidDidAuth {
       x: jwk.x,
       y: jwk.y,
     };
-    const thumbprint = base64urlEncodeBuffer(
-      createHash("sha256").update(JSON.stringify(fields)).digest()
-    );
+    const buff = SHA("sha256").update(JSON.stringify(fields)).digest();
+    const thumbprint = base64urlEncodeBuffer(buff);
     return thumbprint;
   }
 
   static getAudience(jwt: string): string | undefined {
     const { payload } = decodeJWT(jwt);
-    if (!payload) throw new Error(DIDAUTH_ERRORS.NO_AUDIENCE);
+    if (!payload) throw new Error(DidAuthErrors.NO_AUDIENCE);
     if (!payload.aud) return undefined;
     if (Array.isArray(payload.aud))
-      throw new Error(DIDAUTH_ERRORS.INVALID_AUDIENCE);
+      throw new Error(DidAuthErrors.INVALID_AUDIENCE);
     return payload.aud;
   }
 }
