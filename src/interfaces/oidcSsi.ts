@@ -44,13 +44,17 @@ export interface VerifiablePresentation extends Presentation {
   proof: Proof;
 }
 
-export interface OidcClaimRequest {
+export interface OidcClaimJson {
   essential?: boolean;
-  value?: string | string[];
-  values?: string[] | string[][];
+  value?: string;
+  values?: string[];
+}
+
+export interface OidcClaimRequest {
+  [x: string]: null | OidcClaimJson;
 }
 
 export interface OidcClaim {
-  vc?: null | OidcClaimRequest;
+  vc?: OidcClaimRequest;
   [x: string]: unknown;
 }

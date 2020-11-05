@@ -37,8 +37,7 @@ export const DIDAUTH_RESPONSE_PAYLOAD = {
 
 export const verifiableIdOidcClaim: OidcClaim = {
   vc: {
-    essential: true,
-    value: ["VerifiableCredential", "VerifiableIdCredential"],
+    VerifiableIdCredential: { essential: true },
   },
 };
 
