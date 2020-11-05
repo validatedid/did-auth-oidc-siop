@@ -15,38 +15,6 @@ import {
 } from "../src";
 import { prefixWith0x } from "../src/util/Util";
 
-export const DIDAUTH_HEADER = {
-  typ: "JWT",
-  alg: "ES256K-R",
-  kid: "did:vid:0x416e6e6162656c2e4c65652e452d412d506f652e#key1",
-};
-
-export const DIDAUTH_REQUEST_PAYLOAD = {
-  iss: "did:vid:0x416e6e6162656c2e4c65652e452d412d506f652e", // DID of the RP (kid must point to a key in this DID Document)
-  scope: "openid did_authn", // MUST be "openid did_authn"
-  response_type: "id_token", // MUST be ID Token
-  client_id: "redirect-uri", // Redirect URI after successful authentication
-  nonce: "n-0S6_WzA2M", // MUST be a random string from a high-entropy source
-  exp: 1569937756, // Unix Timestamp; Date and time when the ID Token expires.
-  iat: 1569934156,
-};
-
-export const DIDAUTH_RESPONSE_PAYLOAD = {
-  iss: "https://self-issued.me",
-  sub: "QS+5mH5GqVxuah94+D9wV97mMKZ6iMzW1op4B4s02Jk=", // Thumbprint of the sub_jwk
-  aud: "redirect-uri", // MUST be client_id from the Request Object
-  exp: 1569937756, // Unix Timestamp; Date and time when the ID Token expires.
-  iat: 1569934156, // Unix Timestamp; Date and time when the Token was issued.
-  nonce: "6a6b57a9d4e1a130b0edbe1ec4ae8823",
-  sub_jwk: {
-    crv: "secp256k1",
-    kid: "did:vid:0x226e2e2223333c2e4c65652e452d412d50611111#key-1",
-    kty: "EC",
-    x: "7KEKZa5xJPh7WVqHJyUpb2MgEe3nA8Rk7eUlXsmBl-M",
-    y: "3zIgl_ml4RhapyEm5J7lvU-4f5jiBvZr4KgxUjEhl9o",
-  },
-};
-
 export interface TESTKEY {
   key: JWK.ECKey;
   did: string;

@@ -2,13 +2,7 @@ import * as dotenv from "dotenv";
 import axios from "axios";
 import * as didJwt from "did-jwt";
 import { JWT } from "jose";
-import {
-  DIDAUTH_HEADER,
-  DIDAUTH_REQUEST_PAYLOAD,
-  DIDAUTH_RESPONSE_PAYLOAD,
-  mockedGetEnterpriseAuthToken,
-  generateTestKey,
-} from "../AuxTest";
+import { mockedGetEnterpriseAuthToken, generateTestKey } from "../AuxTest";
 import {
   getHexPrivateKey,
   DidAuthScope,
@@ -24,6 +18,7 @@ import {
   JWTHeader,
   DidAuthErrors,
 } from "../../src";
+import * as mockedData from "../data/mockedData";
 
 // importing .env variables
 dotenv.config();
@@ -216,9 +211,9 @@ describe("vidDidAuth", () => {
       expect(nonce).toBeDefined();
       const { header, payload } = didJwt.decodeJWT(jwt);
 
-      const expectedHeader = DIDAUTH_HEADER;
+      const expectedHeader = mockedData.DIDAUTH_HEADER;
       expectedHeader.kid = `${didEntityAA}#key-1`;
-      const expectedPayload = DIDAUTH_REQUEST_PAYLOAD;
+      const expectedPayload = mockedData.DIDAUTH_REQUEST_PAYLOAD;
       expectedPayload.iss = didEntityAA;
       expectedPayload.nonce = expect.any(String) as string;
       expectedPayload.client_id = didAuthRequestCall.redirectUri;
@@ -229,6 +224,72 @@ describe("vidDidAuth", () => {
       expect(header).toMatchObject(expectedHeader);
       expect(payload).toMatchObject(expectedPayload);
       expect(payload.exp).toStrictEqual(payload.iat + 5 * 60); // 5 minutes of expiration time
+      jest.clearAllMocks();
+    });
+
+    it("should create a DID Auth Request with vc claims", async () => {
+      expect.assertions(3);
+      const WALLET_API_BASE_URL =
+        process.env.WALLET_API_URL || "http://localhost:9000";
+      const entityAA = mockedGetEnterpriseAuthToken("COMPANY AA INC");
+      const didEntityAA = entityAA.did;
+      const tokenEntityAA = entityAA.jwt;
+      const didAuthRequestCall: DidAuthRequestCall = {
+        requestUri: "https://dev.vidchain.net/siop/jwts/N7A8u4VmZfMGGdAtAAFV",
+        redirectUri: "http://localhost:8080/demo/spanish-university",
+        signatureUri: `${WALLET_API_BASE_URL}/wallet/v1/signatures`,
+        authZToken: tokenEntityAA,
+        claims: mockedData.verifiableIdOidcClaim,
+      };
+      jest.spyOn(axios, "post").mockImplementation(async () => {
+        const header: JWTHeader = {
+          alg: DidAuthKeyAlgo.ES256KR,
+          typ: "JWT",
+          kid: `${entityAA.did}#key-1`,
+        };
+        const payload = {
+          iss: entityAA.did,
+          scope: DidAuthScope.OPENID_DIDAUTHN,
+          response_type: DIdAuthResponseType.ID_TOKEN,
+          client_id: didAuthRequestCall.redirectUri,
+          nonce: getNonce(),
+          claims: didAuthRequestCall.claims,
+        };
+        const jws = await didJwt.createJWT(
+          payload,
+          {
+            issuer: entityAA.did,
+            alg: DidAuthKeyAlgo.ES256KR,
+            signer: didJwt.SimpleSigner(
+              getHexPrivateKey(entityAA.jwk).replace("0x", "")
+            ), // Removing 0x from private key as input of SimpleSigner
+            expiresIn: 5 * 60,
+          },
+          header
+        );
+        return {
+          status: 200,
+          data: { jws },
+        };
+      });
+
+      const { jwt, nonce } = await VidDidAuth.createDidAuthRequest(
+        didAuthRequestCall
+      );
+      expect(nonce).toBeDefined();
+      const { header, payload } = didJwt.decodeJWT(jwt);
+
+      const expectedHeader = mockedData.DIDAUTH_HEADER;
+      expectedHeader.kid = `${didEntityAA}#key-1`;
+      const expectedPayload = mockedData.DIDAUTH_REQUEST_PAYLOAD_CLAIMS;
+      expectedPayload.iss = didEntityAA;
+      expectedPayload.nonce = expect.any(String) as string;
+      expectedPayload.client_id = didAuthRequestCall.redirectUri;
+      expectedPayload.iat = expect.any(Number) as number;
+      expectedPayload.exp = expect.any(Number) as number;
+
+      expect(header).toMatchObject(expectedHeader);
+      expect(payload).toMatchObject(expectedPayload);
       jest.clearAllMocks();
     });
 
@@ -287,7 +348,7 @@ describe("vidDidAuth", () => {
         RPC_PROVIDER
       );
 
-      const expectedPayload = DIDAUTH_REQUEST_PAYLOAD;
+      const expectedPayload = mockedData.DIDAUTH_REQUEST_PAYLOAD;
       expectedPayload.iss = didEntityAA;
       expectedPayload.nonce = expect.any(String) as string;
       expectedPayload.client_id = didAuthRequestCall.redirectUri;
@@ -353,9 +414,9 @@ describe("vidDidAuth", () => {
       );
       const { header, payload } = didJwt.decodeJWT(didAuthJwt);
 
-      const expectedHeader = DIDAUTH_HEADER;
+      const expectedHeader = mockedData.DIDAUTH_HEADER;
       expectedHeader.kid = `${testKeyUser.did}#key-1`;
-      const expectedPayload = DIDAUTH_RESPONSE_PAYLOAD;
+      const expectedPayload = mockedData.DIDAUTH_RESPONSE_PAYLOAD;
       expectedPayload.iss = expect.stringMatching(
         DidAuthResponseIss.SELF_ISSUE
       ) as string;
@@ -374,6 +435,44 @@ describe("vidDidAuth", () => {
       expect(header).toMatchObject(expectedHeader);
       expect(payload).toMatchObject(expectedPayload);
       expect(payload.exp).toStrictEqual(payload.iat + 5 * 60); // 5 minutes of expiration time
+      jest.clearAllMocks();
+    });
+
+    it("should create a JWT DID Auth Response token with Verifiable Presentation", async () => {
+      expect.assertions(2);
+      const requestDIDAuthNonce: string = getNonce();
+      const testKeyUser = generateTestKey(DidAuthKeyType.EC);
+      const didAuthResponseCall: DidAuthResponseCall = {
+        hexPrivatekey: getHexPrivateKey(testKeyUser.key),
+        did: testKeyUser.did,
+        nonce: requestDIDAuthNonce,
+        redirectUri: "http://localhost:8080/demo/spanish-university", // just assuming that we know that
+        vp: mockedData.verifiableIdPresentation,
+      };
+      const didAuthJwt = await VidDidAuth.createDidAuthResponse(
+        didAuthResponseCall
+      );
+      const { header, payload } = didJwt.decodeJWT(didAuthJwt);
+
+      const expectedHeader = mockedData.DIDAUTH_HEADER;
+      expectedHeader.kid = `${testKeyUser.did}#key-1`;
+      const expectedPayload = mockedData.DIDAUTH_RESPONSE_PAYLOAD_VP;
+      expectedPayload.iss = expect.stringMatching(
+        DidAuthResponseIss.SELF_ISSUE
+      ) as string;
+      expectedPayload.aud = didAuthResponseCall.redirectUri;
+      expectedPayload.nonce = expect.any(String) as string;
+      expectedPayload.iat = expect.any(Number) as number;
+      expectedPayload.exp = expect.any(Number) as number;
+      expectedPayload.sub_jwk.kid = expect.stringContaining(
+        "did:vid:"
+      ) as string;
+      expectedPayload.sub_jwk.x = expect.any(String) as string;
+      expectedPayload.sub_jwk.y = expect.any(String) as string;
+      expectedPayload.sub = expect.any(String) as string;
+
+      expect(header).toMatchObject(expectedHeader);
+      expect(payload).toMatchObject(expectedPayload);
       jest.clearAllMocks();
     });
 
