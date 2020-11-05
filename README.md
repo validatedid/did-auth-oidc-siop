@@ -111,14 +111,14 @@ console.log(didAuthRequestJwt);
 
 ```javascript
 // VERIFY DID-AUTH REQUEST
-const requestPayload: DidAuthRequestPayload = await vidDidAuth.verifyDidAuthRequest(
+const requestPayload: DidAuthRequestPayload = await VidDidAuth.verifyDidAuthRequest(
   didAuthRequestJwt,
   RPC_ADDRESS,
   RPC_PROVIDER
 );
 ```
 
-- After a successful validation, user creates a DID Auth Response JWT token calling `vidDidAuth.createDidAuthResponse`, reusing the Request `nonce`.
+- After a successful validation, user creates a DID Auth Response JWT token calling `VidDidAuth.createDidAuthResponse`, reusing the Request `nonce`.
 
 ```javascript
 // CREATE A DID-AUTH RESPONSE
@@ -128,7 +128,7 @@ const didAuthResponseCall: DidAuthResponseCall = {
   nonce: requestPayload.nonce, // same nonce received as a Request Payload after verifying it
   redirectUri, // parsed URI from the DID Auth Request payload
 };
-const didAuthResponseJwt = await vidDidAuth.createDidAuthResponse(
+const didAuthResponseJwt = await VidDidAuth.createDidAuthResponse(
   didAuthResponseCall
 );
 
@@ -167,10 +167,10 @@ https://app.example.net/demo/spanish-university?response=<Signed JWT Response Ob
 ```
 <!-- prettier-ignore-end -->
 
-- RP verifies the DID Auth Response token calling `vidDidAuth.verifyDidAuthResponse` passing the stored nonce:
+- RP verifies the DID Auth Response token calling `VidDidAuth.verifyDidAuthResponse` passing the stored nonce:
 
 ```javascript
-const response = await vidDidAuth.verifyDidAuthResponse(
+const response = await VidDidAuth.verifyDidAuthResponse(
   didAuthResponseJwt, // DID Auth Response token to be validate
   "https://api.vidchain.net/wallet/signature-validations", // VIDchain wallet endpoint to validate a signature
   RPAuthZToken, // RP Access token received after calling VIDchain wallet sessions endpoint,
@@ -208,7 +208,7 @@ const enterpriseDid = "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0";
 Creates a DidAuth Request URI with a JWT signed with the RP DID key, using wallet backend endpoint URI given as a parameter `signatureUri` with an authorization token `authZToken`.
 
 ```js
-import { DidAuthRequestCall, vidDidAuth } from "@validatedid/did-auth";
+import { DidAuthRequestCall, VidDidAuth } from "@validatedid/did-auth";
 
 const didAuthRequestCall: DidAuthRequestCall = {
   redirectUri: "https://localhost:8080/demo/spanish-university",
@@ -216,7 +216,7 @@ const didAuthRequestCall: DidAuthRequestCall = {
   authZToken: enterpriseAuthZToken,
 };
 
-const { uri, nonce } = await vidDidAuth.createUriRequest(didAuthRequestCall);
+const { uri, nonce } = await VidDidAuth.createUriRequest(didAuthRequestCall);
 console.log(uri);
 // openid://?response_type=id_token&client_id=http://localhost:8080/demo/spanish-university&scope=openid did_authn&requestUri=https://dev.vidchain.net/siop/jwts/N7A8u4VmZfMGGdAtAAFV
 console.log(nonce);
@@ -228,9 +228,9 @@ console.log(nonce);
 Pass in a DID Auth Request JWT to verify the token:
 
 ```js
-import { DidAuthRequestPayload, vidDidAuth } from "@validatedid/did-auth";
+import { DidAuthRequestPayload, VidDidAuth } from "@validatedid/did-auth";
 
-const payload: DidAuthRequestPayload = await vidDidAuth.verifyDidAuthRequest(
+const payload: DidAuthRequestPayload = await VidDidAuth.verifyDidAuthRequest(
   didAuthJwt
 );
 
@@ -251,7 +251,7 @@ console.log(payload);
 Creates a DID Auth Response JWT signed with the user DID key, passed directly as a hexadecimal format.
 
 ```js
-import { DidAuthResponseCall, vidDidAuth } from "@validatedid/did-auth";
+import { DidAuthResponseCall, VidDidAuth } from "@validatedid/did-auth";
 
 const didAuthResponseCall: DidAuthResponseCall = {
   hexPrivatekey: getHexPrivateKey(testKeyUser.key),
@@ -259,7 +259,7 @@ const didAuthResponseCall: DidAuthResponseCall = {
   nonce: requestPayload.nonce,
   redirectUri,
 };
-const didAuthResponseJwt = await vidDidAuth.createDidAuthResponse(
+const didAuthResponseJwt = await VidDidAuth.createDidAuthResponse(
   didAuthResponseCall
 );
 
@@ -274,9 +274,9 @@ Pass in a DID Auth Response JWT to verify the token:
 > Note: Response code is 204. So, no response data is returned.
 
 ```js
-import { DidAuthResponsePayload, vidDidAuth } from "@validatedid/did-auth";
+import { DidAuthResponsePayload, VidDidAuth } from "@validatedid/did-auth";
 
-const response = await vidDidAuth.verifyDidAuthResponse(didAuthJwt);
+const response = await VidDidAuth.verifyDidAuthResponse(didAuthJwt);
 ```
 
 ## Verifiable Credential Exchange Flow
@@ -370,7 +370,7 @@ Response for a mandatory `VerifiableIdCredential`
 To request a specific credential on the DID Auth Request, you just need to add it to the library call.
 
 ```js
-import { DidAuthRequestCall, vidDidAuth } from "@validatedid/did-auth";
+import { DidAuthRequestCall, VidDidAuth } from "@validatedid/did-auth";
 
 const verifiableIdOidcClaim: OidcClaim = {
   vc: {
@@ -385,7 +385,7 @@ const didAuthRequestCall: DidAuthRequestCall = {
   claims: verifiableIdOidcClaim,
 };
 
-const { uri, nonce, jwt } = await vidDidAuth.createUriRequest(
+const { uri, nonce, jwt } = await VidDidAuth.createUriRequest(
   didAuthRequestCall
 );
 console.log(jwt);
@@ -421,7 +421,7 @@ console.log(jwt);
 To add a Verifiable Presentation to the DID Auth Response Object, you just need to add it to the `vp` parameter.
 
 ```js
-import { DidAuthResponseCall, vidDidAuth } from "@validatedid/did-auth";
+import { DidAuthResponseCall, VidDidAuth } from "@validatedid/did-auth";
 
 const didAuthResponseCall: DidAuthResponseCall = {
   hexPrivatekey: getHexPrivateKey(testKeyUser.key),
@@ -430,7 +430,7 @@ const didAuthResponseCall: DidAuthResponseCall = {
   redirectUri,
   vp: verifiableIdPresentation,
 };
-const didAuthResponseJwt = await vidDidAuth.createDidAuthResponse(
+const didAuthResponseJwt = await VidDidAuth.createDidAuthResponse(
   didAuthResponseCall
 );
 
