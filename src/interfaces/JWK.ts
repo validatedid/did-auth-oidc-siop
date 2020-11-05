@@ -1,5 +1,3 @@
-import { KeyObject } from "crypto";
-
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export type use = "sig" | "enc";
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -56,7 +54,6 @@ export interface Key {
   readonly x5c?: ReadonlyArray<string>;
   readonly x5t?: string;
   readonly "x5t#S256"?: string;
-  readonly keyObject: KeyObject;
 
   readonly crv?: ECCurve;
   readonly d?: string;

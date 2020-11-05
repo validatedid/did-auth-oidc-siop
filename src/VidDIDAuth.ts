@@ -6,9 +6,9 @@ import {
   JWTVerified,
 } from "did-jwt";
 import { Resolver } from "did-resolver";
-import { createHash } from "crypto";
 import VidDidResolver from "@validated-id/vid-did-resolver";
 import { AxiosResponse } from "axios";
+import SHA from "sha.js";
 import {
   DidAuthRequestCall,
   DidAuthKeyAlgo,
@@ -265,7 +265,7 @@ export default class VidDidAuth {
       x: jwk.x,
       y: jwk.y,
     };
-    const buff = createHash("sha256").update(JSON.stringify(fields)).digest();
+    const buff = SHA("sha256").update(JSON.stringify(fields)).digest();
     const thumbprint = base64urlEncodeBuffer(buff);
     return thumbprint;
   }
