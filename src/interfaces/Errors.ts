@@ -9,7 +9,6 @@ enum DidAuthErrors {
   ERROR_VALIDATING_NONCE = "Error validating nonce.",
   NO_AUDIENCE = "No audience found in JWT payload",
   INVALID_AUDIENCE = "Audience is invalid. Should be a string value.",
-  BAD_KEY_FORMAT = "Key does not have a proper format.",
 }
 
 export default DidAuthErrors;
