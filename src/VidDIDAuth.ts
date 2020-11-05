@@ -18,7 +18,7 @@ import {
   DidAuthResponsePayload,
   DidAuthResponseCall,
   DidAuthScope,
-  DIdAuthResponseType,
+  DidAuthResponseType,
   DidAuthResponseIss,
   expirationTime,
   DidAuthValidationResponse,
@@ -52,7 +52,7 @@ export default class VidDidAuth {
     const { jwt, nonce } = await VidDidAuth.createDidAuthRequest(
       didAuthRequestCall
     );
-    const responseUri = `openid://?response_type=${DIdAuthResponseType.ID_TOKEN}&client_id=${didAuthRequestCall.redirectUri}&scope=${DidAuthScope.OPENID_DIDAUTHN}&requestUri=${didAuthRequestCall.requestUri}`;
+    const responseUri = `openid://?response_type=${DidAuthResponseType.ID_TOKEN}&client_id=${didAuthRequestCall.redirectUri}&scope=${DidAuthScope.OPENID_DIDAUTHN}&requestUri=${didAuthRequestCall.requestUri}`;
     // returns a URI with Request JWT embedded
     return { uri: responseUri, nonce, jwt };
   }
@@ -179,7 +179,7 @@ export default class VidDidAuth {
     return {
       iss: (payload as EnterpriseAuthZToken).did,
       scope: DidAuthScope.OPENID_DIDAUTHN,
-      response_type: DIdAuthResponseType.ID_TOKEN,
+      response_type: DidAuthResponseType.ID_TOKEN,
       client_id: input.redirectUri,
       nonce: getNonce(),
       claims: input.claims,

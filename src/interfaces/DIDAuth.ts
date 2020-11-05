@@ -20,7 +20,7 @@ export enum DidAuthScope {
   OPENID_DIDAUTHN = "openid did_authn",
 }
 
-export enum DIdAuthResponseType {
+export enum DidAuthResponseType {
   ID_TOKEN = "id_token",
 }
 
@@ -33,7 +33,7 @@ export const expirationTime = 5 * 60; // token expires in 5 minutes (in seconds)
 export interface DidAuthRequestPayload extends JWTClaims {
   iss: string;
   scope: DidAuthScope;
-  response_type: DIdAuthResponseType;
+  response_type: DidAuthResponseType;
   client_id: string;
   nonce: string;
   did_doc?: DIDDocument;

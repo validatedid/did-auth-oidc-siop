@@ -5,7 +5,7 @@ import { getEnterpriseAuthZToken, generateTestKey } from "../AuxTest";
 import {
   getHexPrivateKey,
   DidAuthScope,
-  DIdAuthResponseType,
+  DidAuthResponseType,
   DidAuthResponseIss,
   VidDidAuth,
   DidAuthRequestCall,
@@ -40,7 +40,7 @@ describe("vidDidAuth", () => {
         didAuthRequestCall
       );
       expect(uri).toContain(`openid://`);
-      expect(uri).toContain(`?response_type=${DIdAuthResponseType.ID_TOKEN}`);
+      expect(uri).toContain(`?response_type=${DidAuthResponseType.ID_TOKEN}`);
       expect(uri).toContain(`&client_id=${didAuthRequestCall.redirectUri}`);
       expect(uri).toContain(`&scope=${DidAuthScope.OPENID_DIDAUTHN}`);
       expect(uri).toContain(`&requestUri=${didAuthRequestCall.requestUri}`);

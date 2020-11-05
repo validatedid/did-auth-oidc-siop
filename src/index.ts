@@ -10,7 +10,7 @@ export {
   DidAuthKeyCurve,
   DidAuthKeyAlgo,
   DidAuthScope,
-  DIdAuthResponseType,
+  DidAuthResponseType,
   DidAuthResponseIss,
 } from "./interfaces/DIDAuth";
 
