@@ -1,6 +1,7 @@
 import { DIDDocument } from "did-resolver";
 import { JWTClaims } from "./JWT";
-import { JWKECKey } from "./util/JWK";
+import { JWKECKey } from "./JWK";
+import { OidcClaim, VerifiablePresentation } from "./oidcSsi";
 
 export enum DidAuthKeyType {
   EC = "EC",
@@ -36,6 +37,7 @@ export interface DidAuthRequestPayload extends JWTClaims {
   client_id: string;
   nonce: string;
   did_doc?: DIDDocument;
+  claims?: OidcClaim;
 }
 
 export interface DidAuthResponsePayload extends JWTClaims {
@@ -46,6 +48,7 @@ export interface DidAuthResponsePayload extends JWTClaims {
   iat?: number;
   nonce: string;
   sub_jwk: JWKECKey;
+  vp?: VerifiablePresentation;
 }
 
 export interface DidAuthRequestCall {
@@ -53,6 +56,7 @@ export interface DidAuthRequestCall {
   requestUri: string;
   signatureUri: string;
   authZToken: string;
+  claims?: OidcClaim;
 }
 
 export interface DidAuthResponseCall {
@@ -60,6 +64,7 @@ export interface DidAuthResponseCall {
   did: string;
   nonce: string;
   redirectUri: string;
+  vp?: VerifiablePresentation;
 }
 
 export interface DidAuthValidationResponse {

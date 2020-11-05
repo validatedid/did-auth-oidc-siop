@@ -23,17 +23,21 @@ import {
   expirationTime,
   DidAuthValidationResponse,
   SignatureResponse,
-} from "./DIDAuth";
-import DidAuthErrors from "./Errors";
+} from "./interfaces/DIDAuth";
+import DidAuthErrors from "./interfaces/Errors";
 import {
   getNonce,
   doPostCallWithToken,
   getECKeyfromHexPrivateKey,
   base64urlEncodeBuffer,
 } from "./util/Util";
-import { JWTVerifyOptions, JWTHeader, EnterpriseAuthZToken } from "./JWT";
+import {
+  JWTVerifyOptions,
+  JWTHeader,
+  EnterpriseAuthZToken,
+} from "./interfaces/JWT";
 
-import * as JWK from "./util/JWK";
+import * as JWK from "./interfaces/JWK";
 
 export default class VidDidAuth {
   /**
@@ -178,6 +182,7 @@ export default class VidDidAuth {
       response_type: DIdAuthResponseType.ID_TOKEN,
       client_id: input.redirectUri,
       nonce: getNonce(),
+      claims: input.claims,
     };
   }
 
@@ -190,6 +195,7 @@ export default class VidDidAuth {
       aud: input.redirectUri,
       nonce: input.nonce,
       sub_jwk: this.getJWK(input.hexPrivatekey, `${input.did}#key-1`),
+      vp: input.vp,
     };
   }
 

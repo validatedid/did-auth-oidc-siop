@@ -2,8 +2,8 @@ import { v4 as uuidv4 } from "uuid";
 import axios, { AxiosResponse } from "axios";
 import { ethers } from "ethers";
 import { ec as EC } from "elliptic";
-import * as JWK from "./JWK";
-import DidAuthErrors from "../Errors";
+import * as JWK from "../interfaces/JWK";
+import DidAuthErrors from "../interfaces/Errors";
 
 export const prefixWith0x = (key: string): string => {
   return key.startsWith("0x") ? key : `0x${key}`;

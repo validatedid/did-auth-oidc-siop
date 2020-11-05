@@ -1,5 +1,5 @@
 import VidDidAuth from "./VidDIDAuth";
-import DidAuthErrors from "./Errors";
+import DidAuthErrors from "./interfaces/Errors";
 
 export {
   DidAuthRequestCall,
@@ -12,9 +12,9 @@ export {
   DidAuthScope,
   DIdAuthResponseType,
   DidAuthResponseIss,
-} from "./DIDAuth";
+} from "./interfaces/DIDAuth";
 
-export { JWTClaims, JWTHeader } from "./JWT";
+export { JWTClaims, JWTHeader } from "./interfaces/JWT";
 
 export { getHexPrivateKey, getDIDFromKey, getNonce } from "./util/Util";
 
