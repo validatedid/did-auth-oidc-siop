@@ -11,7 +11,7 @@ Current version supports only `ES256k` algorithm (the EC secp256k1).
 1. [Installation](#Installation)
 2. [Authentication Flow](#Authentication-Flow)
 3. [Usage](#Usage)
-4. [Optional: Verifiable Credential Exchange Flow](#Optional:-Verifiable-Credential-Exchange-Flow)
+4. [Verifiable Credential Exchange Flow](#Verifiable-Credential-Exchange-Flow)
 5. [Library Test](#Library-Test)
 
 ## Installation
@@ -279,7 +279,7 @@ import { DidAuthResponsePayload, vidDidAuth } from "@validatedid/did-auth";
 const response = await vidDidAuth.verifyDidAuthResponse(didAuthJwt);
 ```
 
-## Optional: Verifiable Credential Exchange Flow
+## Verifiable Credential Exchange Flow
 
 Library supports the Credential Exchange Flow via the claims parameter OIDC spec.
 
