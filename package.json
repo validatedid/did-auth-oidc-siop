@@ -33,6 +33,7 @@
     "lint": "eslint 'src/**/*.{js,ts,tsx}' 'tests/**/*.{js,ts,tsx}' --quiet",
     "full-lint": "tsc --noEmit && eslint 'src/**/*.{js,ts,tsx}' --quiet --fix && prettier --write 'src/**/*.{js,ts,tsx}'",
     "format": "prettier --write 'src/**/*.{js,ts,tsx}' 'tests/**/*.{js,ts,tsx}'",
+    "prepublishOnly": "tsc -p tsconfig.build.json && webpack --mode=production",
     "release": "standard-version",
     "test": "jest --runInBand --verbose false --forceExit",
     "test:watch": "jest --watch",
