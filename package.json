@@ -16,7 +16,6 @@
     "DID-SIOP"
   ],
   "main": "dist/index.js",
-  "browser": "dist/validatedid-did-auth.js",
   "types": "dist/index.d.js",
   "files": [
     "dist"
