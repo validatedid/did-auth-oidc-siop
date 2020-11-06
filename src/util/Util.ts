@@ -3,6 +3,7 @@ import axios, { AxiosResponse } from "axios";
 import { ethers } from "ethers";
 import { ec as EC } from "elliptic";
 import * as JWK from "../interfaces/JWK";
+import DidAuthErrors from "../interfaces/Errors";
 
 export const prefixWith0x = (key: string): string => {
   return key.startsWith("0x") ? key : `0x${key}`;
@@ -17,6 +18,7 @@ function toHex(data: string): string {
 }
 
 function getEthWallet(key: JWK.Key): ethers.Wallet {
+  if (!key || !key.d) throw Error(DidAuthErrors.BAD_KEY_FORMAT);
   return new ethers.Wallet(prefixWith0x(toHex(key.d)));
 }
 
