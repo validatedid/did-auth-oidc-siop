@@ -6,7 +6,7 @@ import {
   JWTVerified,
 } from "did-jwt";
 import { Resolver } from "did-resolver";
-import VidDidResolver from "@validated-id/vid-did-resolver";
+import VidDidResolver from "@validatedid/vid-did-resolver";
 import { AxiosResponse } from "axios";
 import SHA from "sha.js";
 import {

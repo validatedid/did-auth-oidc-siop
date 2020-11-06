@@ -1,6 +1,6 @@
 {
   "name": "@validatedid/did-auth",
-  "version": "0.0.1",
+  "version": "0.0.5",
   "description": "Validated ID Authentication library that implements an OIDC-SIOP with DIDs",
   "author": "Validated ID",
   "license": "Apache-2.0",
@@ -8,8 +8,15 @@
     "type": "github",
     "url": "https://github.com/validatedid/did-auth-oidc-siop.git"
   },
+  "keywords": [
+    "Authentication",
+    "DID-Auth",
+    "SIOP",
+    "OIDC",
+    "DID-SIOP"
+  ],
   "main": "dist/index.js",
-  "types": "dist/index.d.js",
+  "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],
@@ -17,7 +24,7 @@
     "audit": "audit-ci --moderate",
     "prepare": "npm run build",
     "build": "npm run clean && tsc -p tsconfig.build.json",
-    "clean": "rm -rf ./dist ./coverage ./build",
+    "clean": "rm -rf ./dist ./coverage",
     "compile": "tsc",
     "compile:dev": "tsc -w",
     "coverage": "jest --coverage",
@@ -64,7 +71,7 @@
     "typescript": "^4.0.5"
   },
   "dependencies": {
-    "@validated-id/vid-did-resolver": "0.0.7",
+    "@validatedid/vid-did-resolver": "0.0.1",
     "axios": "^0.21.0",
     "did-jwt": "^4.6.2",
     "did-resolver": "^2.1.1",
