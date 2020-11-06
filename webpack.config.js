@@ -24,7 +24,7 @@ module.exports = {
   },
   output: {
     path: path.resolve(__dirname, "dist"),
-    filename: "validatedid-did-auth.js",
+    filename: "[name].js",
     library: "@validatedid/did-auth",
     libraryTarget: "umd",
     umdNamedDefine: true,
