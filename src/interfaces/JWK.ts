@@ -37,6 +37,7 @@ export interface JWKECKey extends KeyParameters {
   x: string;
   y: string;
   d?: string;
+  kid?: string;
 }
 
 export interface Key {

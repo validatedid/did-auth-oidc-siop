@@ -1,4 +1,3 @@
-import { DIDDocument } from "did-resolver";
 import { JWTClaims } from "./JWT";
 import { JWKECKey } from "./JWK";
 import { OidcClaim, VerifiablePresentation } from "./oidcSsi";
@@ -36,7 +35,6 @@ export interface DidAuthRequestPayload extends JWTClaims {
   response_type: DidAuthResponseType;
   client_id: string;
   nonce: string;
-  did_doc?: DIDDocument;
   claims?: OidcClaim;
 }
 

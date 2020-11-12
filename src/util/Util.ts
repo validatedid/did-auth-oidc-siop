@@ -1,8 +1,8 @@
 import { v4 as uuidv4 } from "uuid";
 import axios, { AxiosResponse } from "axios";
 import { ethers } from "ethers";
-import { ec as EC } from "elliptic";
-import * as JWK from "../interfaces/JWK";
+import { decodeJWT } from "did-jwt";
+import { JWK, Errors } from "../interfaces";
 
 export const prefixWith0x = (key: string): string => {
   return key.startsWith("0x") ? key : `0x${key}`;
@@ -42,18 +42,6 @@ const base64urlEncodeBuffer = (buf: {
   return fromBase64(buf.toString("base64"));
 };
 
-function getECKeyfromHexPrivateKey(
-  hexPrivateKey: string
-): { x: string; y: string } {
-  const ec = new EC("secp256k1");
-  const privKey = ec.keyFromPrivate(hexPrivateKey);
-  const pubPoint = privKey.getPublic();
-  return {
-    x: pubPoint.getX().toString("hex"),
-    y: pubPoint.getY().toString("hex"),
-  };
-}
-
 async function doPostCallWithToken(
   url: string,
   data: unknown,
@@ -68,11 +56,19 @@ async function doPostCallWithToken(
   return response;
 }
 
+const getAudience = (jwt: string): string | undefined => {
+  const { payload } = decodeJWT(jwt);
+  if (!payload) throw new Error(Errors.NO_AUDIENCE);
+  if (!payload.aud) return undefined;
+  if (Array.isArray(payload.aud)) throw new Error(Errors.INVALID_AUDIENCE);
+  return payload.aud;
+};
+
 export {
   getNonce,
+  getAudience,
   getDIDFromKey,
   getHexPrivateKey,
   doPostCallWithToken,
   base64urlEncodeBuffer,
-  getECKeyfromHexPrivateKey,
 };

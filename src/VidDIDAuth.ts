@@ -8,12 +8,9 @@ import {
 import { Resolver } from "did-resolver";
 import VidDidResolver from "@validatedid/vid-did-resolver";
 import { AxiosResponse } from "axios";
-import SHA from "sha.js";
 import {
   DidAuthRequestCall,
   DidAuthKeyAlgo,
-  DidAuthKeyType,
-  DidAuthKeyCurve,
   DidAuthRequestPayload,
   DidAuthResponsePayload,
   DidAuthResponseCall,
@@ -25,19 +22,13 @@ import {
   SignatureResponse,
 } from "./interfaces/DIDAuth";
 import DidAuthErrors from "./interfaces/Errors";
-import {
-  getNonce,
-  doPostCallWithToken,
-  getECKeyfromHexPrivateKey,
-  base64urlEncodeBuffer,
-} from "./util/Util";
+import { getNonce, doPostCallWithToken } from "./util/Util";
 import {
   JWTVerifyOptions,
   JWTHeader,
   EnterpriseAuthZToken,
 } from "./interfaces/JWT";
-
-import * as JWK from "./interfaces/JWK";
+import { util, JWK } from "./util";
 
 export default class VidDidAuth {
   /**
@@ -95,7 +86,7 @@ export default class VidDidAuth {
   ): Promise<DidAuthRequestPayload> {
     // as audience is set in payload as a DID, it is required to be set as options
     const options: JWTVerifyOptions = {
-      audience: this.getAudience(didAuthJwt),
+      audience: util.getAudience(didAuthJwt),
       resolver: new Resolver(
         VidDidResolver.getResolver({
           rpcUrl,
@@ -191,10 +182,10 @@ export default class VidDidAuth {
   ): DidAuthResponsePayload {
     return {
       iss: DidAuthResponseIss.SELF_ISSUE,
-      sub: this.getThumbprint(input.hexPrivatekey),
+      sub: JWK.getThumbprint(input.hexPrivatekey),
       aud: input.redirectUri,
       nonce: input.nonce,
-      sub_jwk: this.getJWK(input.hexPrivatekey, `${input.did}#key-1`),
+      sub_jwk: JWK.getJWK(input.hexPrivatekey, `${input.did}#key-1`),
       vp: input.vp,
     };
   }
@@ -244,38 +235,5 @@ export default class VidDidAuth {
     )
       throw new Error(DidAuthErrors.MALFORMED_SIGNATURE_RESPONSE);
     return (response.data as SignatureResponse).jws;
-  }
-
-  private static getJWK(hexPrivateKey: string, kid?: string): JWK.JWKECKey {
-    const { x, y } = getECKeyfromHexPrivateKey(hexPrivateKey);
-    return {
-      kid,
-      kty: DidAuthKeyType.EC,
-      crv: DidAuthKeyCurve.SECP256k1,
-      x,
-      y,
-    };
-  }
-
-  private static getThumbprint(hexPrivateKey: string): string {
-    const jwk = this.getJWK(hexPrivateKey);
-    const fields = {
-      crv: jwk.crv,
-      kty: jwk.kty,
-      x: jwk.x,
-      y: jwk.y,
-    };
-    const buff = SHA("sha256").update(JSON.stringify(fields)).digest();
-    const thumbprint = base64urlEncodeBuffer(buff);
-    return thumbprint;
-  }
-
-  static getAudience(jwt: string): string | undefined {
-    const { payload } = decodeJWT(jwt);
-    if (!payload) throw new Error(DidAuthErrors.NO_AUDIENCE);
-    if (!payload.aud) return undefined;
-    if (Array.isArray(payload.aud))
-      throw new Error(DidAuthErrors.INVALID_AUDIENCE);
-    return payload.aud;
   }
 }
