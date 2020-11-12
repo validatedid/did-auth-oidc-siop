@@ -35,7 +35,7 @@ The DID Auth flow has the following steps:
 
 ```javascript
 const didAuthRequestCall: DidAuthRequestCall = {
-  requestUri: "https://app.example.net/siop/jwts/N7A8u4VmZfMGGdAtAAFV", // Endpoint where the RP will store the token so the entity can access to it later on
+  requestUri: "https://dev.vidchain.net/siop/jwts", // Endpoint where the RP will store the token so the entity can access to it later on
   redirectUri: "https://app.example.net/demo/spanish-university", // Redirect URI after successful authentication
   signatureUri: "https://api.vidchain.net/wallet/v1/signatures", // VID wallet endpoint to create a signature
   authZToken: RPAuthZToken, // RP Access token received after calling VID wallet sessions endpoint
@@ -44,7 +44,7 @@ const didAuthRequestCall: DidAuthRequestCall = {
 const { uri, nonce } = await VidDidAuth.createUriRequest(didAuthRequestCall);
 
 console.log(uri);
-// openid://?response_type=id_token&client_id=http://localhost:8080/demo/spanish-university&scope=openid did_authn&requestUri=https://dev.vidchain.net/siop/jwts/N7A8u4VmZfMGGdAtAAFV
+// openid://?response_type=id_token&client_id=http://localhost:8080/demo/spanish-university&scope=openid did_authn&requestUri=https://dev.vidchain.net/siop/jwts
 console.log(nonce);
 // 5dedb59f-cc0d-4a7d-af20-ae05eea6b9e3
 ```
@@ -211,6 +211,7 @@ Creates a DidAuth Request URI with a JWT signed with the RP DID key, using walle
 import { DidAuthRequestCall, vidDidAuth } from "@validatedid/did-auth";
 
 const didAuthRequestCall: DidAuthRequestCall = {
+  requestUri: "https://dev.vidchain.net/siop/jwts",
   redirectUri: "https://localhost:8080/demo/spanish-university",
   signatureUri: "http://api.vidchain.net/api/v1/signatures",
   authZToken: enterpriseAuthZToken,
@@ -218,7 +219,7 @@ const didAuthRequestCall: DidAuthRequestCall = {
 
 const { uri, nonce } = await vidDidAuth.createUriRequest(didAuthRequestCall);
 console.log(uri);
-// openid://?response_type=id_token&client_id=http://localhost:8080/demo/spanish-university&scope=openid did_authn&requestUri=https://dev.vidchain.net/siop/jwts/N7A8u4VmZfMGGdAtAAFV
+// openid://?response_type=id_token&client_id=http://localhost:8080/demo/spanish-university&scope=openid did_authn&requestUri=https://dev.vidchain.net/siop/jwts
 console.log(nonce);
 // 5dedb59f-cc0d-4a7d-af20-ae05eea6b9e3
 ```
@@ -379,6 +380,7 @@ const verifiableIdOidcClaim: OidcClaim = {
 };
 
 const didAuthRequestCall: DidAuthRequestCall = {
+  requestUri: "https://dev.vidchain.net/siop/jwts",
   redirectUri: "https://localhost:8080/demo/spanish-university",
   signatureUri: "http://api.vidchain.net/api/v1/signatures",
   authZToken: enterpriseAuthZToken,
