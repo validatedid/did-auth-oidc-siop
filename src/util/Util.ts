@@ -12,6 +12,13 @@ function getNonce(): string {
   return uuidv4();
 }
 
+const generateRandomString = (length = 6) =>
+  Math.random().toString(20).substr(2, length);
+
+function getState(): string {
+  return generateRandomString();
+}
+
 function toHex(data: string): string {
   return Buffer.from(data, "base64").toString("hex");
 }
@@ -66,6 +73,7 @@ const getAudience = (jwt: string): string | undefined => {
 
 export {
   getNonce,
+  getState,
   getAudience,
   getDIDFromKey,
   getHexPrivateKey,

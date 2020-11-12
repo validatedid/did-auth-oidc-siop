@@ -23,8 +23,28 @@ export enum DidAuthResponseType {
   ID_TOKEN = "id_token",
 }
 
+export enum DidAuthResponseMode {
+  FRAGMENT = "fragment",
+  FORM_POST = "form_post",
+  QUERY = "query",
+}
+
+export enum DidAuthResponseContext {
+  RP = "rp",
+  WALLET = "wallet",
+}
+
 export enum DidAuthResponseIss {
   SELF_ISSUE = "https://self-issued.me",
+}
+
+export interface RegistrationJwksUri {
+  jwks_uri: string;
+  id_token_signed_response_alg: DidAuthKeyAlgo;
+}
+
+export interface RegistrationJwks {
+  jwks: JWKECKey;
 }
 
 export const expirationTime = 5 * 60; // token expires in 5 minutes (in seconds)
@@ -32,9 +52,13 @@ export const expirationTime = 5 * 60; // token expires in 5 minutes (in seconds)
 export interface DidAuthRequestPayload extends JWTClaims {
   iss: string;
   scope: DidAuthScope;
-  response_type: DidAuthResponseType;
+  registration: RegistrationJwksUri | RegistrationJwks;
   client_id: string;
   nonce: string;
+  state: string;
+  response_type: DidAuthResponseType;
+  response_mode?: DidAuthResponseMode;
+  response_context?: DidAuthResponseContext;
   claims?: OidcClaim;
 }
 
@@ -46,14 +70,15 @@ export interface DidAuthResponsePayload extends JWTClaims {
   iat?: number;
   nonce: string;
   sub_jwk: JWKECKey;
+  did: string;
   vp?: VerifiablePresentation;
 }
 
 export interface DidAuthRequestCall {
   redirectUri: string;
-  requestUri: string;
   signatureUri: string;
   authZToken: string;
+  requestUri?: string;
   claims?: OidcClaim;
 }
 

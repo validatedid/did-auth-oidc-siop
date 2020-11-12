@@ -22,7 +22,7 @@ import {
   SignatureResponse,
 } from "./interfaces/DIDAuth";
 import DidAuthErrors from "./interfaces/Errors";
-import { getNonce, doPostCallWithToken } from "./util/Util";
+import { getNonce, doPostCallWithToken, getState } from "./util/Util";
 import {
   JWTVerifyOptions,
   JWTHeader,
@@ -170,9 +170,16 @@ export default class VidDidAuth {
     return {
       iss: (payload as EnterpriseAuthZToken).did,
       scope: DidAuthScope.OPENID_DIDAUTHN,
+      registration: {
+        jwks_uri: `${
+          (payload as EnterpriseAuthZToken).did
+        };transform-keys=jwks`,
+        id_token_signed_response_alg: DidAuthKeyAlgo.ES256K,
+      },
       response_type: DidAuthResponseType.ID_TOKEN,
       client_id: input.redirectUri,
       nonce: getNonce(),
+      state: getState(),
       claims: input.claims,
     };
   }
@@ -186,6 +193,7 @@ export default class VidDidAuth {
       aud: input.redirectUri,
       nonce: input.nonce,
       sub_jwk: JWK.getJWK(input.hexPrivatekey, `${input.did}#key-1`),
+      did: input.did,
       vp: input.vp,
     };
   }
