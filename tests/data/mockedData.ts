@@ -1,7 +1,4 @@
-import {
-  OidcClaim,
-  VerifiablePresentation,
-} from "../../src/interfaces/oidcSsi";
+import { OidcSsi } from "../../src";
 
 export const DIDAUTH_HEADER = {
   typ: "JWT",
@@ -35,13 +32,13 @@ export const DIDAUTH_RESPONSE_PAYLOAD = {
   },
 };
 
-export const verifiableIdOidcClaim: OidcClaim = {
+export const verifiableIdOidcClaim: OidcSsi.OidcClaim = {
   vc: {
     VerifiableIdCredential: { essential: true },
   },
 };
 
-export const verifiableIdPresentation: VerifiablePresentation = {
+export const verifiableIdPresentation: OidcSsi.VerifiablePresentation = {
   "@context": ["https://www.w3.org/2018/credentials/v1"],
   type: "VerifiablePresentation",
   verifiableCredential: [

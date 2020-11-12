@@ -371,9 +371,9 @@ Response for a mandatory `VerifiableIdCredential`
 To request a specific credential on the DID Auth Request, you just need to add it to the library call.
 
 ```js
-import { DidAuthRequestCall, vidDidAuth } from "@validatedid/did-auth";
+import { DidAuthRequestCall, vidDidAuth, OidcSsi } from "@validatedid/did-auth";
 
-const verifiableIdOidcClaim: OidcClaim = {
+const verifiableIdOidcClaim: OidcSsi.OidcClaim = {
   vc: {
     VerifiableIdCredential: { essential: true },
   },

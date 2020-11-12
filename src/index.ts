@@ -1,5 +1,6 @@
 import VidDidAuth from "./VidDIDAuth";
 import DidAuthErrors from "./interfaces/Errors";
+import * as OidcSsi from "./interfaces/oidcSsi";
 
 export {
   DidAuthRequestCall,
@@ -16,6 +17,8 @@ export {
 
 export { JWTClaims, JWTHeader } from "./interfaces/JWT";
 
+export { OidcClaim, OidcClaimRequest } from "./interfaces/oidcSsi";
+
 export { getHexPrivateKey, getDIDFromKey, getNonce } from "./util/Util";
 
-export { VidDidAuth, DidAuthErrors };
+export { VidDidAuth, DidAuthErrors, OidcSsi };
