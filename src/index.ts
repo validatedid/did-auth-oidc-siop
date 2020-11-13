@@ -1,24 +1,23 @@
-import VidDidAuth from "./VidDIDAuth";
 import DidAuthErrors from "./interfaces/Errors";
 import * as OidcSsi from "./interfaces/oidcSsi";
+import * as DidAuthTypes from "./interfaces/DIDAuth.types";
+import { util, JWK } from "./util";
 
 export {
-  DidAuthRequestCall,
-  DidAuthRequestPayload,
-  DidAuthResponseCall,
-  DidAuthResponsePayload,
-  DidAuthKeyType,
-  DidAuthKeyCurve,
-  DidAuthKeyAlgo,
-  DidAuthScope,
-  DidAuthResponseType,
-  DidAuthResponseIss,
-} from "./interfaces/DIDAuth";
-
+  createUriRequest,
+  createUriResponse,
+  createDidAuthRequest,
+  createDidAuthResponse,
+  verifyDidAuthRequest,
+  verifyDidAuthResponse,
+} from "./SiopDidAuth";
 export { JWTClaims, JWTHeader } from "./interfaces/JWT";
-
 export { OidcClaim, OidcClaimRequest } from "./interfaces/oidcSsi";
 
-export { getHexPrivateKey, getDIDFromKey, getNonce } from "./util/Util";
-
-export { VidDidAuth, DidAuthErrors, OidcSsi };
+export {
+  DidAuthErrors,
+  OidcSsi,
+  DidAuthTypes,
+  util as DidAuthUtil,
+  JWK as DidAuthJwk,
+};

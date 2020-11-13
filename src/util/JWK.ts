@@ -1,23 +1,42 @@
 import { ec as EC } from "elliptic";
 import SHA from "sha.js";
-import { JWK, DidAuth } from "../interfaces";
+import { JWK, types } from "../interfaces";
 import { base64urlEncodeBuffer } from "./Util";
 
-const getJWK = (hexPrivateKey: string, kid?: string): JWK.JWKECKey => {
+const getPublicJWKFromPublicHex = (
+  hexPublicKey: string,
+  kid?: string
+): JWK.JWKECKey => {
+  const ec = new EC("secp256k1");
+  const key = ec.keyFromPublic(hexPublicKey);
+  const pubPoint = key.getPublic();
+  return {
+    kid,
+    kty: types.DidAuthKeyType.EC,
+    crv: types.DidAuthKeyCurve.SECP256k1,
+    x: pubPoint.getX().toString("hex"),
+    y: pubPoint.getY().toString("hex"),
+  };
+};
+
+const getPublicJWKFromPrivateHex = (
+  hexPrivateKey: string,
+  kid?: string
+): JWK.JWKECKey => {
   const ec = new EC("secp256k1");
   const privKey = ec.keyFromPrivate(hexPrivateKey);
   const pubPoint = privKey.getPublic();
   return {
     kid,
-    kty: DidAuth.DidAuthKeyType.EC,
-    crv: DidAuth.DidAuthKeyCurve.SECP256k1,
+    kty: types.DidAuthKeyType.EC,
+    crv: types.DidAuthKeyCurve.SECP256k1,
     x: pubPoint.getX().toString("hex"),
     y: pubPoint.getY().toString("hex"),
   };
 };
 
 const getThumbprint = (hexPrivateKey: string): string => {
-  const jwk = getJWK(hexPrivateKey);
+  const jwk = getPublicJWKFromPrivateHex(hexPrivateKey);
   const fields = {
     crv: jwk.crv,
     kty: jwk.kty,
@@ -30,4 +49,4 @@ const getThumbprint = (hexPrivateKey: string): string => {
   return thumbprint;
 };
 
-export { getThumbprint, getJWK };
+export { getThumbprint, getPublicJWKFromPrivateHex, getPublicJWKFromPublicHex };

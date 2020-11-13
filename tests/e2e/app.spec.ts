@@ -103,7 +103,7 @@ describe("test DID Auth End to end flow", () => {
     const data = parse(uri);
     const redirectUri = data.client_id;
     const { requestUri } = data;
-    // const redirectUri = params.
+
     expect(redirectUri).toMatch(didAuthRequestCall.redirectUri);
     expect(requestUri).toMatch(didAuthRequestCall.requestUri);
     expect(jwt).toBeDefined();

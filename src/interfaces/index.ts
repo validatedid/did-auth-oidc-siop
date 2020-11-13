@@ -1,7 +1,7 @@
-import * as DidAuth from "./DIDAuth";
+import * as types from "./DIDAuth.types";
 import DidAuthErrors from "./Errors";
 import * as JWK from "./JWK";
 import * as JWT from "./JWT";
 import * as oidcSsi from "./oidcSsi";
 
-export { DidAuth, oidcSsi, DidAuthErrors as Errors, JWT, JWK };
+export { types, oidcSsi, DidAuthErrors, JWT, JWK };

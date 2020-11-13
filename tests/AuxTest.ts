@@ -6,14 +6,12 @@ import axios, { AxiosResponse } from "axios";
 import moment from "moment";
 import { ethers } from "ethers";
 
-import {
-  DidAuthErrors,
-  JWTClaims,
-  getDIDFromKey,
-  DidAuthKeyType,
-  DidAuthKeyCurve,
-} from "../src";
+import { DidAuthErrors, JWTClaims, DidAuthUtil } from "../src";
 import { prefixWith0x } from "../src/util/Util";
+import {
+  DidAuthKeyCurve,
+  DidAuthKeyType,
+} from "../src/interfaces/DIDAuth.types";
 
 export interface TESTKEY {
   key: JWK.ECKey;
@@ -45,7 +43,7 @@ export function generateTestKey(kty: string): TESTKEY {
       throw new Error(DidAuthErrors.NO_ALG_SUPPORTED);
   }
 
-  const did = getDIDFromKey(key);
+  const did = DidAuthUtil.getDIDFromKey(key);
 
   return {
     key,
@@ -66,14 +64,24 @@ export interface LegalEntityAuthNToken extends JWTClaims {
   nonce: string;
 }
 
+export const mockedKeyAndDid = (): {
+  hexPrivateKey: string;
+  did: string;
+  jwk: JWK.ECKey;
+} => {
+  // generate a new keypair
+  const jwk = JWK.generateSync("EC", "secp256k1", { use: "sig" });
+  const hexPrivateKey = Buffer.from(jwk.d, "base64").toString("hex");
+  const wallet: ethers.Wallet = new ethers.Wallet(prefixWith0x(hexPrivateKey));
+  const did = `did:vid:${wallet.address}`;
+  return { hexPrivateKey, did, jwk };
+};
+
 const mockedEntityAuthNToken = (
   enterpiseName?: string
 ): { jwt: string; jwk: JWK.ECKey; did: string } => {
   // generate a new keypair
-  const jwk = JWK.generateSync("EC", "secp256k1", { use: "sig" });
-  const privKeyString = Buffer.from(jwk.d, "base64").toString("hex");
-  const wallet: ethers.Wallet = new ethers.Wallet(prefixWith0x(privKeyString));
-  const did = `did:vid:${wallet.address}`;
+  const { did, jwk } = mockedKeyAndDid();
 
   const payload: LegalEntityAuthNToken = {
     iss: enterpiseName || "Test Legal Entity",

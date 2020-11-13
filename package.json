@@ -33,10 +33,10 @@
     "full-lint": "tsc --noEmit && eslint 'src/**/*.{js,ts,tsx}' --quiet --fix && prettier --write 'src/**/*.{js,ts,tsx}'",
     "format": "prettier --write 'src/**/*.{js,ts,tsx}' 'tests/**/*.{js,ts,tsx}'",
     "release": "standard-version",
-    "test": "jest --runInBand --verbose false --forceExit",
+    "test": "jest --runInBand --verbose false --detectOpenHandles --forceExit",
     "test:watch": "jest --watch",
-    "test:unit": "jest --runInBand --testPathIgnorePatterns=e2e --verbose false --forceExit",
-    "test:e2e": "jest --runInBand --testPathPattern=unit --verbose false --forceExit",
+    "test:unit": "jest --runInBand --testPathIgnorePatterns=e2e --verbose false --detectOpenHandles --forceExit",
+    "test:e2e": "jest --runInBand --testPathPattern=unit --verbose false --detectOpenHandles --forceExit",
     "clearCache": "jest --clearCache"
   },
   "devDependencies": {
