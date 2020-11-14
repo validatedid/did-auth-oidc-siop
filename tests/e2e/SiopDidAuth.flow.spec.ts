@@ -112,7 +112,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
   });
 
   it.only("create an app 2 app flow", async () => {
-    expect.assertions(5);
+    expect.assertions(6);
     const WALLET_API_BASE_URL = process.env.WALLET_API_URL;
     const entityAA = await getLegalEntityAuthZToken("ODYSSEY APP TEST");
     const authZToken = entityAA.jwt;
@@ -146,13 +146,26 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     expect(uriRequest).toBeDefined();
     expect(uriRequest).toHaveProperty("urlEncoded");
     const uriDecoded = decodeURIComponent(uriRequest.urlEncoded);
-    console.warn(uriDecoded);
     expect(uriDecoded).toContain(`openid://`);
     expect(uriDecoded).toContain(
       `?response_type=${DidAuthTypes.DidAuthResponseType.ID_TOKEN}`
     );
     const data = parse(uriDecoded);
     expect(data.request).toBeDefined();
-    console.warn(data.request);
+    const authRequestToken = data.request as string;
+
+    // verify request internally
+    const optsVerifyRequest: DidAuthVerifyOpts = {
+      verificationType: {
+        registry: process.env.DID_REGISTRY_SC_ADDRESS,
+        rpcUrl: process.env.DID_PROVIDER_RPC_URL,
+      },
+    };
+    const validationRequestResponse = await siopDidAuth.verifyDidAuthRequest(
+      authRequestToken,
+      optsVerifyRequest
+    );
+    expect(validationRequestResponse).toBeDefined();
+    console.warn(JSON.stringify(validationRequestResponse, null, 2));
   });
 });

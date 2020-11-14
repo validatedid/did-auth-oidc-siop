@@ -135,7 +135,7 @@ Let's first explain the different Request elements and then show you an example.
 - **state**: Opaque value used to maintain state between the request and the callback. Typically, Cross-Site Request Forgery (CSRF, XSRF) mitigation is done by cryptographically binding the value of this parameter with a browser cookie.
 - **claims**: OIDC additional claims, in which you can request a specific W3C Verifiable Credential type. As example, we will request a `VerifiableIdCredential`.
 
-#### Example of a Authentication Request Structure:
+#### Example of a Authentication Request Structure
 
 ```json
 {
@@ -165,6 +165,101 @@ Let's first explain the different Request elements and then show you an example.
     }
   }
 }
+```
+
+### Create an Authentication Request URI
+
+With the previous Authentication Request Structure you can initate the flow to create an Authentication Request URI and redirect it to the vidWallet App.
+
+Example:
+
+```js
+import * as siopDidAuth from "@validatedid/did-auth";
+
+const uriRequest = await siopDidAuth.createUriRequest(requestOpts);
+
+console.log(uriRequest);
+//     {
+//      urlEncoded: 'vidchain%3A%2F%2Fdid-auth%3Fopenid%3A%2F%2F%3Fresponse_type%3Did_token%26client_id%3Dodysseyapp%3A%2F%2Fexample%2Fdid-auth%26scope%3Dopenid%20did_authn%26state%3D5bb6601229e0b922ddc52259%26nonce%3DjRn2K8vDknh6_l40EaprqixvRwRsHpQpTi715aQrWPU%26request%3DeyJhbGciOiJFUzI1NkstUiIsInR5cCI6IkpXVCIsImtpZCI6ImRpZDp2aWQ6MHg4NEI2MEFkYjcwZjU1YzVjZDhlYTM5NzFBYUMyNzJjM2EwYmRCNjcwI2tleS0xIn0.eyJpYXQiOjE2MDUzNjIwODksImV4cCI6MTYwNTM2MjM4OSwiaXNzIjoiZGlkOnZpZDoweDg0QjYwQWRiNzBmNTVjNWNkOGVhMzk3MUFhQzI3MmMzYTBiZEI2NzAiLCJzY29wZSI6Im9wZW5pZCBkaWRfYXV0aG4iLCJyZWdpc3RyYXRpb24iOnsiandrc191cmkiOiJodHRwczovL2Rldi52aWRjaGFpbi5uZXQvYXBpL3YxL2lkZW50aWZpZXJzL2RpZDp2aWQ6MHg4NEI2MEFkYjcwZjU1YzVjZDhlYTM5NzFBYUMyNzJjM2EwYmRCNjcwO3RyYW5zZm9ybS1rZXlzPWp3a3MiLCJpZF90b2tlbl9zaWduZWRfcmVzcG9uc2VfYWxnIjoiRVMyNTZLIn0sImNsaWVudF9pZCI6Im9keXNzZXlhcHA6Ly9leGFtcGxlL2RpZC1hdXRoIiwibm9uY2UiOiJqUm4ySzh2RGtuaDZfbDQwRWFwcnFpeHZSd1JzSHBRcFRpNzE1YVFyV1BVIiwic3RhdGUiOiI1YmI2NjAxMjI5ZTBiOTIyZGRjNTIyNTkiLCJyZXNwb25zZV90eXBlIjoiaWRfdG9rZW4iLCJyZXNwb25zZV9tb2RlIjoiZnJhZ21lbnQiLCJyZXNwb25zZV9jb250ZXh0IjoicnAiLCJjbGFpbXMiOnsidmMiOnsiVmVyaWZpYWJsZUlkQ3JlZGVudGlhbCI6eyJlc3NlbnRpYWwiOnRydWV9fX19.AXacqs1vlEIVwidrfdyZMMKrToobD4CYUCbe8VMkjoIkHYu94f3ACk09-jDz1nLs6-1vM5hIl4_e5ZDnm7B1uAA',
+//      encoding: 'application/x-www-form-urlencoded'
+//    }
+```
+
+At that moment, you can perfom a redirect from the `uriRequest.urlEncoded`. Keep in mind that this Url is an UriEncoded.
+
+If you want to read it as a regular Url, you just decode it:
+
+```js
+const uriDecoded = decodeURIComponent(uriRequest.urlEncoded);
+
+console.log(uriDecoded);
+// vidchain://did-auth?openid://?response_type=id_token&client_id=odysseyapp://example/did-auth&scope=openid did_authn&state=5bb6601229e0b922ddc52259&nonce=jRn2K8vDknh6_l40EaprqixvRwRsHpQpTi715aQrWPU&request=eyJhbGciOiJFUzI1NkstUiIsInR5cCI6IkpXVCIsImtpZCI6ImRpZDp2aWQ6MHg4NEI2MEFkYjcwZjU1YzVjZDhlYTM5NzFBYUMyNzJjM2EwYmRCNjcwI2tleS0xIn0.eyJpYXQiOjE2MDUzNjIwODksImV4cCI6MTYwNTM2MjM4OSwiaXNzIjoiZGlkOnZpZDoweDg0QjYwQWRiNzBmNTVjNWNkOGVhMzk3MUFhQzI3MmMzYTBiZEI2NzAiLCJzY29wZSI6Im9wZW5pZCBkaWRfYXV0aG4iLCJyZWdpc3RyYXRpb24iOnsiandrc191cmkiOiJodHRwczovL2Rldi52aWRjaGFpbi5uZXQvYXBpL3YxL2lkZW50aWZpZXJzL2RpZDp2aWQ6MHg4NEI2MEFkYjcwZjU1YzVjZDhlYTM5NzFBYUMyNzJjM2EwYmRCNjcwO3RyYW5zZm9ybS1rZXlzPWp3a3MiLCJpZF90b2tlbl9zaWduZWRfcmVzcG9uc2VfYWxnIjoiRVMyNTZLIn0sImNsaWVudF9pZCI6Im9keXNzZXlhcHA6Ly9leGFtcGxlL2RpZC1hdXRoIiwibm9uY2UiOiJqUm4ySzh2RGtuaDZfbDQwRWFwcnFpeHZSd1JzSHBRcFRpNzE1YVFyV1BVIiwic3RhdGUiOiI1YmI2NjAxMjI5ZTBiOTIyZGRjNTIyNTkiLCJyZXNwb25zZV90eXBlIjoiaWRfdG9rZW4iLCJyZXNwb25zZV9tb2RlIjoiZnJhZ21lbnQiLCJyZXNwb25zZV9jb250ZXh0IjoicnAiLCJjbGFpbXMiOnsidmMiOnsiVmVyaWZpYWJsZUlkQ3JlZGVudGlhbCI6eyJlc3NlbnRpYWwiOnRydWV9fX19.AXacqs1vlEIVwidrfdyZMMKrToobD4CYUCbe8VMkjoIkHYu94f3ACk09-jDz1nLs6-1vM5hIl4_e5ZDnm7B1uAA
+```
+
+### From vidWallet App, verify the received deeplink Url
+
+In the vidWallet App, receive the deeplink, decode it, and obtain the Authentication Request Token to validated it.
+
+To call `verifyDidAuthRequest` you need to create a `DidAuthVerifyOpts` that contains the following parameters:
+
+- **verificationType**: Whether you want to perform a verification internally or via VIDcredentials API. In this case, we perform it internally.
+- **registry**: Smart Contract to resolve the DID.
+- **rpcUrl**: Url to the verification method.
+
+> Note: Ask Validated ID if you need it the `registry` and `rpcUrl`
+
+Example:
+Assuming that the `urlEncoded` is the deeplink you receive as a redirect.
+
+```js
+import { parse } from "querystring";
+import * as siopDidAuth from "../../src";
+
+const uriDecoded = decodeURIComponent(urlEncoded);
+
+const data = parse(uriDecoded);
+const authRequestToken = data.request as string;
+
+// verify request internally
+const optsVerifyRequest: DidAuthVerifyOpts = {
+  verificationType: {
+    registry: DID_REGISTRY_SC_ADDRESS,
+    rpcUrl: DID_PROVIDER_RPC_URL,
+  },
+};
+
+const validationRequestResponse = await siopDidAuth.verifyDidAuthRequest(
+      authRequestToken,
+      optsVerifyRequest
+    );
+
+console.log(validationRequestResponse);
+// {
+//      "signatureValidation": true,
+//      "payload": {
+//        "iat": 1605364884,
+//        "exp": 1605365184,
+//        "iss": "did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670",
+//        "scope": "openid did_authn",
+//        "registration": {
+//          "jwks_uri": "https://dev.vidchain.net/api/v1/identifiers/did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670;transform-keys=jwks",
+//          "id_token_signed_response_alg": "ES256K"
+//        },
+//        "client_id": "odysseyapp://example/did-auth",
+//        "nonce": "H7R5lqrXMf_hf-xCDSQrTnml1kBKLrTThCn4YdzshAc",
+//        "state": "15ebd31369ec9d26cd883f56",
+//        "response_type": "id_token",
+//        "response_mode": "fragment",
+//        "response_context": "rp",
+//        "claims": {
+//          "vc": {
+//            "VerifiableIdCredential": {
+//              "essential": true
+//            }
+//          }
+//        }
+//      }
+//    }
 ```
 
 ## Authentication Flow
