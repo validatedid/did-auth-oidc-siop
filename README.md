@@ -9,10 +9,8 @@ Current version supports only `ES256k` algorithm (the EC secp256k1).
 ## Table of Contents
 
 1. [Installation](#Installation)
-2. [Authentication Flow](#Authentication-Flow)
-3. [Usage](#Usage)
-4. [Verifiable Credential Exchange Flow](#Verifiable-Credential-Exchange-Flow)
-5. [Library Test](#Library-Test)
+2. [App 2 App Authentication Flow with VIDcredentials API](#App-2-App-Authentication-Flow-with-VIDcredentials-API)
+3. [Library Test](#Library-Test)
 
 ## Installation
 
@@ -24,6 +22,149 @@ or if you use `yarn`
 
 ```bash
 yarn add @validatedid/did-auth
+```
+
+## App 2 App Authentication Flow with VIDcredentials API
+
+When a new App, called Odyssey App, wants to connect to to the vidWallet App, and perform an app2app authentication with an exchange of DIDs and request a Verifiable Credential to a user, it can use this flow to make it possible.
+
+Let's explain the stepts of this authentication:
+
+### Ask ValidatedID for a new API KEY to access VIDcredentials API
+
+You will need to provide a name to identify your Odyssey App, for instace: `ODYSSEY APP TEST`
+Let's use the following example `APIKEY=4ae5f694-98f2-479c-a5be-2c0edb569fb3`
+
+### Request an Access Token to VIDcredentials API for further calls
+
+With your Api Key you can call VIDCredentials API to get an Access Token.
+
+You need first to know the VIDCredentials URL and the audience for the token payload:
+
+- `VIDCredentials API URL` = `https://api.vidchain.net`
+- `audience` = `vidchain-api`
+
+Here is an example code to to so:
+
+```js
+import axios from "axios";
+import moment from "moment";
+import { v4 as uuidv4 } from "uuid";
+import { JWT } from "jose";
+
+function getEnterpriseDID(token: string): string {
+  const { payload } = JWT.decode(token, { complete: true });
+
+  return (payload as IEnterpriseAuthZToken).did;
+}
+
+const getEntityAuthNToken = async (
+  enterpiseName: string,
+  apiKey: string,
+): Promise<{ jwt: string }> => {
+  const payload: LegalEntityAuthNToken = {
+    iss: enterpiseName,
+    aud: audience,
+    iat: moment().unix(),
+    exp: moment().add(15, "minutes").unix(),
+    nonce: uuidv4(),
+    apiKey: apiKey,
+  };
+
+  const jwt = Buffer.from(JSON.stringify(payload)).toString("base64");
+  return { jwt };
+};
+
+const getLegalEntityAuthZToken = async (
+  enterpiseName: string,
+  apiKey: string
+): Promise<{
+  jwt: string;
+  did: string;
+}> => {
+  const VIDCREDENTIALS_API_BASE_URL = "https://api.vidchain.net";
+  const auth = await getEntityAuthNToken(enterpiseName, apiKey);
+  const payload = {
+    grantType: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+    assertion: auth.jwt,
+    scope: "vidchain profile entity",
+  };
+
+  // Create and sign JWT
+  const result = await axios.post(
+    `${VIDCREDENTIALS_API_BASE_URL}/api/v1/sessions`,
+    payload
+  );
+  const { accessToken } = result.data as AccessTokenResponseBody;
+
+  return {
+    jwt: accessToken,
+    did: getEnterpriseDID(accessToken),
+  };
+};
+
+const odysseyEntity = await getLegalEntityAuthZToken("ODYSSEY APP TEST", "4ae5f694-98f2-479c-a5be-2c0edb569fb3");
+
+const authZToken = odysseyEntity.jwt;
+const entityDid = odysseyEntity.did;
+
+```
+
+Now on `authZToken` you have an Access Token to call VIDCredentials API and you also got your DID.
+
+```js
+console.log(authZToken);
+// eyJhbGciOiJFUzI1NksiLCJ0eXAiOiJKV1QiLCJraWQiOiJ2aWRjaGFpbi1hcGkifQ.eyJzdWIiOiJPRFlTU0VZIEFQUCBURVNUIiwiZGlkIjoiZGlkOnZpZDoweDg0QjYwQWRiNzBmNTVjNWNkOGVhMzk3MUFhQzI3MmMzYTBiZEI2NzAiLCJub25jZSI6ImYxYzA3NWVjLWZmMDAtNDY1Zi04ZmI1LTU2MDBjZGU0MjVhNiIsImlhdCI6MTYwNTM1ODkxOCwiZXhwIjoxNjA1MzU5ODE4LCJhdWQiOiJ2aWRjaGFpbi1hcGkifQ.oRl-KFo_0DuAFdVqcVXOaMorlLWnMedzIvXjKMvjK-rJesa4dQ9YoyEwQUnIQOsbwxQ7Sfg3C7AhiqvNhEkQeA
+console.log(entityDid);
+// did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670
+```
+
+### Prepare Authentication Request Data
+
+To initate the flow you need to set the Authentication Request Data.
+
+Let's first explain the different Request elements and then show you an example.
+
+- **oidpUri**: Open Id Provider Url address. To connect to vidWallet: `vidchain://did-auth`
+- **redirectUri**: This is your App deeplink to redirect the Authentication Response. Example: `odysseyapp://example/did-auth`
+- **requestObjectBy**: Whether you want to generate the Authentication Request embedded in the url or via reference. For this particular flow, it will be embedded in the url.
+- **signatureType**: Whether you want to sign the Authentication Request using your own private key or externally. For this particular flow, you will use VIDCredentials API as an external signature type.
+- **registrationType**: Whether you want to generate a Registration Object from your keys as a value or as a reference. In this case, it will be as reference using VIDCredentials API.
+- **responseMode**: Specifies the way you want to receive the Authentication Response. In this case, it will be `fragment`, which is the default value.
+- **responseContext**: Specifies whether the response should be returned to the redirect URI in the intiator context, or whether the response can be returned in a new/empty context. In this case, it will be in the same context (a mobile device). The default `responseContext` is `rp`, indicating that the response should be submitted in the existing initiator context.
+- **state**: Opaque value used to maintain state between the request and the callback. Typically, Cross-Site Request Forgery (CSRF, XSRF) mitigation is done by cryptographically binding the value of this parameter with a browser cookie.
+- **claims**: OIDC additional claims, in which you can request a specific W3C Verifiable Credential type. As example, we will request a `VerifiableIdCredential`.
+
+#### Example of a Authentication Request Structure:
+
+```json
+{
+  "oidpUri": "vidchain://did-auth",
+  "redirectUri": "odysseyapp://example/did-auth",
+  "requestObjectBy": {
+    "type": "VALUE"
+  },
+  "signatureType": {
+    "signatureUri": "https://api.vidchain.net/api/v1/signatures",
+    "did": "did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670",
+    "authZToken": "eyJhbGciOiJFUzI1NksiLCJ0eXAiOiJKV1QiLCJraWQiOiJ2aWRjaGFpbi1hcGkifQ.eyJzdWIiOiJPRFlTU0VZIEFQUCBURVNUIiwiZGlkIjoiZGlkOnZpZDoweDg0QjYwQWRiNzBmNTVjNWNkOGVhMzk3MUFhQzI3MmMzYTBiZEI2NzAiLCJub25jZSI6IjY1MmFhN2Q0LWVhYTctNDEyZi04YjFlLTZhMzJhOWYzODQxNiIsImlhdCI6MTYwNTM2MDI1OSwiZXhwIjoxNjA1MzYxMTU5LCJhdWQiOiJ2aWRjaGFpbi1hcGkifQ.ooEH46tETgCRxFe_UMlPrnkJja2lyxuoF_MdlPgQKDqkeLjOESd_Qev6hKiV-ksdpH3E99Oq_OMdsgmnw-57WA",
+    "kid": "did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670#key-1"
+  },
+  "registrationType": {
+    "type": "REFERENCE",
+    "referenceUri": "https://api.vidchain.net/api/v1/identifiers/did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670;transform-keys=jwks"
+  },
+  "responseMode": "fragment",
+  "responseContext": "rp",
+  "state": "1f50031ed2e57ed52cf5fc81",
+  "claims": {
+    "vc": {
+      "VerifiableIdCredential": {
+        "essential": true
+      }
+    }
+  }
+}
 ```
 
 ## Authentication Flow
