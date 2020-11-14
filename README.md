@@ -2,7 +2,7 @@
 
 > This is a ValidatedID version of did-auth protocol to authenticate a user and a Relaying Party using vid DIDs.
 
-The current DID Auth implementation follows [DID SIOP Auth](https://identity.foundation/did-siop/), which uses two JSON Web Tokens (JWT) signed by both two parties DID keys in a double challenge-response authentication. Is is also supported the protocol to exchange Verifiable Credentials as part of the ID token response.
+The current DID Auth implementation follows [DID SIOP Auth](https://identity.foundation/did-siop/), which uses two JSON Web Tokens (JWT) signed by both two parties DID keys in a double challenge-response authentication. It is also supported the protocol to exchange Verifiable Credentials as part of the ID token response.
 
 Current version supports only `ES256k` algorithm (the EC secp256k1).
 
@@ -26,9 +26,11 @@ yarn add @validatedid/did-auth
 
 ## App 2 App Authentication Flow with VIDcredentials API
 
-When a new App, called Odyssey App, wants to connect to to the vidWallet App, and perform an app2app authentication with an exchange of DIDs and request a Verifiable Credential to a user, it can use this flow to make it possible.
+![App 2 App Authentication Flow Design](img/siop-vc-exchange.png "Design")
 
-Let's explain the stepts of this authentication:
+When a new App, called Odyssey App, wants to connect to to the VIDwallet App, and perform an app2app authentication with an exchange of DIDs and request a Verifiable Credential to a user, it can use this flow to make it possible.
+
+Let's explain the steps of this authentication:
 
 ### Ask ValidatedID for a new API KEY to access VIDcredentials API
 
@@ -37,11 +39,11 @@ Let's use the following example `APIKEY=4ae5f694-98f2-479c-a5be-2c0edb569fb3`
 
 ### Request an Access Token to VIDcredentials API for further calls
 
-With your Api Key you can call VIDCredentials API to get an Access Token.
+With your Api Key you can call VIDcredentials API to get an Access Token.
 
-You need first to know the VIDCredentials URL and the audience for the token payload:
+You first need to know the VIDcredentials URL and the `audience` for the token payload:
 
-- `VIDCredentials API URL` = `https://api.vidchain.net`
+- `VIDcredentials API URL` = `https://api.vidchain.net`
 - `audience` = `vidchain-api`
 
 Here is an example code to to so:
@@ -110,7 +112,7 @@ const entityDid = odysseyEntity.did;
 
 ```
 
-Now on `authZToken` you have an Access Token to call VIDCredentials API and you also got your DID.
+Now on `authZToken` you have an Access Token to call VIDcredentials API and you also got your DID.
 
 ```js
 console.log(authZToken);
@@ -123,17 +125,17 @@ console.log(entityDid);
 
 To initate the flow you need to set the Authentication Request Data.
 
-Let's first explain the different Request elements and then show you an example.
+Let's first explain the different Request elements and then show you an example:
 
-- **oidpUri**: Open Id Provider Url address. To connect to vidWallet: `vidchain://did-auth`
+- **oidpUri**: Open Id Provider url address. To connect to VIDwallet: `vidchain://did-auth`
 - **redirectUri**: This is your App deeplink to redirect the Authentication Response. Example: `odysseyapp://example/did-auth`
 - **requestObjectBy**: Whether you want to generate the Authentication Request embedded in the url or via reference. For this particular flow, it will be embedded in the url.
-- **signatureType**: Whether you want to sign the Authentication Request using your own private key or externally. For this particular flow, you will use VIDCredentials API as an external signature type.
-- **registrationType**: Whether you want to generate a Registration Object from your keys as a value or as a reference. In this case, it will be as reference using VIDCredentials API.
+- **signatureType**: Whether you want to sign the Authentication Request using your own private key or externally. For this particular flow, you will use VIDcredentials API as an external signature type.
+- **registrationType**: Whether you want to generate a Registration Object from your keys as a value or as a reference. In this case, it will be as reference using VIDcredentials API.
 - **responseMode**: Specifies the way you want to receive the Authentication Response. In this case, it will be `fragment`, which is the default value.
 - **responseContext**: Specifies whether the response should be returned to the redirect URI in the intiator context, or whether the response can be returned in a new/empty context. In this case, it will be in the same context (a mobile device). The default `responseContext` is `rp`, indicating that the response should be submitted in the existing initiator context.
 - **state**: Opaque value used to maintain state between the request and the callback. Typically, Cross-Site Request Forgery (CSRF, XSRF) mitigation is done by cryptographically binding the value of this parameter with a browser cookie.
-- **claims**: OIDC additional claims, in which you can request a specific W3C Verifiable Credential type. As example, we will request a `VerifiableIdCredential`.
+- **claims**: OIDC additional claims, in which you can request a specific W3C Verifiable Credential type. As an example, we will request a `VerifiableIdCredential`.
 
 #### Example of a Authentication Request Structure
 
@@ -169,9 +171,11 @@ Let's first explain the different Request elements and then show you an example.
 
 ### Create an Authentication Request URI
 
-With the previous Authentication Request Structure you can initate the flow to create an Authentication Request URI and redirect it to the vidWallet App.
+With the previous Authentication Request Structure you can initate the flow to create an Authentication Request URI and redirect it to the VIDwallet App.
 
 Example:
+
+Declare the example structure before as `requestOpts`.
 
 ```js
 import * as siopDidAuth from "@validatedid/did-auth";
@@ -196,20 +200,20 @@ console.log(uriDecoded);
 // vidchain://did-auth?openid://?response_type=id_token&client_id=odysseyapp://example/did-auth&scope=openid did_authn&state=5bb6601229e0b922ddc52259&nonce=jRn2K8vDknh6_l40EaprqixvRwRsHpQpTi715aQrWPU&request=eyJhbGciOiJFUzI1NkstUiIsInR5cCI6IkpXVCIsImtpZCI6ImRpZDp2aWQ6MHg4NEI2MEFkYjcwZjU1YzVjZDhlYTM5NzFBYUMyNzJjM2EwYmRCNjcwI2tleS0xIn0.eyJpYXQiOjE2MDUzNjIwODksImV4cCI6MTYwNTM2MjM4OSwiaXNzIjoiZGlkOnZpZDoweDg0QjYwQWRiNzBmNTVjNWNkOGVhMzk3MUFhQzI3MmMzYTBiZEI2NzAiLCJzY29wZSI6Im9wZW5pZCBkaWRfYXV0aG4iLCJyZWdpc3RyYXRpb24iOnsiandrc191cmkiOiJodHRwczovL2Rldi52aWRjaGFpbi5uZXQvYXBpL3YxL2lkZW50aWZpZXJzL2RpZDp2aWQ6MHg4NEI2MEFkYjcwZjU1YzVjZDhlYTM5NzFBYUMyNzJjM2EwYmRCNjcwO3RyYW5zZm9ybS1rZXlzPWp3a3MiLCJpZF90b2tlbl9zaWduZWRfcmVzcG9uc2VfYWxnIjoiRVMyNTZLIn0sImNsaWVudF9pZCI6Im9keXNzZXlhcHA6Ly9leGFtcGxlL2RpZC1hdXRoIiwibm9uY2UiOiJqUm4ySzh2RGtuaDZfbDQwRWFwcnFpeHZSd1JzSHBRcFRpNzE1YVFyV1BVIiwic3RhdGUiOiI1YmI2NjAxMjI5ZTBiOTIyZGRjNTIyNTkiLCJyZXNwb25zZV90eXBlIjoiaWRfdG9rZW4iLCJyZXNwb25zZV9tb2RlIjoiZnJhZ21lbnQiLCJyZXNwb25zZV9jb250ZXh0IjoicnAiLCJjbGFpbXMiOnsidmMiOnsiVmVyaWZpYWJsZUlkQ3JlZGVudGlhbCI6eyJlc3NlbnRpYWwiOnRydWV9fX19.AXacqs1vlEIVwidrfdyZMMKrToobD4CYUCbe8VMkjoIkHYu94f3ACk09-jDz1nLs6-1vM5hIl4_e5ZDnm7B1uAA
 ```
 
-### From vidWallet App, verify the received deeplink Url
+### VIDwallet App verifies the received deeplink Url
 
-In the vidWallet App, receive the deeplink, decode it, and obtain the Authentication Request Token to validated it.
+VIDwallet App receives the deeplink, decodes it, and obtains the Authentication Request Token to validated it.
 
-To call `verifyDidAuthRequest` you need to create a `DidAuthVerifyOpts` that contains the following parameters:
+To call `verifyDidAuthRequest` requires a `DidAuthVerifyOpts` structure that contains the following parameters:
 
 - **verificationType**: Whether you want to perform a verification internally or via VIDcredentials API. In this case, we perform it internally.
 - **registry**: Smart Contract to resolve the DID.
 - **rpcUrl**: Url to the verification method.
 
-> Note: Ask Validated ID if you need it the `registry` and `rpcUrl`
+> Note: `registry` and `rpcUrl` depends on did method to use.
 
 Example:
-Assuming that the `urlEncoded` is the deeplink you receive as a redirect.
+Assuming that the `urlEncoded` is the deeplink VIDwallet receives as a redirect.
 
 ```js
 import { parse } from "querystring";
@@ -262,17 +266,17 @@ console.log(validationRequestResponse);
 //    }
 ```
 
-### vidWallet prepares the Authentication Response Structure
+### VIDwallet prepares the Authentication Response Structure
 
-Similary as before, let's first explain the different Response elements and then show you an example.
+Similary as before, let's first explain the different Response elements and then show an example:
 
 - **redirectUri**: This is the intiator App deeplink included in the Request to redirect the Authentication Response.
-- **signatureType**: Whether you want to sign the Authentication Response using your own private key or externally. For this particular flow, we will use our private key managed by vidWallet.
+- **signatureType**: Whether you want to sign the Authentication Response using your own private key or externally. For this particular flow, we will use our private key managed by VIDwallet.
 - **nonce**: Nonce value included in the Authentication Request Token received.
 - **state**: State value included in the Authentication Request Token received.
 - **registrationType**: Whether you want to generate a Registration Object from your keys as a value or as a reference. In this case, it will use the `value` option.
 - **responseMode**: Specifies the way you want to receive the Authentication Response. In this case, it will be `fragment`, which is the default value.
-- **did**: User DID from the private key in vidWallet used to perform the signature.
+- **did**: User DID from the private key in VIDwallet used to perform the signature.
 - **vp**: A claim response that includes a Verifiable Presentation with the Verifiable Credential type/s requested.
 
 Example:
@@ -337,7 +341,7 @@ Example:
 }
 ```
 
-### vidWallet creates an Authentication Response URI
+### VIDwallet creates an Authentication Response URI
 
 With previous Authentication Response Structure data, we can call the library to create an Authentication Response URI encoded, and ready to be redirected to the initiator's App.
 
@@ -346,7 +350,7 @@ Example:
 ```js
 const uriResponse = await siopDidAuth.createUriResponse(responseOpts);
 
-console.warn(uriResponse);
+console.log(uriResponse);
 //     {
 //      urlEncoded: 'odysseyapp%3A%2F%2Fexample%2Fdid-auth%23id_token%3DeyJhbGciOiJFUzI1NkstUiIsInR5cCI6IkpXVCIsImtpZCI6ImRpZDp2aWQ6MHgzNDk5YTc3MjA5MmVlMUE2NzBlNjkyOGMxMmE5QkY4NGU0NDU0OWI4I2tleS0xIn0.eyJpYXQiOjE2MDUzNjcwNTQsImV4cCI6MTYwNTM2NzM1NCwiaXNzIjoiaHR0cHM6Ly9zZWxmLWlzc3VlZC5tZSIsInN1YiI6IkdBR0xJRVJJZG84Slg0X3hOOVplZlNkY3dXRmdkQzNIN3MyMEd3Wmh1OUkiLCJub25jZSI6IlNJYUpXQ1NqeFRHMjdJUHhpS2Z1ZUk1WFhYVVNoTzdTWURsek5ES0o2TlUiLCJhdWQiOiJvZHlzc2V5YXBwOi8vZXhhbXBsZS9kaWQtYXV0aCIsInN1Yl9qd2siOnsia2lkIjoiZGlkOnZpZDoweDM0OTlhNzcyMDkyZWUxQTY3MGU2OTI4YzEyYTlCRjg0ZTQ0NTQ5Yjgja2V5LTEiLCJrdHkiOiJFQyIsImNydiI6InNlY3AyNTZrMSIsIngiOiJiOTkzMWZhMTk5ZTcwMTIxNDZhN2QzM2YyNDAyODI3NGUxZDkyODM1NTQ1MWVhMjdiNjhjMjI4NThlYjQzNDY0IiwieSI6IjM3NTFlNDg5YjUxMTJmNjMwZDE2ZmNiYTZkNjU2MjhlZGIzZWFlNmM4ZjFiZTJlOWEzMTMxNWJmN2Q0MmY3NjEifSwiZGlkIjoiZGlkOnZpZDoweDM0OTlhNzcyMDkyZWUxQTY3MGU2OTI4YzEyYTlCRjg0ZTQ0NTQ5YjgiLCJ2cCI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSJdLCJ0eXBlIjoiVmVyaWZpYWJsZVByZXNlbnRhdGlvbiIsInZlcmlmaWFibGVDcmVkZW50aWFsIjpbeyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vYXBpLnZpZGNoYWluLm5ldC9jcmVkZW50aWFscy92ZXJpZmlhYmxlSWQvdjEiXSwiaWQiOiJodHRwczovL2FwaS52aWRjaGFpbi5uZXQvYXBpL3YxL3NjaGVtYXMvMjM5MSIsInR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJWZXJpZmlhYmxlSWRDcmVkZW50aWFsIl0sImlzc3VlciI6ImRpZDp2aWQ6MHg1MjA4NDMxQzZFQzJlYzQwOTdhZUE3MTgyYkI5MmQwMTg3NjY0OThjIiwiY3JlZGVudGlhbFN1YmplY3QiOnsiaWQiOiJkaWQ6dmlkOjB4ODcwN0NDYTgzNUM5NjEzMzREM0Y2NDUwQzZhNjFhMEFENjU5MjQ2MCIsImZpcnN0TmFtZSI6IkV2YSIsImxhc3ROYW1lIjoiTW9ucm9lIiwiZ2VuZGVyIjoiRmVtYWxlIiwiZGF0ZU9mQmlydGgiOiIxMi8xMS8xOTcwIiwicGxhY2VPZkJpcnRoIjoiTWFkcmlkIiwiY3VycmVudEFkZHJlc3MiOiJBcmFnbyAxNzkgNGEiLCJjaXR5IjoiQmFyY2Vsb25hIiwic3RhdGUiOiJDYXRhbHXDsWEiLCJ6aXAiOiIwODAxMSJ9LCJpc3N1YW5jZURhdGUiOiIyMDE5LTExLTE3VDE0OjAwOjAwWiIsInByb29mIjp7InR5cGUiOiJFY2RzYVNlY3AyNTZrMVNpZ25hdHVyZTIwMTkiLCJjcmVhdGVkIjoiMjAxOS0xMS0xN1QxNDowMDowMFoiLCJwcm9vZlB1cnBvc2UiOiJhc3NlcnRpb25NZXRob2QiLCJ2ZXJpZmljYXRpb25NZXRob2QiOiJkaWQ6dmlkOjB4NTIwODQzMUM2RUMyZWM0MDk3YWVBNzE4MmJCOTJkMDE4NzY2NDk4YyNrZXktMSIsImp3cyI6ImV5SmhiR2NpT2lKRlV6STFOa3N0VWlJc0luUjVjQ0k2SWtwWFZDSXNJbXRwWkNJNkltUnBaRHAyYVdRNk1IZ3pZV1F6WmtZNFJUVmhRamhFTmprelF6STRRbVJFT1VJME4yVmtSREZtTnpRME5VWTRZek5HSTJ0bGVTMHhJbjAuZXlKcFlYUWlPakUxT1RFM09UazFNRFFzSW5aaklqcDdJa0JqYjI1MFpYaDBJanBiSW1oMGRIQnpPaTh2ZDNkM0xuY3pMbTl5Wnk4eU1ERTRMMk55WldSbGJuUnBZV3h6TDNZeElpd2lhSFIwY0hNNkx5OWhjR2t1ZG1sa1kyaGhhVzR1Ym1WMEwyTnlaV1JsYm5ScFlXeHpMM1psY21sbWFXRmliR1V0YVdRdmRqRWlYU3dpYVdRaU9pSm9kSFJ3Y3pvdkwyRndhUzUyYVdSamFHRnBiaTV1WlhRdllYQnBMM1l4TDNOamFHVnRZWE12TWpNNU1TSXNJblI1Y0dVaU9sc2lWbVZ5YVdacFlXSnNaVU55WldSbGJuUnBZV3dpTENKV1pYSnBabWxoWW14bFNXUkRjbVZrWlc1MGFXRnNJbDBzSW1OeVpXUmxiblJwWVd4VGRXSnFaV04wSWpwN0ltbGtJam9pWkdsa09uWnBaRG93ZURReVlqZzVPRVV5TjBNMU5tVTNaRFZCTW1RMFJUWTBObVJDTW1RME1UaENSRFZETVRjd1l6UWlMQ0ptYVhKemRFNWhiV1VpT2lKRmRtRWlMQ0pzWVhOMFRtRnRaU0k2SWsxdmJuSnZaU0lzSW1kbGJtUmxjaUk2SWtabGJXRnNaU0lzSW1SaGRHVlBaa0pwY25Sb0lqb2lNVEl2TVRFdk1UazNNQ0lzSW5Cc1lXTmxUMlpDYVhKMGFDSTZJazFoWkhKcFpDSXNJbU4xY25KbGJuUkJaR1J5WlhOeklqb2lRWEpoWjI4Z01UYzVJRFJoSWl3aVkybDBlU0k2SWtKaGNtTmxiRzl1WVNJc0luTjBZWFJsSWpvaVEyRjBZV3h2Ym1saElpd2llbWx3SWpvaU1EZ3dNVEVpZlN3aWFYTnpkV1Z5SWpvaVpHbGtPblpwWkRvd2VETmhaRE5tUmpoRk5XRkNPRVEyT1RORE1qaENaRVE1UWpRM1pXUkVNV1kzTkRRMVJqaGpNMFlpZlN3aWFYTnpJam9pWkdsa09uWnBaRG93ZUROaFpETm1SamhGTldGQ09FUTJPVE5ETWpoQ1pFUTVRalEzWldSRU1XWTNORFExUmpoak0wWWlmUS5CN2U0WnA5akdMRFhUUkc4SUQxajBfRVZ3b1FsSV9YRHpTYWdLV21EUi1JTmpNVlNGRzExNDJhc0MxcjVSZWROdXUzU1I4VkljRTl5cmJEdzljUnVFUUEifX1dLCJwcm9vZiI6eyJ0eXBlIjoiRWNkc2FTZWNwMjU2azFTaWduYXR1cmUyMDE5IiwiY3JlYXRlZCI6IjIwMTktMDYtMjJUMTQ6MTE6NDRaIiwicHJvb2ZQdXJwb3NlIjoiYXNzZXJ0aW9uTWV0aG9kIiwidmVyaWZpY2F0aW9uTWV0aG9kIjoiZGlkOnZpZDoweDE2MDQ4QjgzRkFkYUNkQ0IyMDE5OEFCYzQ1NTYyRGYxQTNlMjg5YUYja2V5LTEiLCJqd3MiOiJleUpoYkdjaU9pSkZVekkxTmtzaWZRLmV5SnpkV0lpT2lKRlFsTkpJREl3TVRraWZRLm9nZ0UzZnQza0pZUEdHYTllQmlicGJqZ2VKWHc0ZkxiVk1vdVZvTTJOZmNEeHNsX1VVVUlhcnNTMVZwQm9ZRXM3czljQmxjNHVDMEVibkpDSGZWSkl3In19fQ.1fVQmPniGc2Qii-lNxWy1ydPJ2SDWUewXi1MZfXa8sPguNCHZLLAntSj3gB7ExteJBHlBct_JT_eb1jSr6i-PQE%26state%3Dfa78bbbad7f66c3060eb388f',
 //      encoding: 'application/x-www-form-urlencoded',
@@ -356,7 +360,7 @@ console.warn(uriResponse);
 
 The Url to be redirected is included in `uriResponse.urlEncoded`. Keep in mind that this Url is an UriEncoded.
 
-If you want to read it as a regular Url, you just decode it:
+To read it as a regular Url, it can be decoded:
 
 ```js
 const uriResponseDecoded = decodeURIComponent(uriResponse.urlEncoded);
@@ -365,18 +369,19 @@ console.log(uriResponseDecoded);
 // odysseyapp://example/did-auth#id_token=eyJhbGciOiJFUzI1NkstUiIsInR5cCI6IkpXVCIsImtpZCI6ImRpZDp2aWQ6MHg2Y2Q5NkFhMEQzMmQyRjFlOWM4MzM4MTgxMzQ4MWE4ODBhMzQ0NjY4I2tleS0xIn0.eyJpYXQiOjE2MDUzNjc1MzEsImV4cCI6MTYwNTM2NzgzMSwiaXNzIjoiaHR0cHM6Ly9zZWxmLWlzc3VlZC5tZSIsInN1YiI6IkEyeElIYWVmYWdRTHVyOENfZTE3amZfSktUcl8xVXRaOXNzczJOX0taNTAiLCJub25jZSI6InE1ZmxoVHh6NnZHdE5qREN6ZVRsSFBvNkE4Z3EySEhUTlRqaFpzLW1jUjQiLCJhdWQiOiJvZHlzc2V5YXBwOi8vZXhhbXBsZS9kaWQtYXV0aCIsInN1Yl9qd2siOnsia2lkIjoiZGlkOnZpZDoweDZjZDk2QWEwRDMyZDJGMWU5YzgzMzgxODEzNDgxYTg4MGEzNDQ2Njgja2V5LTEiLCJrdHkiOiJFQyIsImNydiI6InNlY3AyNTZrMSIsIngiOiI3MTE5ZTI5YjZjZDc5NTIzMDRmN2E4NjRkODA4ZjFkNTZmZWY3Y2Y0YTdlYTIyOWFmZTJhMDI0YjlhMDE5OTRkIiwieSI6IjllYzU3NWZkZGVkNjgyNDU4MjU3ZDQ3M2ZhMDg2ZjA2NTdlNzViOWNlNDA4YzFkZWZjZmM1ZjdlOTZlMWVmYWIifSwiZGlkIjoiZGlkOnZpZDoweDZjZDk2QWEwRDMyZDJGMWU5YzgzMzgxODEzNDgxYTg4MGEzNDQ2NjgiLCJ2cCI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSJdLCJ0eXBlIjoiVmVyaWZpYWJsZVByZXNlbnRhdGlvbiIsInZlcmlmaWFibGVDcmVkZW50aWFsIjpbeyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vYXBpLnZpZGNoYWluLm5ldC9jcmVkZW50aWFscy92ZXJpZmlhYmxlSWQvdjEiXSwiaWQiOiJodHRwczovL2FwaS52aWRjaGFpbi5uZXQvYXBpL3YxL3NjaGVtYXMvMjM5MSIsInR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJWZXJpZmlhYmxlSWRDcmVkZW50aWFsIl0sImlzc3VlciI6ImRpZDp2aWQ6MHg1MjA4NDMxQzZFQzJlYzQwOTdhZUE3MTgyYkI5MmQwMTg3NjY0OThjIiwiY3JlZGVudGlhbFN1YmplY3QiOnsiaWQiOiJkaWQ6dmlkOjB4ODcwN0NDYTgzNUM5NjEzMzREM0Y2NDUwQzZhNjFhMEFENjU5MjQ2MCIsImZpcnN0TmFtZSI6IkV2YSIsImxhc3ROYW1lIjoiTW9ucm9lIiwiZ2VuZGVyIjoiRmVtYWxlIiwiZGF0ZU9mQmlydGgiOiIxMi8xMS8xOTcwIiwicGxhY2VPZkJpcnRoIjoiTWFkcmlkIiwiY3VycmVudEFkZHJlc3MiOiJBcmFnbyAxNzkgNGEiLCJjaXR5IjoiQmFyY2Vsb25hIiwic3RhdGUiOiJDYXRhbHXDsWEiLCJ6aXAiOiIwODAxMSJ9LCJpc3N1YW5jZURhdGUiOiIyMDE5LTExLTE3VDE0OjAwOjAwWiIsInByb29mIjp7InR5cGUiOiJFY2RzYVNlY3AyNTZrMVNpZ25hdHVyZTIwMTkiLCJjcmVhdGVkIjoiMjAxOS0xMS0xN1QxNDowMDowMFoiLCJwcm9vZlB1cnBvc2UiOiJhc3NlcnRpb25NZXRob2QiLCJ2ZXJpZmljYXRpb25NZXRob2QiOiJkaWQ6dmlkOjB4NTIwODQzMUM2RUMyZWM0MDk3YWVBNzE4MmJCOTJkMDE4NzY2NDk4YyNrZXktMSIsImp3cyI6ImV5SmhiR2NpT2lKRlV6STFOa3N0VWlJc0luUjVjQ0k2SWtwWFZDSXNJbXRwWkNJNkltUnBaRHAyYVdRNk1IZ3pZV1F6WmtZNFJUVmhRamhFTmprelF6STRRbVJFT1VJME4yVmtSREZtTnpRME5VWTRZek5HSTJ0bGVTMHhJbjAuZXlKcFlYUWlPakUxT1RFM09UazFNRFFzSW5aaklqcDdJa0JqYjI1MFpYaDBJanBiSW1oMGRIQnpPaTh2ZDNkM0xuY3pMbTl5Wnk4eU1ERTRMMk55WldSbGJuUnBZV3h6TDNZeElpd2lhSFIwY0hNNkx5OWhjR2t1ZG1sa1kyaGhhVzR1Ym1WMEwyTnlaV1JsYm5ScFlXeHpMM1psY21sbWFXRmliR1V0YVdRdmRqRWlYU3dpYVdRaU9pSm9kSFJ3Y3pvdkwyRndhUzUyYVdSamFHRnBiaTV1WlhRdllYQnBMM1l4TDNOamFHVnRZWE12TWpNNU1TSXNJblI1Y0dVaU9sc2lWbVZ5YVdacFlXSnNaVU55WldSbGJuUnBZV3dpTENKV1pYSnBabWxoWW14bFNXUkRjbVZrWlc1MGFXRnNJbDBzSW1OeVpXUmxiblJwWVd4VGRXSnFaV04wSWpwN0ltbGtJam9pWkdsa09uWnBaRG93ZURReVlqZzVPRVV5TjBNMU5tVTNaRFZCTW1RMFJUWTBObVJDTW1RME1UaENSRFZETVRjd1l6UWlMQ0ptYVhKemRFNWhiV1VpT2lKRmRtRWlMQ0pzWVhOMFRtRnRaU0k2SWsxdmJuSnZaU0lzSW1kbGJtUmxjaUk2SWtabGJXRnNaU0lzSW1SaGRHVlBaa0pwY25Sb0lqb2lNVEl2TVRFdk1UazNNQ0lzSW5Cc1lXTmxUMlpDYVhKMGFDSTZJazFoWkhKcFpDSXNJbU4xY25KbGJuUkJaR1J5WlhOeklqb2lRWEpoWjI4Z01UYzVJRFJoSWl3aVkybDBlU0k2SWtKaGNtTmxiRzl1WVNJc0luTjBZWFJsSWpvaVEyRjBZV3h2Ym1saElpd2llbWx3SWpvaU1EZ3dNVEVpZlN3aWFYTnpkV1Z5SWpvaVpHbGtPblpwWkRvd2VETmhaRE5tUmpoRk5XRkNPRVEyT1RORE1qaENaRVE1UWpRM1pXUkVNV1kzTkRRMVJqaGpNMFlpZlN3aWFYTnpJam9pWkdsa09uWnBaRG93ZUROaFpETm1SamhGTldGQ09FUTJPVE5ETWpoQ1pFUTVRalEzWldSRU1XWTNORFExUmpoak0wWWlmUS5CN2U0WnA5akdMRFhUUkc4SUQxajBfRVZ3b1FsSV9YRHpTYWdLV21EUi1JTmpNVlNGRzExNDJhc0MxcjVSZWROdXUzU1I4VkljRTl5cmJEdzljUnVFUUEifX1dLCJwcm9vZiI6eyJ0eXBlIjoiRWNkc2FTZWNwMjU2azFTaWduYXR1cmUyMDE5IiwiY3JlYXRlZCI6IjIwMTktMDYtMjJUMTQ6MTE6NDRaIiwicHJvb2ZQdXJwb3NlIjoiYXNzZXJ0aW9uTWV0aG9kIiwidmVyaWZpY2F0aW9uTWV0aG9kIjoiZGlkOnZpZDoweDE2MDQ4QjgzRkFkYUNkQ0IyMDE5OEFCYzQ1NTYyRGYxQTNlMjg5YUYja2V5LTEiLCJqd3MiOiJleUpoYkdjaU9pSkZVekkxTmtzaWZRLmV5SnpkV0lpT2lKRlFsTkpJREl3TVRraWZRLm9nZ0UzZnQza0pZUEdHYTllQmlicGJqZ2VKWHc0ZkxiVk1vdVZvTTJOZmNEeHNsX1VVVUlhcnNTMVZwQm9ZRXM3czljQmxjNHVDMEVibkpDSGZWSkl3In19fQ.pq3vX7C7_cLfe-LRRHsivNrH50-TxtGORI9SMVQ5bj1jlv_CFf5WNggevjiWLm8jrxkoenqBqXsKF3IGgxlqwwA&state=9caaf9f6d37ed48a9e2247e4
 ```
 
-### Validate the Authentication Response and retrieve the user DID and requested Verifiable Credentials
+### On Your App, Validate the Authentication Response and retrieve the user DID and requested Verifiable Credentials
 
-Last step is that the initiator's App, parses the received Authentication Response URI, obtains the Response Token and validates it, to finally obtain the desired Verifiable Credentials from the user.
+Last step is that on your App, you parse the received Authentication Response URI, obtain the Response Token and validate it, to finally obtain the desired Verifiable Credentials from the user.
 
 To call `verifyDidAuthResponse` you need to create a `DidAuthVerifyOpts` that contains the following parameters:
 
 - **verificationType**: Whether you want to perform a verification internally or via VIDcredentials API. In this case, we perform it using VIDcredentials API.
 - **verifyUri**: URL to perform the external Authenticatoin Response Token validation. In this case, we call the VIDcredentials API.
 - **authZToken**: Access Token (if required) to call the verifyUri. In this case, we will use the Access Token created on the first step.
-  --**nonce**: Nonce value from the initial Authentication Request Token, to check that we are validating the same request flow.
+- **nonce**: Nonce value from the initial Authentication Request Token, to check that we are validating the same request flow.
 
 Example:
+
 Assuming that `urlEncoded` is the received deeplink to parse.
 
 ```js
@@ -465,7 +470,7 @@ const validationResponse = await verifyDidAuthResponse(
 }
 ```
 
-In this moment, we got `"signatureValidation": true`, so we validate the Authentication Response Token and we received a Verifiable Presentation that contains the requested Verifiable Credential, under `payload.vp`.
+In this moment, `"signatureValidation": true` means that you validated the Authentication Response Token and received a Verifiable Presentation that contains the requested Verifiable Credential, under `payload.vp`.
 
 **Et voilà!!**
 
