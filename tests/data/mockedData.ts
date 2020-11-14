@@ -1,28 +1,32 @@
-import {
-  OidcClaim,
-  VerifiablePresentation,
-} from "../../src/interfaces/oidcSsi";
+import { DidAuthTypes, JWTHeader, OidcSsi } from "../../src";
 
-export const DIDAUTH_HEADER = {
+export const DIDAUTH_HEADER: JWTHeader = {
   typ: "JWT",
   alg: "ES256K-R",
   kid: "did:vid:0x416e6e6162656c2e4c65652e452d412d506f652e#key1",
 };
 
-export const DIDAUTH_REQUEST_PAYLOAD = {
+export const DIDAUTH_REQUEST_PAYLOAD: DidAuthTypes.DidAuthRequestPayload = {
   iss: "did:vid:0x416e6e6162656c2e4c65652e452d412d506f652e", // DID of the RP (kid must point to a key in this DID Document)
-  scope: "openid did_authn", // MUST be "openid did_authn"
-  response_type: "id_token", // MUST be ID Token
-  client_id: "redirect-uri", // Redirect URI after successful authentication
+  scope: DidAuthTypes.DidAuthScope.OPENID_DIDAUTHN, // MUST be "openid did_authn"
+  response_type: DidAuthTypes.DidAuthResponseType.ID_TOKEN, // MUST be ID Token
+  client_id: "http://app.example/demo", // Redirect URI after successful authentication
   nonce: "n-0S6_WzA2M", // MUST be a random string from a high-entropy source
+  state: "af0ifjsldkj",
+  registration: {
+    // either using jwks_uri or jwks
+    jwks_uri:
+      "https://uniresolver.io/1.0/identifiers/did:example:0xab;transform-keys=jwks",
+    id_token_signed_response_alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256K,
+  },
   exp: 1569937756, // Unix Timestamp; Date and time when the ID Token expires.
   iat: 1569934156,
 };
 
-export const DIDAUTH_RESPONSE_PAYLOAD = {
-  iss: "https://self-issued.me",
+export const DIDAUTH_RESPONSE_PAYLOAD: DidAuthTypes.DidAuthResponsePayload = {
+  iss: DidAuthTypes.DidAuthResponseIss.SELF_ISSUE, // MUST be https://self-issued.me
   sub: "QS+5mH5GqVxuah94+D9wV97mMKZ6iMzW1op4B4s02Jk=", // Thumbprint of the sub_jwk
-  aud: "redirect-uri", // MUST be client_id from the Request Object
+  aud: "http://app.example/demo", // MUST be client_id from the Request Object
   exp: 1569937756, // Unix Timestamp; Date and time when the ID Token expires.
   iat: 1569934156, // Unix Timestamp; Date and time when the Token was issued.
   nonce: "6a6b57a9d4e1a130b0edbe1ec4ae8823",
@@ -33,15 +37,16 @@ export const DIDAUTH_RESPONSE_PAYLOAD = {
     x: "7KEKZa5xJPh7WVqHJyUpb2MgEe3nA8Rk7eUlXsmBl-M",
     y: "3zIgl_ml4RhapyEm5J7lvU-4f5jiBvZr4KgxUjEhl9o",
   },
+  did: "did:vid:0x226e2e2223333c2e4c65652e452d412d50611111",
 };
 
-export const verifiableIdOidcClaim: OidcClaim = {
+export const verifiableIdOidcClaim: OidcSsi.OidcClaim = {
   vc: {
     VerifiableIdCredential: { essential: true },
   },
 };
 
-export const verifiableIdPresentation: VerifiablePresentation = {
+export const verifiableIdPresentation: OidcSsi.VerifiablePresentation = {
   "@context": ["https://www.w3.org/2018/credentials/v1"],
   type: "VerifiablePresentation",
   verifiableCredential: [
