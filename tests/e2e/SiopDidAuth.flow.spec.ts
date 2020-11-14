@@ -1,5 +1,6 @@
 import { parse } from "querystring";
 import * as dotenv from "dotenv";
+import { JWT } from "jose";
 import * as siopDidAuth from "../../src";
 import {
   DidAuthTypes,
@@ -111,8 +112,8 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     expect(validationResponse.payload).toBeDefined();
   });
 
-  it.only("create an app 2 app flow", async () => {
-    expect.assertions(8);
+  it("create an app 2 app flow", async () => {
+    expect.assertions(10);
     const WALLET_API_BASE_URL = process.env.WALLET_API_URL;
     const entityAA = await getLegalEntityAuthZToken("ODYSSEY APP TEST");
     const authZToken = entityAA.jwt;
@@ -193,7 +194,23 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     const uriResponse = await siopDidAuth.createUriResponse(responseOpts);
     expect(uriResponse).toBeDefined();
     const uriResponseDecoded = decodeURIComponent(uriResponse.urlEncoded);
+    const splitUrl = uriResponseDecoded.split("#");
+    const responseData = parse(splitUrl[1]);
+    expect(responseData.id_token).toBeDefined();
+    const authResponseToken = responseData.id_token as string;
+    const { payload } = JWT.decode(authResponseToken, { complete: true });
 
-    console.warn(uriResponseDecoded);
+    const optsVerify: DidAuthVerifyOpts = {
+      verificationType: {
+        verifyUri: `${WALLET_API_BASE_URL}/api/v1/signature-validations`,
+        authZToken,
+      },
+      nonce: (payload as DidAuthTypes.DidAuthResponsePayload).nonce,
+    };
+    const validationResponse = await verifyDidAuthResponse(
+      authResponseToken,
+      optsVerify
+    );
+    expect(validationResponse).toBeDefined();
   });
 });
