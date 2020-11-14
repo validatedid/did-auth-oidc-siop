@@ -1,6 +1,6 @@
 {
   "name": "@validatedid/did-auth",
-  "version": "0.0.6",
+  "version": "2.0.0",
   "description": "Validated ID Authentication library that implements an OIDC-SIOP with DIDs",
   "author": "Validated ID",
   "license": "Apache-2.0",
@@ -82,8 +82,7 @@
   },
   "husky": {
     "hooks": {
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
-      "pre-commit": "lint-staged"
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
     }
   }
 }
