@@ -1,10 +1,4 @@
-import {
-  createJWT,
-  SimpleSigner,
-  decodeJWT,
-  verifyJWT,
-  JWTVerified,
-} from "did-jwt";
+import { createJWT, SimpleSigner, decodeJWT, verifyJWT } from "did-jwt";
 import { Resolver } from "did-resolver";
 import VidDidResolver from "@validatedid/vid-did-resolver";
 import { AxiosResponse } from "axios";
@@ -180,8 +174,8 @@ const createDidAuthResponsePayload = (
   return {
     iss: DidAuthResponseIss.SELF_ISSUE,
     sub: JWK.getThumbprint(opts.signatureType.hexPrivateKey),
-    aud: opts.redirectUri,
     nonce: opts.nonce,
+    aud: opts.redirectUri,
     sub_jwk: JWK.getPublicJWKFromPrivateHex(
       opts.signatureType.hexPrivateKey,
       opts.signatureType.kid || `${opts.signatureType.did}#key-1`
@@ -210,7 +204,8 @@ const verifyDidAuth = async (
         })
       ),
     };
-    const verifiedJWT: JWTVerified = await verifyJWT(jwt, options);
+    // !!! TODO: adapt this verifyJWT to be able to admit issuer and aud as an http
+    const verifiedJWT = await verifyJWT(jwt, options);
     if (!verifiedJWT || !verifiedJWT.payload)
       throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
     const payload = verifiedJWT.payload as DidAuthRequestPayload;
@@ -226,10 +221,13 @@ const verifyDidAuth = async (
         data,
         opts.verificationType.authZToken
       );
+
       if (!response || !response.status || response.status !== 204)
         throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
     } catch (error) {
-      throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
+      throw Error(
+        DidAuthErrors.ERROR_VERIFYING_SIGNATURE + (error as Error).message
+      );
     }
 
     const { payload } = decodeJWT(jwt);

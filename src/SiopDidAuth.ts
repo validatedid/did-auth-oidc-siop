@@ -122,7 +122,6 @@ const createDidAuthResponse = async (
   const didAuthResponsePayload: DidAuthResponsePayload = createDidAuthResponsePayload(
     opts
   );
-  console.warn(didAuthResponsePayload);
   if (!didAuthResponsePayload)
     throw new Error(DidAuthErrors.DIDAUTH_REQUEST_PAYLOAD_NOT_CREATED);
 

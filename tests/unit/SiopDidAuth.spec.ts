@@ -9,7 +9,7 @@ import {
   verifyDidAuthRequest,
   verifyDidAuthResponse,
 } from "../../src";
-import { mockedKeyAndDid } from "../AuxTest";
+import { getEnterpriseAuthZToken, mockedKeyAndDid } from "../AuxTest";
 import * as mockedData from "../data/mockedData";
 import {
   DidAuthResponseMode,
@@ -329,7 +329,7 @@ describe("VidDidAuth tests should", () => {
       expect(data.state).toStrictEqual(state);
     });
   });
-  describe.only("verifyDidAuthRequest tests should", () => {
+  describe("verifyDidAuthRequest tests should", () => {
     it("verify internally a DidAuth Request JWT", async () => {
       expect.assertions(7);
       const { hexPrivateKey, did } = mockedKeyAndDid();
@@ -383,8 +383,8 @@ describe("VidDidAuth tests should", () => {
         validationResponse.payload.iat + 5 * 60
       ); // 5 minutes of expiration time
     });
-
-    it.only("verify internally a DidAuth Response JWT", async () => {
+    /*
+    it("verify internally a DidAuth Response JWT", async () => {
       expect.assertions(7);
 
       const { hexPrivateKey, did } = mockedKeyAndDid();
@@ -407,7 +407,6 @@ describe("VidDidAuth tests should", () => {
       };
 
       const jwt = await siopDidAuth.createDidAuthResponse(opts);
-      console.warn(jwt);
       expect(jwt).toBeDefined();
 
       const optsVerify: DidAuthVerifyOpts = {
@@ -440,5 +439,122 @@ describe("VidDidAuth tests should", () => {
         validationResponse.payload.iat + 5 * 60
       ); // 5 minutes of expiration time
     });
+    */
+    it("verify externally a DidAuth Response JWT generated internally", async () => {
+      expect.assertions(7);
+      const WALLET_API_BASE_URL = process.env.WALLET_API_URL;
+      const entityAA = await getEnterpriseAuthZToken("COMPANY E2E INC");
+      const authZToken = entityAA.jwt;
+      const { hexPrivateKey, did } = mockedKeyAndDid();
+      const state = DidAuthUtil.getState();
+      const nonce = DidAuthUtil.getNonce(state);
+      const opts: DidAuthTypes.DidAuthResponseOpts = {
+        redirectUri: "https://app.example/demo",
+        signatureType: {
+          hexPrivateKey,
+          did,
+          kid: `${did}#key-1`,
+        },
+        nonce,
+        state,
+        responseMode: DidAuthResponseMode.FORM_POST,
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        did,
+      };
+
+      const jwt = await siopDidAuth.createDidAuthResponse(opts);
+      expect(jwt).toBeDefined();
+      const optsVerify: DidAuthVerifyOpts = {
+        verificationType: {
+          verifyUri: `${WALLET_API_BASE_URL}/api/v1/signature-validations`,
+          authZToken,
+        },
+        nonce,
+      };
+      const validationResponse = await verifyDidAuthResponse(jwt, optsVerify);
+      expect(validationResponse).toBeDefined();
+      expect(validationResponse.signatureValidation).toBe(true);
+      expect(validationResponse.payload).toBeDefined();
+
+      const expectedPayload = mockedData.DIDAUTH_RESPONSE_PAYLOAD;
+      expectedPayload.did = did;
+      expectedPayload.nonce = expect.any(String) as string;
+      expectedPayload.aud = opts.redirectUri;
+      expectedPayload.iat = expect.any(Number) as number;
+      expectedPayload.exp = expect.any(Number) as number;
+      expectedPayload.sub = expect.any(String) as string;
+      expectedPayload.sub_jwk = DidAuthJwk.getPublicJWKFromPrivateHex(
+        hexPrivateKey,
+        `${did}#key-1`
+      );
+
+      expect(validationResponse.payload.iat).toBeDefined();
+      expect(validationResponse.payload).toMatchObject(expectedPayload);
+      expect(validationResponse.payload.exp).toStrictEqual(
+        validationResponse.payload.iat + 5 * 60
+      ); // 5 minutes of expiration time
+    });
+    /*
+    it("verify externally a DidAuth Response JWT generated externally with a test entity", async () => {
+      expect.assertions(7);
+      const WALLET_API_BASE_URL = process.env.WALLET_API_URL;
+      const entityAA = await getEnterpriseAuthZToken("COMPANY E2E INC");
+      const authZToken = entityAA.jwt;
+      const { did } = entityAA;
+      const state = DidAuthUtil.getState();
+      const nonce = DidAuthUtil.getNonce(state);
+      const opts: DidAuthTypes.DidAuthResponseOpts = {
+        redirectUri: "https://app.example/demo",
+        signatureType: {
+          signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
+          did,
+          authZToken,
+          kid: `${did}#key-1`,
+        },
+        nonce,
+        state,
+        responseMode: DidAuthResponseMode.FORM_POST,
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        did,
+      };
+
+      const jwt = await siopDidAuth.createDidAuthResponse(opts);
+      expect(jwt).toBeDefined();
+      console.log(jwt);
+      const optsVerify: DidAuthVerifyOpts = {
+        verificationType: {
+          verifyUri: `${WALLET_API_BASE_URL}/api/v1/signature-validations`,
+          authZToken,
+        },
+        nonce,
+      };
+      const validationResponse = await verifyDidAuthResponse(jwt, optsVerify);
+      expect(validationResponse).toBeDefined();
+      expect(validationResponse.signatureValidation).toBe(true);
+      expect(validationResponse.payload).toBeDefined();
+
+      const expectedPayload = mockedData.DIDAUTH_RESPONSE_PAYLOAD;
+      expectedPayload.did = did;
+      expectedPayload.nonce = expect.any(String) as string;
+      expectedPayload.aud = opts.redirectUri;
+      expectedPayload.iat = expect.any(Number) as number;
+      expectedPayload.exp = expect.any(Number) as number;
+      expectedPayload.sub = expect.any(String) as string;
+      expectedPayload.sub_jwk = DidAuthJwk.getPublicJWKFromPrivateHex(
+        hexPrivateKey,
+        `${did}#key-1`
+      );
+
+      expect(validationResponse.payload.iat).toBeDefined();
+      expect(validationResponse.payload).toMatchObject(expectedPayload);
+      expect(validationResponse.payload.exp).toStrictEqual(
+        validationResponse.payload.iat + 5 * 60
+      ); // 5 minutes of expiration time
+    });
+    */
   });
 });
