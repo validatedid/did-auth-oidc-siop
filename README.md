@@ -10,6 +10,14 @@ Current version supports only `ES256k` algorithm (the EC secp256k1).
 
 1. [Installation](#Installation)
 2. [App 2 App Authentication Flow with VIDcredentials API](#App-2-App-Authentication-Flow-with-VIDcredentials-API)
+   1. [Ask ValidatedID for a new API KEY to access VIDcredentials API](Ask-ValidatedId-for-a-new-API-KEY-to-access-VIDcredentials-API)
+   2. [Request an Access Token to VIDcredentials API for further calls](#request-an-access-token-to-vidcredentials-api-for-further-calls)
+   3. [Prepare Authentication Request Data](#prepare-authentication-request-data)
+   4. [Create an Authentication Request URI](#create-an-authentication-request-uri)
+   5. [VIDwallet App verifies the received deeplink Url](#vidwallet-app-verifies-the-received-deeplink-url)
+   6. [VIDwallet prepares the Authentication Response Structure](#vidwallet-prepares-the-authentication-response-structure)
+   7. [VIDwallet creates an Authentication Response URI](#vidwallet-creates-an-authentication-response-uri)
+   8. [On Your App, Validate the Authentication Response and retrieve the user DID and requested Verifiable Credentials](#on-your-app-validate-the-authentication-response-and-retrieve-the-user-did-and-requested-verifiable-credentials)
 3. [Library Test](#Library-Test)
 
 ## Installation
