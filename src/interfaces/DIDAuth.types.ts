@@ -103,6 +103,7 @@ export interface RegistrationType extends RequestObjectBy {
 }
 
 export interface DidAuthRequestOpts {
+  oidpUri: string;
   redirectUri: string;
   requestObjectBy: RequestObjectBy;
   signatureType: InternalSignature | ExternalSignature;

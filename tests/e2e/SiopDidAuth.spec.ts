@@ -9,7 +9,7 @@ import {
   verifyDidAuthRequest,
   verifyDidAuthResponse,
 } from "../../src";
-import { getEnterpriseAuthZToken, mockedKeyAndDid } from "../AuxTest";
+import { getLegalEntityTestAuthZToken, mockedKeyAndDid } from "../AuxTest";
 import * as mockedData from "../data/mockedData";
 import {
   DidAuthResponseMode,
@@ -443,7 +443,7 @@ describe("VidDidAuth tests should", () => {
     it("verify externally a DidAuth Response JWT generated internally", async () => {
       expect.assertions(7);
       const WALLET_API_BASE_URL = process.env.WALLET_API_URL;
-      const entityAA = await getEnterpriseAuthZToken("COMPANY E2E INC");
+      const entityAA = await getLegalEntityTestAuthZToken("COMPANY E2E INC");
       const authZToken = entityAA.jwt;
       const { hexPrivateKey, did } = mockedKeyAndDid();
       const state = DidAuthUtil.getState();
@@ -500,7 +500,7 @@ describe("VidDidAuth tests should", () => {
     it("verify externally a DidAuth Response JWT generated externally with a test entity", async () => {
       expect.assertions(7);
       const WALLET_API_BASE_URL = process.env.WALLET_API_URL;
-      const entityAA = await getEnterpriseAuthZToken("COMPANY E2E INC");
+      const entityAA = await getLegalEntityTestAuthZToken("COMPANY E2E INC");
       const authZToken = entityAA.jwt;
       const { did } = entityAA;
       const state = DidAuthUtil.getState();

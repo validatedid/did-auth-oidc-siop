@@ -59,9 +59,26 @@ export interface IEnterpriseAuthZToken extends JWTClaims {
 }
 
 export interface LegalEntityAuthNToken extends JWTClaims {
-  iss: string;
-  aud: string;
+  iss: string; // legal entity name identifier
+  aud: string; // RP Application Name. usually vidchain-wallet
+  iat: number;
+  exp: number;
   nonce: string;
+  apiKey: string;
+  callbackUrl?: string; // Entity url to send notifications
+  image?: string; // base64 encoded image data
+  icon?: string; // base64 encoded image icon data
+}
+
+export interface LegalEntityTestAuthN {
+  iss: string; // legal entity name identifier
+  aud: string; // RP Application Name. usually vidchain-wallet
+  iat: number;
+  exp: number;
+  nonce: string;
+  callbackUrl?: string; // Entity url to send notifications
+  image?: string; // base64 encoded image data
+  icon?: string; // base64 encoded image icon data
 }
 
 export const mockedKeyAndDid = (): {
@@ -83,7 +100,7 @@ const mockedEntityAuthNToken = (
   // generate a new keypair
   const { did, jwk } = mockedKeyAndDid();
 
-  const payload: LegalEntityAuthNToken = {
+  const payload: LegalEntityTestAuthN = {
     iss: enterpiseName || "Test Legal Entity",
     aud: "vidchain-api",
     iat: moment().unix(),
@@ -101,7 +118,7 @@ const mockedEntityAuthNToken = (
 };
 
 const testEntityAuthNToken = (enterpiseName?: string): { jwt: string } => {
-  const payload: LegalEntityAuthNToken = {
+  const payload: LegalEntityTestAuthN = {
     iss: enterpiseName || "Test Legal Entity",
     aud: "vidchain-api",
     iat: moment().unix(),
@@ -124,7 +141,68 @@ async function doPostCall(url: string, data: unknown): Promise<AxiosResponse> {
   return response;
 }
 
-export async function getEnterpriseAuthZToken(
+interface ApiKeyStruct {
+  type: string;
+  authenticationKey: string;
+}
+
+const getEntityAuthNToken = async (
+  enterpiseName?: string
+): Promise<{ jwt: string }> => {
+  const WALLET_API_BASE_URL =
+    process.env.WALLET_API_URL || "http://localhost:9000";
+  // get entity API Key
+  const result = await doPostCall(
+    `${WALLET_API_BASE_URL}/api/v1/authentication-keys`,
+    { iss: enterpiseName || "Test Legal Entity" }
+  );
+  if (!result || !result.data)
+    throw new Error("Authentication Keys not generated.");
+  const apiKeyStruct = result.data as ApiKeyStruct;
+  if (!apiKeyStruct.type || !apiKeyStruct.authenticationKey)
+    throw new Error("Authentication Keys not generated.");
+
+  const payload: LegalEntityAuthNToken = {
+    iss: enterpiseName || "Test Legal Entity",
+    aud: "vidchain-api",
+    iat: moment().unix(),
+    exp: moment().add(15, "minutes").unix(),
+    nonce: uuidv4(),
+    apiKey: apiKeyStruct.authenticationKey,
+  };
+
+  const jwt = Buffer.from(JSON.stringify(payload)).toString("base64");
+  return { jwt };
+};
+
+export const getLegalEntityAuthZToken = async (
+  enterpiseName?: string
+): Promise<{
+  jwt: string;
+  did: string;
+}> => {
+  const auth = await getEntityAuthNToken(enterpiseName);
+  const payload = {
+    grantType: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+    assertion: auth.jwt,
+    scope: "vidchain profile entity",
+  };
+  const WALLET_API_BASE_URL =
+    process.env.WALLET_API_URL || "http://localhost:9000";
+  // Create and sign JWT
+  const result = await doPostCall(
+    `${WALLET_API_BASE_URL}/api/v1/sessions`,
+    payload
+  );
+  const { accessToken } = result.data as AccessTokenResponseBody;
+
+  return {
+    jwt: accessToken,
+    did: getEnterpriseDID(accessToken),
+  };
+};
+
+export async function getLegalEntityTestAuthZToken(
   enterpiseName?: string
 ): Promise<{
   jwt: string;

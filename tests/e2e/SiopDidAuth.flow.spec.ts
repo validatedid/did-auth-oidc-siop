@@ -7,11 +7,16 @@ import {
   verifyDidAuthRequest,
   verifyDidAuthResponse,
 } from "../../src";
-import { getEnterpriseAuthZToken, mockedKeyAndDid } from "../AuxTest";
+import {
+  getLegalEntityAuthZToken,
+  getLegalEntityTestAuthZToken,
+  mockedKeyAndDid,
+} from "../AuxTest";
 import {
   DidAuthResponseMode,
   DidAuthVerifyOpts,
 } from "../../src/interfaces/DIDAuth.types";
+import * as mockedData from "../data/mockedData";
 
 // importing .env variables
 dotenv.config();
@@ -20,12 +25,13 @@ describe("SIOP DID Auth end to end flow tests should", () => {
   it("create a request externally, verify it internally, create a response internally and verify it externally", async () => {
     expect.assertions(12);
     const WALLET_API_BASE_URL = process.env.WALLET_API_URL;
-    const entityAA = await getEnterpriseAuthZToken("COMPANY E2E INC");
+    const entityAA = await getLegalEntityTestAuthZToken("COMPANY E2E INC");
     const authZToken = entityAA.jwt;
     const entityDid = entityAA.did;
 
     // create request internally
     const requestOpts: DidAuthTypes.DidAuthRequestOpts = {
+      oidpUri: "http://your-oipc/did-auth",
       redirectUri: "http://app.example/demo",
       requestObjectBy: {
         type: DidAuthTypes.ObjectPassedBy.REFERENCE,
@@ -104,5 +110,50 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     expect(validationResponse).toBeDefined();
     expect(validationResponse.signatureValidation).toBe(true);
     expect(validationResponse.payload).toBeDefined();
+  });
+
+  it.only("create an app 2 app flow", async () => {
+    expect.assertions(5);
+    const WALLET_API_BASE_URL = process.env.WALLET_API_URL;
+    const entityAA = await getLegalEntityAuthZToken("ODYSSEY APP TEST");
+    const authZToken = entityAA.jwt;
+    const entityDid = entityAA.did;
+    const state = DidAuthUtil.getState();
+
+    // create request externally passing the request via value (in the Url)
+    const requestOpts: DidAuthTypes.DidAuthRequestOpts = {
+      oidpUri: "vidchain://did-auth",
+      redirectUri: "odysseyapp://example/did-auth",
+      requestObjectBy: {
+        type: DidAuthTypes.ObjectPassedBy.VALUE,
+      },
+      signatureType: {
+        signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
+        did: entityDid,
+        authZToken,
+        kid: `${entityDid}#key-1`,
+      },
+      registrationType: {
+        type: DidAuthTypes.ObjectPassedBy.REFERENCE,
+        referenceUri: `https://dev.vidchain.net/api/v1/identifiers/${entityDid};transform-keys=jwks`,
+      },
+      responseMode: DidAuthTypes.DidAuthResponseMode.FRAGMENT,
+      responseContext: DidAuthTypes.DidAuthResponseContext.RP,
+      state,
+      claims: mockedData.verifiableIdOidcClaim,
+    };
+
+    const uriRequest = await siopDidAuth.createUriRequest(requestOpts);
+    expect(uriRequest).toBeDefined();
+    expect(uriRequest).toHaveProperty("urlEncoded");
+    const uriDecoded = decodeURIComponent(uriRequest.urlEncoded);
+    console.warn(uriDecoded);
+    expect(uriDecoded).toContain(`openid://`);
+    expect(uriDecoded).toContain(
+      `?response_type=${DidAuthTypes.DidAuthResponseType.ID_TOKEN}`
+    );
+    const data = parse(uriDecoded);
+    expect(data.request).toBeDefined();
+    console.warn(data.request);
   });
 });
