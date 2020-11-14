@@ -31,7 +31,6 @@ describe("SIOP DID Auth end to end flow tests should", () => {
 
     // create request internally
     const requestOpts: DidAuthTypes.DidAuthRequestOpts = {
-      oidpUri: "http://your-oipc/did-auth",
       redirectUri: "http://app.example/demo",
       requestObjectBy: {
         type: DidAuthTypes.ObjectPassedBy.REFERENCE,

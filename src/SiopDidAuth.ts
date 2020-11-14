@@ -154,7 +154,7 @@ const createDidAuthResponse = async (
 const createUriRequest = async (
   opts: DidAuthRequestOpts
 ): Promise<UriRequest> => {
-  if (!opts || !opts.oidpUri || !opts.redirectUri || !opts.requestObjectBy)
+  if (!opts || !opts.redirectUri || !opts.requestObjectBy)
     throw new Error(DidAuthErrors.BAD_PARAMS);
   if (
     opts.requestObjectBy.type !== ObjectPassedBy.REFERENCE &&
@@ -168,7 +168,8 @@ const createUriRequest = async (
     throw new Error(DidAuthErrors.NO_REFERENCE_URI);
   const { jwt, state, nonce } = await createDidAuthRequest(opts);
 
-  let responseUri = `${opts.oidpUri}?openid://?response_type=${DidAuthResponseType.ID_TOKEN}&client_id=${opts.redirectUri}&scope=${DidAuthScope.OPENID_DIDAUTHN}&state=${state}&nonce=${nonce}`;
+  const baseOidp = opts.oidpUri ? `${opts.oidpUri}?` : "";
+  let responseUri = `${baseOidp}openid://?response_type=${DidAuthResponseType.ID_TOKEN}&client_id=${opts.redirectUri}&scope=${DidAuthScope.OPENID_DIDAUTHN}&state=${state}&nonce=${nonce}`;
 
   // returns an URI, with a reference Uri, and JWT
   if (opts.requestObjectBy.type === ObjectPassedBy.REFERENCE) {
