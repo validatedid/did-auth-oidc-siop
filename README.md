@@ -242,7 +242,7 @@ console.log(validationRequestResponse);
 //        "iss": "did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670",
 //        "scope": "openid did_authn",
 //        "registration": {
-//          "jwks_uri": "https://dev.vidchain.net/api/v1/identifiers/did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670;transform-keys=jwks",
+//          "jwks_uri": "https://api.vidchain.net/api/v1/identifiers/did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670;transform-keys=jwks",
 //          "id_token_signed_response_alg": "ES256K"
 //        },
 //        "client_id": "odysseyapp://example/did-auth",
@@ -260,6 +260,109 @@ console.log(validationRequestResponse);
 //        }
 //      }
 //    }
+```
+
+### vidWallet prepares the Authentication Response Structure
+
+Similary as before, let's first explain the different Response elements and then show you an example.
+
+- **redirectUri**: This is the intiator App deeplink included in the Request to redirect the Authentication Response.
+- **signatureType**: Whether you want to sign the Authentication Response using your own private key or externally. For this particular flow, we will use our private key managed by vidWallet.
+- **nonce**: Nonce value included in the Authentication Request Token received.
+- **state**: State value included in the Authentication Request Token received.
+- **registrationType**: Whether you want to generate a Registration Object from your keys as a value or as a reference. In this case, it will use the `value` option.
+- **responseMode**: Specifies the way you want to receive the Authentication Response. In this case, it will be `fragment`, which is the default value.
+- **did**: User DID from the private key in vidWallet used to perform the signature.
+- **vp**: A claim response that includes a Verifiable Presentation with the Verifiable Credential type/s requested.
+
+Example:
+
+```json
+{
+  "redirectUri": "odysseyapp://example/did-auth",
+  "signatureType": {
+    "hexPrivateKey": "58ab64245715ee6c67f51abe86de3d07cc0a6555b638becae7dab21d6bbe83b2",
+    "did": "did:vid:0x8D851667cC475114085F24A145134F2AA8223b00",
+    "kid": "did:vid:0x8D851667cC475114085F24A145134F2AA8223b00#key-1"
+  },
+  "nonce": "agxZnO7jbSDvKhRK2BIgx0he-w3TU035pigj6sRXk7s",
+  "state": "ac675fe2981496fad688b3ac",
+  "responseMode": "fragment",
+  "registrationType": {
+    "type": "VALUE"
+  },
+  "did": "did:vid:0x8D851667cC475114085F24A145134F2AA8223b00",
+  "vp": {
+    "@context": ["https://www.w3.org/2018/credentials/v1"],
+    "type": "VerifiablePresentation",
+    "verifiableCredential": [
+      {
+        "@context": [
+          "https://www.w3.org/2018/credentials/v1",
+          "https://api.vidchain.net/credentials/verifiableId/v1"
+        ],
+        "id": "https://api.vidchain.net/api/v1/schemas/2391",
+        "type": ["VerifiableCredential", "VerifiableIdCredential"],
+        "issuer": "did:vid:0x5208431C6EC2ec4097aeA7182bB92d018766498c",
+        "credentialSubject": {
+          "id": "did:vid:0x8707CCa835C961334D3F6450C6a61a0AD6592460",
+          "firstName": "Eva",
+          "lastName": "Monroe",
+          "gender": "Female",
+          "dateOfBirth": "12/11/1970",
+          "placeOfBirth": "Madrid",
+          "currentAddress": "Arago 179 4a",
+          "city": "Barcelona",
+          "state": "Cataluña",
+          "zip": "08011"
+        },
+        "issuanceDate": "2019-11-17T14:00:00Z",
+        "proof": {
+          "type": "EcdsaSecp256k1Signature2019",
+          "created": "2019-11-17T14:00:00Z",
+          "proofPurpose": "assertionMethod",
+          "verificationMethod": "did:vid:0x5208431C6EC2ec4097aeA7182bB92d018766498c#key-1",
+          "jws": "eyJhbGciOiJFUzI1NkstUiIsInR5cCI6IkpXVCIsImtpZCI6ImRpZDp2aWQ6MHgzYWQzZkY4RTVhQjhENjkzQzI4QmREOUI0N2VkRDFmNzQ0NUY4YzNGI2tleS0xIn0.eyJpYXQiOjE1OTE3OTk1MDQsInZjIjp7IkBjb250ZXh0IjpbImh0dHBzOi8vd3d3LnczLm9yZy8yMDE4L2NyZWRlbnRpYWxzL3YxIiwiaHR0cHM6Ly9hcGkudmlkY2hhaW4ubmV0L2NyZWRlbnRpYWxzL3ZlcmlmaWFibGUtaWQvdjEiXSwiaWQiOiJodHRwczovL2FwaS52aWRjaGFpbi5uZXQvYXBpL3YxL3NjaGVtYXMvMjM5MSIsInR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJWZXJpZmlhYmxlSWRDcmVkZW50aWFsIl0sImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImlkIjoiZGlkOnZpZDoweDQyYjg5OEUyN0M1NmU3ZDVBMmQ0RTY0NmRCMmQ0MThCRDVDMTcwYzQiLCJmaXJzdE5hbWUiOiJFdmEiLCJsYXN0TmFtZSI6Ik1vbnJvZSIsImdlbmRlciI6IkZlbWFsZSIsImRhdGVPZkJpcnRoIjoiMTIvMTEvMTk3MCIsInBsYWNlT2ZCaXJ0aCI6Ik1hZHJpZCIsImN1cnJlbnRBZGRyZXNzIjoiQXJhZ28gMTc5IDRhIiwiY2l0eSI6IkJhcmNlbG9uYSIsInN0YXRlIjoiQ2F0YWxvbmlhIiwiemlwIjoiMDgwMTEifSwiaXNzdWVyIjoiZGlkOnZpZDoweDNhZDNmRjhFNWFCOEQ2OTNDMjhCZEQ5QjQ3ZWREMWY3NDQ1RjhjM0YifSwiaXNzIjoiZGlkOnZpZDoweDNhZDNmRjhFNWFCOEQ2OTNDMjhCZEQ5QjQ3ZWREMWY3NDQ1RjhjM0YifQ.B7e4Zp9jGLDXTRG8ID1j0_EVwoQlI_XDzSagKWmDR-INjMVSFG1142asC1r5RedNuu3SR8VIcE9yrbDw9cRuEQA"
+        }
+      }
+    ],
+    "proof": {
+      "type": "EcdsaSecp256k1Signature2019",
+      "created": "2019-06-22T14:11:44Z",
+      "proofPurpose": "assertionMethod",
+      "verificationMethod": "did:vid:0x16048B83FAdaCdCB20198ABc45562Df1A3e289aF#key-1",
+      "jws": "eyJhbGciOiJFUzI1NksifQ.eyJzdWIiOiJFQlNJIDIwMTkifQ.oggE3ft3kJYPGGa9eBibpbjgeJXw4fLbVMouVoM2NfcDxsl_UUUIarsS1VpBoYEs7s9cBlc4uC0EbnJCHfVJIw"
+    }
+  }
+}
+```
+
+### vidWallet creates an Authentication Response URI
+
+With previous Authentication Response Structure data, we can call the library to create an Authentication Response URI encoded, and ready to be redirected to the initiator's App.
+
+Example:
+
+```js
+const uriResponse = await siopDidAuth.createUriResponse(responseOpts);
+
+console.warn(uriResponse);
+//     {
+//      urlEncoded: 'odysseyapp%3A%2F%2Fexample%2Fdid-auth%23id_token%3DeyJhbGciOiJFUzI1NkstUiIsInR5cCI6IkpXVCIsImtpZCI6ImRpZDp2aWQ6MHgzNDk5YTc3MjA5MmVlMUE2NzBlNjkyOGMxMmE5QkY4NGU0NDU0OWI4I2tleS0xIn0.eyJpYXQiOjE2MDUzNjcwNTQsImV4cCI6MTYwNTM2NzM1NCwiaXNzIjoiaHR0cHM6Ly9zZWxmLWlzc3VlZC5tZSIsInN1YiI6IkdBR0xJRVJJZG84Slg0X3hOOVplZlNkY3dXRmdkQzNIN3MyMEd3Wmh1OUkiLCJub25jZSI6IlNJYUpXQ1NqeFRHMjdJUHhpS2Z1ZUk1WFhYVVNoTzdTWURsek5ES0o2TlUiLCJhdWQiOiJvZHlzc2V5YXBwOi8vZXhhbXBsZS9kaWQtYXV0aCIsInN1Yl9qd2siOnsia2lkIjoiZGlkOnZpZDoweDM0OTlhNzcyMDkyZWUxQTY3MGU2OTI4YzEyYTlCRjg0ZTQ0NTQ5Yjgja2V5LTEiLCJrdHkiOiJFQyIsImNydiI6InNlY3AyNTZrMSIsIngiOiJiOTkzMWZhMTk5ZTcwMTIxNDZhN2QzM2YyNDAyODI3NGUxZDkyODM1NTQ1MWVhMjdiNjhjMjI4NThlYjQzNDY0IiwieSI6IjM3NTFlNDg5YjUxMTJmNjMwZDE2ZmNiYTZkNjU2MjhlZGIzZWFlNmM4ZjFiZTJlOWEzMTMxNWJmN2Q0MmY3NjEifSwiZGlkIjoiZGlkOnZpZDoweDM0OTlhNzcyMDkyZWUxQTY3MGU2OTI4YzEyYTlCRjg0ZTQ0NTQ5YjgiLCJ2cCI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSJdLCJ0eXBlIjoiVmVyaWZpYWJsZVByZXNlbnRhdGlvbiIsInZlcmlmaWFibGVDcmVkZW50aWFsIjpbeyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vYXBpLnZpZGNoYWluLm5ldC9jcmVkZW50aWFscy92ZXJpZmlhYmxlSWQvdjEiXSwiaWQiOiJodHRwczovL2FwaS52aWRjaGFpbi5uZXQvYXBpL3YxL3NjaGVtYXMvMjM5MSIsInR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJWZXJpZmlhYmxlSWRDcmVkZW50aWFsIl0sImlzc3VlciI6ImRpZDp2aWQ6MHg1MjA4NDMxQzZFQzJlYzQwOTdhZUE3MTgyYkI5MmQwMTg3NjY0OThjIiwiY3JlZGVudGlhbFN1YmplY3QiOnsiaWQiOiJkaWQ6dmlkOjB4ODcwN0NDYTgzNUM5NjEzMzREM0Y2NDUwQzZhNjFhMEFENjU5MjQ2MCIsImZpcnN0TmFtZSI6IkV2YSIsImxhc3ROYW1lIjoiTW9ucm9lIiwiZ2VuZGVyIjoiRmVtYWxlIiwiZGF0ZU9mQmlydGgiOiIxMi8xMS8xOTcwIiwicGxhY2VPZkJpcnRoIjoiTWFkcmlkIiwiY3VycmVudEFkZHJlc3MiOiJBcmFnbyAxNzkgNGEiLCJjaXR5IjoiQmFyY2Vsb25hIiwic3RhdGUiOiJDYXRhbHXDsWEiLCJ6aXAiOiIwODAxMSJ9LCJpc3N1YW5jZURhdGUiOiIyMDE5LTExLTE3VDE0OjAwOjAwWiIsInByb29mIjp7InR5cGUiOiJFY2RzYVNlY3AyNTZrMVNpZ25hdHVyZTIwMTkiLCJjcmVhdGVkIjoiMjAxOS0xMS0xN1QxNDowMDowMFoiLCJwcm9vZlB1cnBvc2UiOiJhc3NlcnRpb25NZXRob2QiLCJ2ZXJpZmljYXRpb25NZXRob2QiOiJkaWQ6dmlkOjB4NTIwODQzMUM2RUMyZWM0MDk3YWVBNzE4MmJCOTJkMDE4NzY2NDk4YyNrZXktMSIsImp3cyI6ImV5SmhiR2NpT2lKRlV6STFOa3N0VWlJc0luUjVjQ0k2SWtwWFZDSXNJbXRwWkNJNkltUnBaRHAyYVdRNk1IZ3pZV1F6WmtZNFJUVmhRamhFTmprelF6STRRbVJFT1VJME4yVmtSREZtTnpRME5VWTRZek5HSTJ0bGVTMHhJbjAuZXlKcFlYUWlPakUxT1RFM09UazFNRFFzSW5aaklqcDdJa0JqYjI1MFpYaDBJanBiSW1oMGRIQnpPaTh2ZDNkM0xuY3pMbTl5Wnk4eU1ERTRMMk55WldSbGJuUnBZV3h6TDNZeElpd2lhSFIwY0hNNkx5OWhjR2t1ZG1sa1kyaGhhVzR1Ym1WMEwyTnlaV1JsYm5ScFlXeHpMM1psY21sbWFXRmliR1V0YVdRdmRqRWlYU3dpYVdRaU9pSm9kSFJ3Y3pvdkwyRndhUzUyYVdSamFHRnBiaTV1WlhRdllYQnBMM1l4TDNOamFHVnRZWE12TWpNNU1TSXNJblI1Y0dVaU9sc2lWbVZ5YVdacFlXSnNaVU55WldSbGJuUnBZV3dpTENKV1pYSnBabWxoWW14bFNXUkRjbVZrWlc1MGFXRnNJbDBzSW1OeVpXUmxiblJwWVd4VGRXSnFaV04wSWpwN0ltbGtJam9pWkdsa09uWnBaRG93ZURReVlqZzVPRVV5TjBNMU5tVTNaRFZCTW1RMFJUWTBObVJDTW1RME1UaENSRFZETVRjd1l6UWlMQ0ptYVhKemRFNWhiV1VpT2lKRmRtRWlMQ0pzWVhOMFRtRnRaU0k2SWsxdmJuSnZaU0lzSW1kbGJtUmxjaUk2SWtabGJXRnNaU0lzSW1SaGRHVlBaa0pwY25Sb0lqb2lNVEl2TVRFdk1UazNNQ0lzSW5Cc1lXTmxUMlpDYVhKMGFDSTZJazFoWkhKcFpDSXNJbU4xY25KbGJuUkJaR1J5WlhOeklqb2lRWEpoWjI4Z01UYzVJRFJoSWl3aVkybDBlU0k2SWtKaGNtTmxiRzl1WVNJc0luTjBZWFJsSWpvaVEyRjBZV3h2Ym1saElpd2llbWx3SWpvaU1EZ3dNVEVpZlN3aWFYTnpkV1Z5SWpvaVpHbGtPblpwWkRvd2VETmhaRE5tUmpoRk5XRkNPRVEyT1RORE1qaENaRVE1UWpRM1pXUkVNV1kzTkRRMVJqaGpNMFlpZlN3aWFYTnpJam9pWkdsa09uWnBaRG93ZUROaFpETm1SamhGTldGQ09FUTJPVE5ETWpoQ1pFUTVRalEzWldSRU1XWTNORFExUmpoak0wWWlmUS5CN2U0WnA5akdMRFhUUkc4SUQxajBfRVZ3b1FsSV9YRHpTYWdLV21EUi1JTmpNVlNGRzExNDJhc0MxcjVSZWROdXUzU1I4VkljRTl5cmJEdzljUnVFUUEifX1dLCJwcm9vZiI6eyJ0eXBlIjoiRWNkc2FTZWNwMjU2azFTaWduYXR1cmUyMDE5IiwiY3JlYXRlZCI6IjIwMTktMDYtMjJUMTQ6MTE6NDRaIiwicHJvb2ZQdXJwb3NlIjoiYXNzZXJ0aW9uTWV0aG9kIiwidmVyaWZpY2F0aW9uTWV0aG9kIjoiZGlkOnZpZDoweDE2MDQ4QjgzRkFkYUNkQ0IyMDE5OEFCYzQ1NTYyRGYxQTNlMjg5YUYja2V5LTEiLCJqd3MiOiJleUpoYkdjaU9pSkZVekkxTmtzaWZRLmV5SnpkV0lpT2lKRlFsTkpJREl3TVRraWZRLm9nZ0UzZnQza0pZUEdHYTllQmlicGJqZ2VKWHc0ZkxiVk1vdVZvTTJOZmNEeHNsX1VVVUlhcnNTMVZwQm9ZRXM3czljQmxjNHVDMEVibkpDSGZWSkl3In19fQ.1fVQmPniGc2Qii-lNxWy1ydPJ2SDWUewXi1MZfXa8sPguNCHZLLAntSj3gB7ExteJBHlBct_JT_eb1jSr6i-PQE%26state%3Dfa78bbbad7f66c3060eb388f',
+//      encoding: 'application/x-www-form-urlencoded',
+//      response_mode: 'fragment'
+//    }
+```
+
+The Url to be redirected is included in `uriResponse.urlEncoded`. Keep in mind that this Url is an UriEncoded.
+
+If you want to read it as a regular Url, you just decode it:
+
+```js
+const uriResponseDecoded = decodeURIComponent(uriResponse.urlEncoded);
+
+console.log(uriResponseDecoded);
+// odysseyapp://example/did-auth#id_token=eyJhbGciOiJFUzI1NkstUiIsInR5cCI6IkpXVCIsImtpZCI6ImRpZDp2aWQ6MHg2Y2Q5NkFhMEQzMmQyRjFlOWM4MzM4MTgxMzQ4MWE4ODBhMzQ0NjY4I2tleS0xIn0.eyJpYXQiOjE2MDUzNjc1MzEsImV4cCI6MTYwNTM2NzgzMSwiaXNzIjoiaHR0cHM6Ly9zZWxmLWlzc3VlZC5tZSIsInN1YiI6IkEyeElIYWVmYWdRTHVyOENfZTE3amZfSktUcl8xVXRaOXNzczJOX0taNTAiLCJub25jZSI6InE1ZmxoVHh6NnZHdE5qREN6ZVRsSFBvNkE4Z3EySEhUTlRqaFpzLW1jUjQiLCJhdWQiOiJvZHlzc2V5YXBwOi8vZXhhbXBsZS9kaWQtYXV0aCIsInN1Yl9qd2siOnsia2lkIjoiZGlkOnZpZDoweDZjZDk2QWEwRDMyZDJGMWU5YzgzMzgxODEzNDgxYTg4MGEzNDQ2Njgja2V5LTEiLCJrdHkiOiJFQyIsImNydiI6InNlY3AyNTZrMSIsIngiOiI3MTE5ZTI5YjZjZDc5NTIzMDRmN2E4NjRkODA4ZjFkNTZmZWY3Y2Y0YTdlYTIyOWFmZTJhMDI0YjlhMDE5OTRkIiwieSI6IjllYzU3NWZkZGVkNjgyNDU4MjU3ZDQ3M2ZhMDg2ZjA2NTdlNzViOWNlNDA4YzFkZWZjZmM1ZjdlOTZlMWVmYWIifSwiZGlkIjoiZGlkOnZpZDoweDZjZDk2QWEwRDMyZDJGMWU5YzgzMzgxODEzNDgxYTg4MGEzNDQ2NjgiLCJ2cCI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSJdLCJ0eXBlIjoiVmVyaWZpYWJsZVByZXNlbnRhdGlvbiIsInZlcmlmaWFibGVDcmVkZW50aWFsIjpbeyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vYXBpLnZpZGNoYWluLm5ldC9jcmVkZW50aWFscy92ZXJpZmlhYmxlSWQvdjEiXSwiaWQiOiJodHRwczovL2FwaS52aWRjaGFpbi5uZXQvYXBpL3YxL3NjaGVtYXMvMjM5MSIsInR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJWZXJpZmlhYmxlSWRDcmVkZW50aWFsIl0sImlzc3VlciI6ImRpZDp2aWQ6MHg1MjA4NDMxQzZFQzJlYzQwOTdhZUE3MTgyYkI5MmQwMTg3NjY0OThjIiwiY3JlZGVudGlhbFN1YmplY3QiOnsiaWQiOiJkaWQ6dmlkOjB4ODcwN0NDYTgzNUM5NjEzMzREM0Y2NDUwQzZhNjFhMEFENjU5MjQ2MCIsImZpcnN0TmFtZSI6IkV2YSIsImxhc3ROYW1lIjoiTW9ucm9lIiwiZ2VuZGVyIjoiRmVtYWxlIiwiZGF0ZU9mQmlydGgiOiIxMi8xMS8xOTcwIiwicGxhY2VPZkJpcnRoIjoiTWFkcmlkIiwiY3VycmVudEFkZHJlc3MiOiJBcmFnbyAxNzkgNGEiLCJjaXR5IjoiQmFyY2Vsb25hIiwic3RhdGUiOiJDYXRhbHXDsWEiLCJ6aXAiOiIwODAxMSJ9LCJpc3N1YW5jZURhdGUiOiIyMDE5LTExLTE3VDE0OjAwOjAwWiIsInByb29mIjp7InR5cGUiOiJFY2RzYVNlY3AyNTZrMVNpZ25hdHVyZTIwMTkiLCJjcmVhdGVkIjoiMjAxOS0xMS0xN1QxNDowMDowMFoiLCJwcm9vZlB1cnBvc2UiOiJhc3NlcnRpb25NZXRob2QiLCJ2ZXJpZmljYXRpb25NZXRob2QiOiJkaWQ6dmlkOjB4NTIwODQzMUM2RUMyZWM0MDk3YWVBNzE4MmJCOTJkMDE4NzY2NDk4YyNrZXktMSIsImp3cyI6ImV5SmhiR2NpT2lKRlV6STFOa3N0VWlJc0luUjVjQ0k2SWtwWFZDSXNJbXRwWkNJNkltUnBaRHAyYVdRNk1IZ3pZV1F6WmtZNFJUVmhRamhFTmprelF6STRRbVJFT1VJME4yVmtSREZtTnpRME5VWTRZek5HSTJ0bGVTMHhJbjAuZXlKcFlYUWlPakUxT1RFM09UazFNRFFzSW5aaklqcDdJa0JqYjI1MFpYaDBJanBiSW1oMGRIQnpPaTh2ZDNkM0xuY3pMbTl5Wnk4eU1ERTRMMk55WldSbGJuUnBZV3h6TDNZeElpd2lhSFIwY0hNNkx5OWhjR2t1ZG1sa1kyaGhhVzR1Ym1WMEwyTnlaV1JsYm5ScFlXeHpMM1psY21sbWFXRmliR1V0YVdRdmRqRWlYU3dpYVdRaU9pSm9kSFJ3Y3pvdkwyRndhUzUyYVdSamFHRnBiaTV1WlhRdllYQnBMM1l4TDNOamFHVnRZWE12TWpNNU1TSXNJblI1Y0dVaU9sc2lWbVZ5YVdacFlXSnNaVU55WldSbGJuUnBZV3dpTENKV1pYSnBabWxoWW14bFNXUkRjbVZrWlc1MGFXRnNJbDBzSW1OeVpXUmxiblJwWVd4VGRXSnFaV04wSWpwN0ltbGtJam9pWkdsa09uWnBaRG93ZURReVlqZzVPRVV5TjBNMU5tVTNaRFZCTW1RMFJUWTBObVJDTW1RME1UaENSRFZETVRjd1l6UWlMQ0ptYVhKemRFNWhiV1VpT2lKRmRtRWlMQ0pzWVhOMFRtRnRaU0k2SWsxdmJuSnZaU0lzSW1kbGJtUmxjaUk2SWtabGJXRnNaU0lzSW1SaGRHVlBaa0pwY25Sb0lqb2lNVEl2TVRFdk1UazNNQ0lzSW5Cc1lXTmxUMlpDYVhKMGFDSTZJazFoWkhKcFpDSXNJbU4xY25KbGJuUkJaR1J5WlhOeklqb2lRWEpoWjI4Z01UYzVJRFJoSWl3aVkybDBlU0k2SWtKaGNtTmxiRzl1WVNJc0luTjBZWFJsSWpvaVEyRjBZV3h2Ym1saElpd2llbWx3SWpvaU1EZ3dNVEVpZlN3aWFYTnpkV1Z5SWpvaVpHbGtPblpwWkRvd2VETmhaRE5tUmpoRk5XRkNPRVEyT1RORE1qaENaRVE1UWpRM1pXUkVNV1kzTkRRMVJqaGpNMFlpZlN3aWFYTnpJam9pWkdsa09uWnBaRG93ZUROaFpETm1SamhGTldGQ09FUTJPVE5ETWpoQ1pFUTVRalEzWldSRU1XWTNORFExUmpoak0wWWlmUS5CN2U0WnA5akdMRFhUUkc4SUQxajBfRVZ3b1FsSV9YRHpTYWdLV21EUi1JTmpNVlNGRzExNDJhc0MxcjVSZWROdXUzU1I4VkljRTl5cmJEdzljUnVFUUEifX1dLCJwcm9vZiI6eyJ0eXBlIjoiRWNkc2FTZWNwMjU2azFTaWduYXR1cmUyMDE5IiwiY3JlYXRlZCI6IjIwMTktMDYtMjJUMTQ6MTE6NDRaIiwicHJvb2ZQdXJwb3NlIjoiYXNzZXJ0aW9uTWV0aG9kIiwidmVyaWZpY2F0aW9uTWV0aG9kIjoiZGlkOnZpZDoweDE2MDQ4QjgzRkFkYUNkQ0IyMDE5OEFCYzQ1NTYyRGYxQTNlMjg5YUYja2V5LTEiLCJqd3MiOiJleUpoYkdjaU9pSkZVekkxTmtzaWZRLmV5SnpkV0lpT2lKRlFsTkpJREl3TVRraWZRLm9nZ0UzZnQza0pZUEdHYTllQmlicGJqZ2VKWHc0ZkxiVk1vdVZvTTJOZmNEeHNsX1VVVUlhcnNTMVZwQm9ZRXM3czljQmxjNHVDMEVibkpDSGZWSkl3In19fQ.pq3vX7C7_cLfe-LRRHsivNrH50-TxtGORI9SMVQ5bj1jlv_CFf5WNggevjiWLm8jrxkoenqBqXsKF3IGgxlqwwA&state=9caaf9f6d37ed48a9e2247e4
 ```
 
 ## Authentication Flow

@@ -112,7 +112,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
   });
 
   it.only("create an app 2 app flow", async () => {
-    expect.assertions(6);
+    expect.assertions(8);
     const WALLET_API_BASE_URL = process.env.WALLET_API_URL;
     const entityAA = await getLegalEntityAuthZToken("ODYSSEY APP TEST");
     const authZToken = entityAA.jwt;
@@ -166,6 +166,34 @@ describe("SIOP DID Auth end to end flow tests should", () => {
       optsVerifyRequest
     );
     expect(validationRequestResponse).toBeDefined();
-    console.warn(JSON.stringify(validationRequestResponse, null, 2));
+    expect(validationRequestResponse.payload).toBeDefined();
+
+    const { hexPrivateKey, did } = mockedKeyAndDid();
+    const requestPayload = validationRequestResponse.payload as DidAuthTypes.DidAuthRequestPayload;
+    const stateRequest = requestPayload.state;
+    const nonceRequest = requestPayload.nonce;
+
+    const responseOpts: DidAuthTypes.DidAuthResponseOpts = {
+      redirectUri: requestPayload.client_id,
+      signatureType: {
+        hexPrivateKey,
+        did,
+        kid: `${did}#key-1`,
+      },
+      nonce: nonceRequest,
+      state: stateRequest,
+      responseMode: DidAuthResponseMode.FRAGMENT,
+      registrationType: {
+        type: DidAuthTypes.ObjectPassedBy.VALUE,
+      },
+      did,
+      vp: mockedData.verifiableIdPresentation,
+    };
+
+    const uriResponse = await siopDidAuth.createUriResponse(responseOpts);
+    expect(uriResponse).toBeDefined();
+    const uriResponseDecoded = decodeURIComponent(uriResponse.urlEncoded);
+
+    console.warn(uriResponseDecoded);
   });
 });
