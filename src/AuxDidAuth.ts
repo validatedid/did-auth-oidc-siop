@@ -2,11 +2,10 @@ import { createJWT, SimpleSigner, decodeJWT, verifyJWT } from "did-jwt";
 import { Resolver } from "did-resolver";
 import VidDidResolver from "@validatedid/vid-did-resolver";
 import { AxiosResponse } from "axios";
-import { DidAuthUtil } from ".";
+import { util, JWK } from "./util";
 import DidAuthErrors from "./interfaces/Errors";
 import { getNonce, doPostCallWithToken, getState } from "./util/Util";
 import { JWTHeader, JWTVerifyOptions } from "./interfaces/JWT";
-import { JWK } from "./util";
 import {
   DidAuthKeyAlgorithm,
   DidAuthRequestOpts,
@@ -196,7 +195,7 @@ const verifyDidAuth = async (
     const { registry } = opts.verificationType;
     // as audience is set in payload as a DID, it is required to be set as options
     const options: JWTVerifyOptions = {
-      audience: DidAuthUtil.getAudience(jwt),
+      audience: util.getAudience(jwt),
       resolver: new Resolver(
         VidDidResolver.getResolver({
           rpcUrl,

@@ -2,21 +2,18 @@ import * as dotenv from "dotenv";
 import axios from "axios";
 import * as didJwt from "did-jwt";
 import { JWT } from "jose";
-import { mockedGetEnterpriseAuthToken, generateTestKey } from "../AuxTest";
+import { parse } from "querystring";
+import { mockedGetEnterpriseAuthToken, mockedKeyAndDid } from "../AuxTest";
 import {
-  getHexPrivateKey,
-  DidAuthScope,
-  DidAuthResponseType,
-  DidAuthResponseIss,
-  VidDidAuth,
-  DidAuthRequestCall,
-  DidAuthRequestPayload,
-  getNonce,
-  DidAuthKeyType,
-  DidAuthResponseCall,
-  DidAuthKeyAlgo,
+  createUriRequest,
+  createDidAuthRequest,
+  createDidAuthResponse,
+  verifyDidAuthRequest,
+  verifyDidAuthResponse,
   JWTHeader,
   DidAuthErrors,
+  DidAuthTypes,
+  DidAuthUtil,
 } from "../../src";
 import * as mockedData from "../data/mockedData";
 
@@ -35,51 +32,71 @@ describe("vidDidAuth", () => {
       };
 
       await expect(
-        VidDidAuth.createUriRequest(didAuthRequestCall as never)
+        createUriRequest(didAuthRequestCall as never)
       ).rejects.toThrow(DidAuthErrors.BAD_PARAMS);
     });
 
     it("should throw BAD_PARAMS when no params is passed", async () => {
       expect.assertions(1);
 
-      await expect(
-        VidDidAuth.createUriRequest(undefined as never)
-      ).rejects.toThrow(DidAuthErrors.BAD_PARAMS);
+      await expect(createUriRequest(undefined as never)).rejects.toThrow(
+        DidAuthErrors.BAD_PARAMS
+      );
     });
 
     it("should create a DID Auth Request URL with a JWT as reference", async () => {
-      expect.assertions(6);
+      expect.assertions(12);
       const WALLET_API_BASE_URL =
         process.env.WALLET_API_URL || "http://localhost:9000";
       const entityAA = mockedGetEnterpriseAuthToken("COMPANY AA INC");
       const tokenEntityAA = entityAA.jwt;
-      const didAuthRequestCall: DidAuthRequestCall = {
-        requestUri: "https://dev.vidchain.net/siop/jwts/N7A8u4VmZfMGGdAtAAFV",
+      const didAA = entityAA.did;
+
+      const opts: DidAuthTypes.DidAuthRequestOpts = {
         redirectUri: "http://localhost:8080/demo/spanish-university",
-        signatureUri: `${WALLET_API_BASE_URL}/wallet/v1/signatures`,
-        authZToken: tokenEntityAA,
+        requestObjectBy: {
+          type: DidAuthTypes.ObjectPassedBy.REFERENCE,
+          referenceUri: "https://dev.vidchain.net/siop/jwts",
+        },
+        signatureType: {
+          signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
+          did: didAA,
+          authZToken: tokenEntityAA,
+          kid: `${didAA}#key-1`,
+        },
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.REFERENCE,
+          referenceUri: `https://dev.vidchain.net/api/v1/identifiers/${didAA};transform-keys=jwks`,
+        },
       };
       jest.spyOn(axios, "post").mockImplementation(async () => {
         const header: JWTHeader = {
-          alg: DidAuthKeyAlgo.ES256KR,
+          alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
           typ: "JWT",
           kid: `${entityAA.did}#key-1`,
         };
-        const payload = {
+        const state = DidAuthUtil.getState();
+        const payload: DidAuthTypes.DidAuthRequestPayload = {
           iss: entityAA.did,
-          scope: DidAuthScope.OPENID_DIDAUTHN,
-          response_type: DidAuthResponseType.ID_TOKEN,
-          client_id: didAuthRequestCall.redirectUri,
-          nonce: getNonce(),
+          scope: DidAuthTypes.DidAuthScope.OPENID_DIDAUTHN,
+          response_type: DidAuthTypes.DidAuthResponseType.ID_TOKEN,
+          client_id: opts.redirectUri,
+          state,
+          nonce: DidAuthUtil.getNonce(state),
+          registration: {
+            jwks_uri: `https://dev.vidchain.net/api/v1/identifiers/${entityAA.did};transform-keys=jwks`,
+            id_token_signed_response_alg:
+              DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
+          },
         };
         const jws = await didJwt.createJWT(
           payload,
           {
             issuer: entityAA.did,
-            alg: DidAuthKeyAlgo.ES256KR,
+            alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
             signer: didJwt.SimpleSigner(
-              getHexPrivateKey(entityAA.jwk).replace("0x", "")
-            ), // Removing 0x from private key as input of SimpleSigner
+              DidAuthUtil.getHexPrivateKey(entityAA.jwk).replace("0x", "")
+            ),
             expiresIn: 5 * 60,
           },
           header
@@ -90,15 +107,25 @@ describe("vidDidAuth", () => {
         };
       });
 
-      const { uri, nonce } = await VidDidAuth.createUriRequest(
-        didAuthRequestCall
+      const uriRequest = await createUriRequest(opts);
+      expect(uriRequest).toBeDefined();
+      expect(uriRequest).toHaveProperty("urlEncoded");
+      expect(uriRequest).toHaveProperty("encoding");
+      expect(uriRequest).toHaveProperty("urlEncoded");
+      const uriDecoded = decodeURIComponent(uriRequest.urlEncoded);
+      expect(uriDecoded).toContain(`openid://`);
+      expect(uriDecoded).toContain(
+        `?response_type=${DidAuthTypes.DidAuthResponseType.ID_TOKEN}`
       );
-      expect(uri).toContain(`openid://`);
-      expect(uri).toContain(`?response_type=${DidAuthResponseType.ID_TOKEN}`);
-      expect(uri).toContain(`&client_id=${didAuthRequestCall.redirectUri}`);
-      expect(uri).toContain(`&scope=${DidAuthScope.OPENID_DIDAUTHN}`);
-      expect(uri).toContain(`&requestUri=${didAuthRequestCall.requestUri}`);
-      expect(nonce).toBeDefined();
+      expect(uriDecoded).toContain(`&client_id=${opts.redirectUri}`);
+      expect(uriDecoded).toContain(
+        `&scope=${DidAuthTypes.DidAuthScope.OPENID_DIDAUTHN}`
+      );
+      expect(uriDecoded).toContain(`&requestUri=`);
+      const data = parse(uriDecoded);
+      expect(data.requestUri).toStrictEqual(opts.requestObjectBy.referenceUri);
+      expect(uriRequest).toHaveProperty("jwt");
+      expect(uriRequest.jwt).toBeDefined();
       jest.clearAllMocks();
     });
 
@@ -108,93 +135,99 @@ describe("vidDidAuth", () => {
         process.env.WALLET_API_URL || "http://localhost:9000";
       const entityAA = mockedGetEnterpriseAuthToken("COMPANY AA INC");
       const tokenEntityAA = entityAA.jwt;
-      const didAuthRequestCall: DidAuthRequestCall = {
-        requestUri: "https://dev.vidchain.net/siop/jwts/N7A8u4VmZfMGGdAtAAFV",
+      const didAA = entityAA.did;
+      const opts: DidAuthTypes.DidAuthRequestOpts = {
         redirectUri: "http://localhost:8080/demo/spanish-university",
-        signatureUri: `${WALLET_API_BASE_URL}/wallet/v1/signatures`,
-        authZToken: tokenEntityAA,
+        requestObjectBy: {
+          type: DidAuthTypes.ObjectPassedBy.REFERENCE,
+          referenceUri: "https://dev.vidchain.net/siop/jwts",
+        },
+        signatureType: {
+          signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
+          did: didAA,
+          authZToken: tokenEntityAA,
+          kid: `${didAA}#key-1`,
+        },
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.REFERENCE,
+          referenceUri: `https://dev.vidchain.net/api/v1/identifiers/${didAA};transform-keys=jwks`,
+        },
       };
       jest.spyOn(axios, "post").mockResolvedValue({
         status: 400,
         data: { jws: undefined },
       });
 
-      await expect(
-        VidDidAuth.createDidAuthRequest(didAuthRequestCall)
-      ).rejects.toThrow(DidAuthErrors.MALFORMED_SIGNATURE_RESPONSE);
+      await expect(createDidAuthRequest(opts)).rejects.toThrow(
+        DidAuthErrors.MALFORMED_SIGNATURE_RESPONSE
+      );
       jest.clearAllMocks();
     });
 
     it("should throw BAD_PARAMS", async () => {
       expect.assertions(1);
-      const didAuthRequestCall = {
+      const opts = {
         signatureUri: "",
-        authZToken: "",
       };
-      await expect(
-        VidDidAuth.createDidAuthRequest(didAuthRequestCall as never)
-      ).rejects.toThrow(DidAuthErrors.BAD_PARAMS);
-      jest.clearAllMocks();
-    });
-
-    it("should throw KEY_SIGNATURE_URI_ERROR", async () => {
-      expect.assertions(1);
-      const didAuthRequestCall = {
-        redirectUri: "http://localhost:8080/demo/spanish-university",
-        authZToken: "",
-      };
-      await expect(
-        VidDidAuth.createDidAuthRequest(didAuthRequestCall as never)
-      ).rejects.toThrow(DidAuthErrors.KEY_SIGNATURE_URI_ERROR);
-      jest.clearAllMocks();
-    });
-
-    it("should throw AUTHZTOKEN_UNDEFINED", async () => {
-      expect.assertions(1);
-      const didAuthRequestCall = {
-        redirectUri: "http://localhost:8080/demo/spanish-university",
-        signatureUri: `/wallet/v1/signatures`,
-      };
-      await expect(
-        VidDidAuth.createDidAuthRequest(didAuthRequestCall as never)
-      ).rejects.toThrow(DidAuthErrors.AUTHZTOKEN_UNDEFINED);
+      await expect(createDidAuthRequest(opts as never)).rejects.toThrow(
+        DidAuthErrors.BAD_PARAMS
+      );
       jest.clearAllMocks();
     });
 
     it('should create a JWT DID Auth Request token with "ES256K-R" algo using wallet keys from a random Enterprise', async () => {
-      expect.assertions(5);
+      expect.assertions(7);
       const WALLET_API_BASE_URL =
         process.env.WALLET_API_URL || "http://localhost:9000";
       const entityAA = mockedGetEnterpriseAuthToken("COMPANY AA INC");
-      const didEntityAA = entityAA.did;
       const tokenEntityAA = entityAA.jwt;
-      const didAuthRequestCall: DidAuthRequestCall = {
-        requestUri: "https://dev.vidchain.net/siop/jwts/N7A8u4VmZfMGGdAtAAFV",
+      const didAA = entityAA.did;
+
+      const opts: DidAuthTypes.DidAuthRequestOpts = {
         redirectUri: "http://localhost:8080/demo/spanish-university",
-        signatureUri: `${WALLET_API_BASE_URL}/wallet/v1/signatures`,
-        authZToken: tokenEntityAA,
+        requestObjectBy: {
+          type: DidAuthTypes.ObjectPassedBy.REFERENCE,
+          referenceUri: "https://dev.vidchain.net/siop/jwts",
+        },
+        signatureType: {
+          signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
+          did: didAA,
+          authZToken: tokenEntityAA,
+          kid: `${didAA}#key-1`,
+        },
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.REFERENCE,
+          referenceUri: `https://dev.vidchain.net/api/v1/identifiers/${didAA};transform-keys=jwks`,
+        },
       };
       jest.spyOn(axios, "post").mockImplementation(async () => {
         const header: JWTHeader = {
-          alg: DidAuthKeyAlgo.ES256KR,
+          alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
           typ: "JWT",
           kid: `${entityAA.did}#key-1`,
         };
-        const payload = {
+        const state = DidAuthUtil.getState();
+        const payload: DidAuthTypes.DidAuthRequestPayload = {
           iss: entityAA.did,
-          scope: DidAuthScope.OPENID_DIDAUTHN,
-          response_type: DidAuthResponseType.ID_TOKEN,
-          client_id: didAuthRequestCall.redirectUri,
-          nonce: getNonce(),
+          scope: DidAuthTypes.DidAuthScope.OPENID_DIDAUTHN,
+          response_type: DidAuthTypes.DidAuthResponseType.ID_TOKEN,
+          client_id: opts.redirectUri,
+          state,
+          nonce: DidAuthUtil.getNonce(state),
+          registration: {
+            jwks_uri: `https://dev.vidchain.net/api/v1/identifiers/${entityAA.did};transform-keys=jwks`,
+            id_token_signed_response_alg:
+              DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
+          },
         };
         const jws = await didJwt.createJWT(
           payload,
           {
             issuer: entityAA.did,
-            alg: DidAuthKeyAlgo.ES256KR,
+            alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
             signer: didJwt.SimpleSigner(
-              getHexPrivateKey(entityAA.jwk).replace("0x", "")
-            ), // Removing 0x from private key as input of SimpleSigner
+              DidAuthUtil.getHexPrivateKey(entityAA.jwk).replace("0x", "")
+            ),
             expiresIn: 5 * 60,
           },
           header
@@ -205,64 +238,88 @@ describe("vidDidAuth", () => {
         };
       });
 
-      const { jwt, nonce } = await VidDidAuth.createDidAuthRequest(
-        didAuthRequestCall
-      );
+      const { jwt, nonce, state } = await createDidAuthRequest(opts);
+
+      expect(jwt).toBeDefined();
       expect(nonce).toBeDefined();
+      expect(state).toBeDefined();
       const { header, payload } = didJwt.decodeJWT(jwt);
 
       const expectedHeader = mockedData.DIDAUTH_HEADER;
-      expectedHeader.kid = `${didEntityAA}#key-1`;
+      expectedHeader.kid = `${entityAA.did}#key-1`;
       const expectedPayload = mockedData.DIDAUTH_REQUEST_PAYLOAD;
-      expectedPayload.iss = didEntityAA;
+      expectedPayload.iss = entityAA.did;
       expectedPayload.nonce = expect.any(String) as string;
-      expectedPayload.client_id = didAuthRequestCall.redirectUri;
+      expectedPayload.state = expect.any(String) as string;
+      expectedPayload.client_id = opts.redirectUri;
       expectedPayload.iat = expect.any(Number) as number;
       expectedPayload.exp = expect.any(Number) as number;
-
+      expectedPayload.registration = {
+        jwks_uri: `https://dev.vidchain.net/api/v1/identifiers/${entityAA.did};transform-keys=jwks`,
+        id_token_signed_response_alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
+      };
       expect(payload.iat).toBeDefined();
       expect(header).toMatchObject(expectedHeader);
       expect(payload).toMatchObject(expectedPayload);
-      expect(payload.exp).toStrictEqual(payload.iat + 5 * 60); // 5 minutes of expiration time
+      expect(payload.exp).toStrictEqual(payload.iat + 5 * 60);
       jest.clearAllMocks();
     });
 
     it("should create a DID Auth Request with vc claims", async () => {
-      expect.assertions(3);
+      expect.assertions(7);
       const WALLET_API_BASE_URL =
         process.env.WALLET_API_URL || "http://localhost:9000";
       const entityAA = mockedGetEnterpriseAuthToken("COMPANY AA INC");
-      const didEntityAA = entityAA.did;
       const tokenEntityAA = entityAA.jwt;
-      const didAuthRequestCall: DidAuthRequestCall = {
-        requestUri: "https://dev.vidchain.net/siop/jwts/N7A8u4VmZfMGGdAtAAFV",
+      const didAA = entityAA.did;
+
+      const opts: DidAuthTypes.DidAuthRequestOpts = {
         redirectUri: "http://localhost:8080/demo/spanish-university",
-        signatureUri: `${WALLET_API_BASE_URL}/wallet/v1/signatures`,
-        authZToken: tokenEntityAA,
+        requestObjectBy: {
+          type: DidAuthTypes.ObjectPassedBy.REFERENCE,
+          referenceUri: "https://dev.vidchain.net/siop/jwts",
+        },
+        signatureType: {
+          signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
+          did: didAA,
+          authZToken: tokenEntityAA,
+          kid: `${didAA}#key-1`,
+        },
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.REFERENCE,
+          referenceUri: `https://dev.vidchain.net/api/v1/identifiers/${didAA};transform-keys=jwks`,
+        },
         claims: mockedData.verifiableIdOidcClaim,
       };
       jest.spyOn(axios, "post").mockImplementation(async () => {
         const header: JWTHeader = {
-          alg: DidAuthKeyAlgo.ES256KR,
+          alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
           typ: "JWT",
           kid: `${entityAA.did}#key-1`,
         };
-        const payload = {
+        const state = DidAuthUtil.getState();
+        const payload: DidAuthTypes.DidAuthRequestPayload = {
           iss: entityAA.did,
-          scope: DidAuthScope.OPENID_DIDAUTHN,
-          response_type: DidAuthResponseType.ID_TOKEN,
-          client_id: didAuthRequestCall.redirectUri,
-          nonce: getNonce(),
-          claims: didAuthRequestCall.claims,
+          scope: DidAuthTypes.DidAuthScope.OPENID_DIDAUTHN,
+          response_type: DidAuthTypes.DidAuthResponseType.ID_TOKEN,
+          client_id: opts.redirectUri,
+          state,
+          nonce: DidAuthUtil.getNonce(state),
+          registration: {
+            jwks_uri: `https://dev.vidchain.net/api/v1/identifiers/${entityAA.did};transform-keys=jwks`,
+            id_token_signed_response_alg:
+              DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
+          },
+          claims: mockedData.verifiableIdOidcClaim,
         };
         const jws = await didJwt.createJWT(
           payload,
           {
             issuer: entityAA.did,
-            alg: DidAuthKeyAlgo.ES256KR,
+            alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
             signer: didJwt.SimpleSigner(
-              getHexPrivateKey(entityAA.jwk).replace("0x", "")
-            ), // Removing 0x from private key as input of SimpleSigner
+              DidAuthUtil.getHexPrivateKey(entityAA.jwk).replace("0x", "")
+            ),
             expiresIn: 5 * 60,
           },
           header
@@ -273,28 +330,35 @@ describe("vidDidAuth", () => {
         };
       });
 
-      const { jwt, nonce } = await VidDidAuth.createDidAuthRequest(
-        didAuthRequestCall
-      );
+      const { jwt, nonce, state } = await createDidAuthRequest(opts);
+
+      expect(jwt).toBeDefined();
       expect(nonce).toBeDefined();
+      expect(state).toBeDefined();
       const { header, payload } = didJwt.decodeJWT(jwt);
 
       const expectedHeader = mockedData.DIDAUTH_HEADER;
-      expectedHeader.kid = `${didEntityAA}#key-1`;
+      expectedHeader.kid = `${entityAA.did}#key-1`;
       const expectedPayload = mockedData.DIDAUTH_REQUEST_PAYLOAD_CLAIMS;
-      expectedPayload.iss = didEntityAA;
+      expectedPayload.iss = entityAA.did;
       expectedPayload.nonce = expect.any(String) as string;
-      expectedPayload.client_id = didAuthRequestCall.redirectUri;
+      expectedPayload.state = expect.any(String) as string;
+      expectedPayload.client_id = opts.redirectUri;
       expectedPayload.iat = expect.any(Number) as number;
       expectedPayload.exp = expect.any(Number) as number;
-
+      expectedPayload.registration = {
+        jwks_uri: `https://dev.vidchain.net/api/v1/identifiers/${entityAA.did};transform-keys=jwks`,
+        id_token_signed_response_alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
+      };
+      expect(payload.iat).toBeDefined();
       expect(header).toMatchObject(expectedHeader);
       expect(payload).toMatchObject(expectedPayload);
+      expect(payload.exp).toStrictEqual(payload.iat + 5 * 60);
       jest.clearAllMocks();
     });
 
     it("should return a valid payload on DID Auth request validation", async () => {
-      expect.assertions(3);
+      expect.assertions(7);
       const RPC_PROVIDER =
         process.env.DID_PROVIDER_RPC_URL ||
         "https://ropsten.infura.io/v3/f03e98e0dc2b855be647c39abe984fcf";
@@ -302,35 +366,54 @@ describe("vidDidAuth", () => {
       const WALLET_API_BASE_URL =
         process.env.WALLET_API_URL || "http://localhost:9000";
       const entityAA = mockedGetEnterpriseAuthToken("COMPANY AA INC");
-      const didEntityAA = entityAA.did;
       const tokenEntityAA = entityAA.jwt;
-      const didAuthRequestCall: DidAuthRequestCall = {
-        requestUri: "https://dev.vidchain.net/siop/jwts/N7A8u4VmZfMGGdAtAAFV",
+      const didAA = entityAA.did;
+
+      const opts: DidAuthTypes.DidAuthRequestOpts = {
         redirectUri: "http://localhost:8080/demo/spanish-university",
-        signatureUri: `${WALLET_API_BASE_URL}/wallet/v1/signatures`,
-        authZToken: tokenEntityAA,
+        requestObjectBy: {
+          type: DidAuthTypes.ObjectPassedBy.REFERENCE,
+          referenceUri: "https://dev.vidchain.net/siop/jwts",
+        },
+        signatureType: {
+          signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
+          did: didAA,
+          authZToken: tokenEntityAA,
+          kid: `${didAA}#key-1`,
+        },
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.REFERENCE,
+          referenceUri: `https://dev.vidchain.net/api/v1/identifiers/${didAA};transform-keys=jwks`,
+        },
       };
       jest.spyOn(axios, "post").mockImplementation(async () => {
         const header: JWTHeader = {
-          alg: DidAuthKeyAlgo.ES256KR,
+          alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
           typ: "JWT",
           kid: `${entityAA.did}#key-1`,
         };
-        const payload = {
+        const state = DidAuthUtil.getState();
+        const payload: DidAuthTypes.DidAuthRequestPayload = {
           iss: entityAA.did,
-          scope: DidAuthScope.OPENID_DIDAUTHN,
-          response_type: DidAuthResponseType.ID_TOKEN,
-          client_id: didAuthRequestCall.redirectUri,
-          nonce: getNonce(),
+          scope: DidAuthTypes.DidAuthScope.OPENID_DIDAUTHN,
+          response_type: DidAuthTypes.DidAuthResponseType.ID_TOKEN,
+          client_id: opts.redirectUri,
+          state,
+          nonce: DidAuthUtil.getNonce(state),
+          registration: {
+            jwks_uri: `https://dev.vidchain.net/api/v1/identifiers/${entityAA.did};transform-keys=jwks`,
+            id_token_signed_response_alg:
+              DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
+          },
         };
         const jws = await didJwt.createJWT(
           payload,
           {
             issuer: entityAA.did,
-            alg: DidAuthKeyAlgo.ES256KR,
+            alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
             signer: didJwt.SimpleSigner(
-              getHexPrivateKey(entityAA.jwk).replace("0x", "")
-            ), // Removing 0x from private key as input of SimpleSigner
+              DidAuthUtil.getHexPrivateKey(entityAA.jwk).replace("0x", "")
+            ),
             expiresIn: 5 * 60,
           },
           header
@@ -341,23 +424,36 @@ describe("vidDidAuth", () => {
         };
       });
 
-      const { jwt } = await VidDidAuth.createDidAuthRequest(didAuthRequestCall);
-      const payload: DidAuthRequestPayload = await VidDidAuth.verifyDidAuthRequest(
-        jwt,
-        RPC_ADDRESS,
-        RPC_PROVIDER
-      );
+      const { jwt } = await createDidAuthRequest(opts);
+      expect(jwt).toBeDefined();
+      const optsVerify: DidAuthTypes.DidAuthVerifyOpts = {
+        verificationType: {
+          registry: RPC_ADDRESS,
+          rpcUrl: RPC_PROVIDER,
+        },
+      };
+      const validationResponse = await verifyDidAuthRequest(jwt, optsVerify);
+      expect(validationResponse).toBeDefined();
+      expect(validationResponse.signatureValidation).toBe(true);
+      expect(validationResponse.payload).toBeDefined();
 
       const expectedPayload = mockedData.DIDAUTH_REQUEST_PAYLOAD;
-      expectedPayload.iss = didEntityAA;
+      expectedPayload.iss = entityAA.did;
       expectedPayload.nonce = expect.any(String) as string;
-      expectedPayload.client_id = didAuthRequestCall.redirectUri;
+      expectedPayload.state = expect.any(String) as string;
+      expectedPayload.client_id = opts.redirectUri;
       expectedPayload.iat = expect.any(Number) as number;
       expectedPayload.exp = expect.any(Number) as number;
+      expectedPayload.registration = {
+        jwks_uri: `https://dev.vidchain.net/api/v1/identifiers/${entityAA.did};transform-keys=jwks`,
+        id_token_signed_response_alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
+      };
 
-      expect(payload.iat).toBeDefined();
-      expect(payload).toMatchObject(expectedPayload);
-      expect(payload.exp).toStrictEqual(payload.iat + 5 * 60); // 5 minutes of expiration time
+      expect(validationResponse.payload.iat).toBeDefined();
+      expect(validationResponse.payload).toMatchObject(expectedPayload);
+      expect(validationResponse.payload.exp).toStrictEqual(
+        validationResponse.payload.iat + 5 * 60
+      ); // 5 minutes of expiration time
       jest.clearAllMocks();
     });
 
@@ -377,50 +473,66 @@ describe("vidDidAuth", () => {
           typ: "JWT",
         },
       });
-      await expect(
-        VidDidAuth.verifyDidAuthRequest(jwt, RPC_ADDRESS, RPC_PROVIDER)
-      ).rejects.toThrow(DidAuthErrors.INVALID_AUDIENCE);
+      const optsVerify: DidAuthTypes.DidAuthVerifyOpts = {
+        verificationType: {
+          registry: RPC_ADDRESS,
+          rpcUrl: RPC_PROVIDER,
+        },
+      };
+
+      await expect(verifyDidAuthRequest(jwt, optsVerify)).rejects.toThrow(
+        DidAuthErrors.INVALID_AUDIENCE
+      );
       jest.clearAllMocks();
     });
   });
 
   describe("vid DID Auth Response", () => {
-    it("should throw BAD_PARAMS when no hexPrivateKey is present", async () => {
+    it("should throw BAD_PARAMS when no all required parameters are present", async () => {
       expect.assertions(1);
 
-      const didAuthResponseCall = {
+      const opts = {
         did: "",
         nonce: "",
         redirect_uri: "",
       };
 
-      await expect(
-        VidDidAuth.createDidAuthResponse(didAuthResponseCall as never)
-      ).rejects.toThrow(DidAuthErrors.BAD_PARAMS);
+      await expect(createDidAuthResponse(opts as never)).rejects.toThrow(
+        DidAuthErrors.BAD_PARAMS
+      );
     });
 
     it('should create a JWT DID Auth Response token with "ES256K-R" algo and random keys generated', async () => {
       expect.assertions(4);
-      const requestDIDAuthNonce: string = getNonce();
-      const testKeyUser = generateTestKey(DidAuthKeyType.EC);
-      const didAuthResponseCall: DidAuthResponseCall = {
-        hexPrivatekey: getHexPrivateKey(testKeyUser.key),
-        did: testKeyUser.did,
-        nonce: requestDIDAuthNonce,
-        redirectUri: "http://localhost:8080/demo/spanish-university", // just assuming that we know that
+      const { hexPrivateKey, did } = mockedKeyAndDid();
+      const state = DidAuthUtil.getState();
+      const nonce = DidAuthUtil.getNonce(state);
+      const opts: DidAuthTypes.DidAuthResponseOpts = {
+        redirectUri: "https://app.example/demo",
+        signatureType: {
+          hexPrivateKey,
+          did,
+          kid: `${did}#key-1`,
+        },
+        nonce,
+        state,
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        did,
       };
-      const didAuthJwt = await VidDidAuth.createDidAuthResponse(
-        didAuthResponseCall
-      );
+
+      const didAuthJwt = await createDidAuthResponse(opts);
       const { header, payload } = didJwt.decodeJWT(didAuthJwt);
 
       const expectedHeader = mockedData.DIDAUTH_HEADER;
-      expectedHeader.kid = `${testKeyUser.did}#key-1`;
+      expectedHeader.kid = `${did}#key-1`;
       const expectedPayload = mockedData.DIDAUTH_RESPONSE_PAYLOAD;
       expectedPayload.iss = expect.stringMatching(
-        DidAuthResponseIss.SELF_ISSUE
-      ) as string;
-      expectedPayload.aud = didAuthResponseCall.redirectUri;
+        DidAuthTypes.DidAuthResponseIss.SELF_ISSUE
+      ) as DidAuthTypes.DidAuthResponseIss.SELF_ISSUE;
+      expectedPayload.aud = opts.redirectUri;
+      expectedPayload.did = did;
       expectedPayload.nonce = expect.any(String) as string;
       expectedPayload.iat = expect.any(Number) as number;
       expectedPayload.exp = expect.any(Number) as number;
@@ -440,27 +552,36 @@ describe("vidDidAuth", () => {
 
     it("should create a JWT DID Auth Response token with Verifiable Presentation", async () => {
       expect.assertions(2);
-      const requestDIDAuthNonce: string = getNonce();
-      const testKeyUser = generateTestKey(DidAuthKeyType.EC);
-      const didAuthResponseCall: DidAuthResponseCall = {
-        hexPrivatekey: getHexPrivateKey(testKeyUser.key),
-        did: testKeyUser.did,
-        nonce: requestDIDAuthNonce,
-        redirectUri: "http://localhost:8080/demo/spanish-university", // just assuming that we know that
+      const { hexPrivateKey, did } = mockedKeyAndDid();
+      const state = DidAuthUtil.getState();
+      const nonce = DidAuthUtil.getNonce(state);
+      const opts: DidAuthTypes.DidAuthResponseOpts = {
+        redirectUri: "https://app.example/demo",
+        signatureType: {
+          hexPrivateKey,
+          did,
+          kid: `${did}#key-1`,
+        },
+        nonce,
+        state,
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        did,
         vp: mockedData.verifiableIdPresentation,
       };
-      const didAuthJwt = await VidDidAuth.createDidAuthResponse(
-        didAuthResponseCall
-      );
+
+      const didAuthJwt = await createDidAuthResponse(opts);
       const { header, payload } = didJwt.decodeJWT(didAuthJwt);
 
       const expectedHeader = mockedData.DIDAUTH_HEADER;
-      expectedHeader.kid = `${testKeyUser.did}#key-1`;
+      expectedHeader.kid = `${did}#key-1`;
       const expectedPayload = mockedData.DIDAUTH_RESPONSE_PAYLOAD_VP;
       expectedPayload.iss = expect.stringMatching(
-        DidAuthResponseIss.SELF_ISSUE
-      ) as string;
-      expectedPayload.aud = didAuthResponseCall.redirectUri;
+        DidAuthTypes.DidAuthResponseIss.SELF_ISSUE
+      ) as DidAuthTypes.DidAuthResponseIss.SELF_ISSUE;
+      expectedPayload.aud = opts.redirectUri;
+      expectedPayload.did = did;
       expectedPayload.nonce = expect.any(String) as string;
       expectedPayload.iat = expect.any(Number) as number;
       expectedPayload.exp = expect.any(Number) as number;
@@ -482,27 +603,40 @@ describe("vidDidAuth", () => {
         process.env.WALLET_API_URL || "http://localhost:9000";
       const entityAA = mockedGetEnterpriseAuthToken("COMPANY AA INC");
       const tokenEntityAA = entityAA.jwt;
-      const requestDIDAuthNonce: string = getNonce();
-      const testKeyUser = generateTestKey(DidAuthKeyType.EC);
-      const didAuthResponseCall: DidAuthResponseCall = {
-        hexPrivatekey: getHexPrivateKey(testKeyUser.key),
-        did: testKeyUser.did,
-        nonce: requestDIDAuthNonce,
-        redirectUri: "http://localhost:8080/demo/spanish-university", // just assuming that we know that
+      const { hexPrivateKey, did } = mockedKeyAndDid();
+      const state = DidAuthUtil.getState();
+      const nonce = DidAuthUtil.getNonce(state);
+      const opts: DidAuthTypes.DidAuthResponseOpts = {
+        redirectUri: "https://app.example/demo",
+        signatureType: {
+          hexPrivateKey,
+          did,
+          kid: `${did}#key-1`,
+        },
+        nonce,
+        state,
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        did,
       };
+
       jest.spyOn(axios, "post").mockResolvedValue({ status: 204 });
-      const didAuthJwt = await VidDidAuth.createDidAuthResponse(
-        didAuthResponseCall
-      );
-      const response = await VidDidAuth.verifyDidAuthResponse(
+      const didAuthJwt = await createDidAuthResponse(opts);
+      const optsVerify: DidAuthTypes.DidAuthVerifyOpts = {
+        verificationType: {
+          verifyUri: `${WALLET_API_BASE_URL}/api/v1/signature-validations`,
+          authZToken: tokenEntityAA,
+        },
+        nonce,
+      };
+      const validationResponse = await verifyDidAuthResponse(
         didAuthJwt,
-        `${WALLET_API_BASE_URL}/wallet/v1/signature-validations`,
-        tokenEntityAA,
-        requestDIDAuthNonce
+        optsVerify
       );
-      expect(response).toBeDefined();
-      expect(response).toHaveProperty("signatureValidation");
-      expect(response.signatureValidation).toBe(true);
+      expect(validationResponse).toBeDefined();
+      expect(validationResponse).toHaveProperty("signatureValidation");
+      expect(validationResponse.signatureValidation).toBe(true);
       jest.clearAllMocks();
     });
 
@@ -512,25 +646,34 @@ describe("vidDidAuth", () => {
         process.env.WALLET_API_URL || "http://localhost:9000";
       const entityAA = mockedGetEnterpriseAuthToken("COMPANY AA INC");
       const tokenEntityAA = entityAA.jwt;
-      const requestDIDAuthNonce: string = getNonce();
-      const testKeyUser = generateTestKey(DidAuthKeyType.EC);
-      const didAuthResponseCall: DidAuthResponseCall = {
-        hexPrivatekey: getHexPrivateKey(testKeyUser.key),
-        did: testKeyUser.did,
+      const state = DidAuthUtil.getState();
+      const requestDIDAuthNonce = DidAuthUtil.getNonce(state);
+      const { hexPrivateKey, did } = mockedKeyAndDid();
+      const opts: DidAuthTypes.DidAuthResponseOpts = {
+        redirectUri: "https://app.example/demo",
+        signatureType: {
+          hexPrivateKey,
+          did,
+          kid: `${did}#key-1`,
+        },
         nonce: requestDIDAuthNonce,
-        redirectUri: "http://localhost:8080/demo/spanish-university", // just assuming that we know that
+        state,
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        did,
       };
       jest.spyOn(axios, "post").mockResolvedValue({ status: 204 });
-      const didAuthJwt = await VidDidAuth.createDidAuthResponse(
-        didAuthResponseCall
-      );
+      const didAuthJwt = await createDidAuthResponse(opts);
+      const optsVerify: DidAuthTypes.DidAuthVerifyOpts = {
+        verificationType: {
+          verifyUri: `${WALLET_API_BASE_URL}/api/v1/signature-validations`,
+          authZToken: tokenEntityAA,
+        },
+        nonce: "a bad nonce",
+      };
       await expect(
-        VidDidAuth.verifyDidAuthResponse(
-          didAuthJwt,
-          `${WALLET_API_BASE_URL}/wallet/v1/signature-validations`,
-          tokenEntityAA,
-          "a bad nonce"
-        )
+        verifyDidAuthResponse(didAuthJwt, optsVerify)
       ).rejects.toThrow(DidAuthErrors.ERROR_VALIDATING_NONCE);
       jest.clearAllMocks();
     });
@@ -541,25 +684,35 @@ describe("vidDidAuth", () => {
         process.env.WALLET_API_URL || "http://localhost:9000";
       const entityAA = mockedGetEnterpriseAuthToken("COMPANY AA INC");
       const tokenEntityAA = entityAA.jwt;
-      const requestDIDAuthNonce: string = getNonce();
-      const testKeyUser = generateTestKey(DidAuthKeyType.EC);
-      const didAuthResponseCall: DidAuthResponseCall = {
-        hexPrivatekey: getHexPrivateKey(testKeyUser.key),
-        did: testKeyUser.did,
+      const state = DidAuthUtil.getState();
+      const nonce = DidAuthUtil.getNonce(state);
+      const requestDIDAuthNonce = DidAuthUtil.getNonce(state);
+      const { hexPrivateKey, did } = mockedKeyAndDid();
+      const opts: DidAuthTypes.DidAuthResponseOpts = {
+        redirectUri: "https://app.example/demo",
+        signatureType: {
+          hexPrivateKey,
+          did,
+          kid: `${did}#key-1`,
+        },
         nonce: requestDIDAuthNonce,
-        redirectUri: "http://localhost:8080/demo/spanish-university", // just assuming that we know that
+        state,
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        did,
       };
       jest.spyOn(axios, "post").mockResolvedValue({ status: 400 });
-      const didAuthJwt = await VidDidAuth.createDidAuthResponse(
-        didAuthResponseCall
-      );
+      const didAuthJwt = await createDidAuthResponse(opts);
+      const optsVerify: DidAuthTypes.DidAuthVerifyOpts = {
+        verificationType: {
+          verifyUri: `${WALLET_API_BASE_URL}/api/v1/signature-validations`,
+          authZToken: tokenEntityAA,
+        },
+        nonce,
+      };
       await expect(
-        VidDidAuth.verifyDidAuthResponse(
-          didAuthJwt,
-          `${WALLET_API_BASE_URL}/wallet/v1/signature-validations`,
-          tokenEntityAA,
-          requestDIDAuthNonce
-        )
+        verifyDidAuthResponse(didAuthJwt, optsVerify)
       ).rejects.toThrow(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
       jest.clearAllMocks();
     });
@@ -570,27 +723,37 @@ describe("vidDidAuth", () => {
         process.env.WALLET_API_URL || "http://localhost:9000";
       const entityAA = mockedGetEnterpriseAuthToken("COMPANY AA INC");
       const tokenEntityAA = entityAA.jwt;
-      const requestDIDAuthNonce: string = getNonce();
-      const testKeyUser = generateTestKey(DidAuthKeyType.EC);
-      const didAuthResponseCall: DidAuthResponseCall = {
-        hexPrivatekey: getHexPrivateKey(testKeyUser.key),
-        did: testKeyUser.did,
+      const state = DidAuthUtil.getState();
+      const nonce = DidAuthUtil.getNonce(state);
+      const requestDIDAuthNonce = DidAuthUtil.getNonce(state);
+      const { hexPrivateKey, did } = mockedKeyAndDid();
+      const opts: DidAuthTypes.DidAuthResponseOpts = {
+        redirectUri: "https://app.example/demo",
+        signatureType: {
+          hexPrivateKey,
+          did,
+          kid: `${did}#key-1`,
+        },
         nonce: requestDIDAuthNonce,
-        redirectUri: "http://localhost:8080/demo/spanish-university", // just assuming that we know that
+        state,
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        did,
       };
       jest
         .spyOn(axios, "post")
         .mockRejectedValue(new Error("Invalid Signature"));
-      const didAuthJwt = await VidDidAuth.createDidAuthResponse(
-        didAuthResponseCall
-      );
+      const didAuthJwt = await createDidAuthResponse(opts);
+      const optsVerify: DidAuthTypes.DidAuthVerifyOpts = {
+        verificationType: {
+          verifyUri: `${WALLET_API_BASE_URL}/api/v1/signature-validations`,
+          authZToken: tokenEntityAA,
+        },
+        nonce,
+      };
       await expect(
-        VidDidAuth.verifyDidAuthResponse(
-          didAuthJwt,
-          `${WALLET_API_BASE_URL}/wallet/v1/signature-validations`,
-          tokenEntityAA,
-          requestDIDAuthNonce
-        )
+        verifyDidAuthResponse(didAuthJwt, optsVerify)
       ).rejects.toThrow(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
       jest.clearAllMocks();
     });

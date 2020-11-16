@@ -1,7 +1,5 @@
 enum DidAuthErrors {
   BAD_PARAMS = "Wrong parameters provided.",
-  KEY_SIGNATURE_URI_ERROR = "Either Key or signature_uri MUST be provided.",
-  AUTHZTOKEN_UNDEFINED = "AuthZToken MUST be defined.",
   MALFORMED_SIGNATURE_RESPONSE = "Response format is malformed",
   NO_ALG_SUPPORTED = "Algorithm not supported.",
   NO_KEY_CURVE_SUPPORTED = "Key Curve not supported.",
