@@ -1,6 +1,6 @@
 import { JWT, JWK } from "jose";
 import { verifyJWT, decodeJWT } from "did-jwt";
-import { VidDidAuth, DidAuthErrors } from "../../src";
+import { DidAuthErrors, DidAuthTypes, verifyDidAuthRequest } from "../../src";
 
 jest.mock("did-jwt");
 const mockVerifyJwt = verifyJWT as jest.Mock;
@@ -22,9 +22,15 @@ describe("vid DID Auth Request Validation", () => {
     });
     mockVerifyJwt.mockResolvedValue(undefined as never);
     mockDecodeJWT.mockReturnValue({ payload: { aud: "" } });
-    await expect(
-      VidDidAuth.verifyDidAuthRequest(jwt, RPC_ADDRESS, RPC_PROVIDER)
-    ).rejects.toThrow(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
+    const optsVerify: DidAuthTypes.DidAuthVerifyOpts = {
+      verificationType: {
+        registry: RPC_ADDRESS,
+        rpcUrl: RPC_PROVIDER,
+      },
+    };
+    await expect(verifyDidAuthRequest(jwt, optsVerify)).rejects.toThrow(
+      DidAuthErrors.ERROR_VERIFYING_SIGNATURE
+    );
     jest.clearAllMocks();
   });
   it("should throw NO_AUDIENCE", async () => {
@@ -42,14 +48,20 @@ describe("vid DID Auth Request Validation", () => {
     });
     mockVerifyJwt.mockResolvedValue(undefined as never);
     mockDecodeJWT.mockReturnValue({} as never);
-    await expect(
-      VidDidAuth.verifyDidAuthRequest(jwt, RPC_ADDRESS, RPC_PROVIDER)
-    ).rejects.toThrow(DidAuthErrors.NO_AUDIENCE);
+    const optsVerify: DidAuthTypes.DidAuthVerifyOpts = {
+      verificationType: {
+        registry: RPC_ADDRESS,
+        rpcUrl: RPC_PROVIDER,
+      },
+    };
+    await expect(verifyDidAuthRequest(jwt, optsVerify)).rejects.toThrow(
+      DidAuthErrors.NO_AUDIENCE
+    );
     jest.clearAllMocks();
   });
 
   it("should return a string audience", async () => {
-    expect.assertions(2);
+    expect.assertions(3);
     const RPC_PROVIDER =
       "https://ropsten.infura.io/v3/f03e98e0dc2b855be647c39abe984fcf";
     const RPC_ADDRESS = process.env.DID_REGISTRY_SC_ADDRESS || "0x00000000";
@@ -65,13 +77,16 @@ describe("vid DID Auth Request Validation", () => {
     });
     mockVerifyJwt.mockResolvedValue({ payload } as never);
     mockDecodeJWT.mockReturnValue({ payload } as never);
-    const response = await VidDidAuth.verifyDidAuthRequest(
-      jwt,
-      RPC_ADDRESS,
-      RPC_PROVIDER
-    );
+    const optsVerify: DidAuthTypes.DidAuthVerifyOpts = {
+      verificationType: {
+        registry: RPC_ADDRESS,
+        rpcUrl: RPC_PROVIDER,
+      },
+    };
+    const response = await verifyDidAuthRequest(jwt, optsVerify);
     expect(response).toBeDefined();
-    expect(response).toMatchObject(payload);
+    expect(response.payload).toBeDefined();
+    expect(response.payload).toMatchObject(payload);
     jest.clearAllMocks();
   });
 });
