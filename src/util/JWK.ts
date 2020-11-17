@@ -8,7 +8,7 @@ const getPublicJWKFromPublicHex = (
   kid?: string
 ): JWK.JWKECKey => {
   const ec = new EC("secp256k1");
-  const key = ec.keyFromPublic(hexPublicKey);
+  const key = ec.keyFromPublic(hexPublicKey.replace("0x", ""), "hex");
   const pubPoint = key.getPublic();
   return {
     kid,
