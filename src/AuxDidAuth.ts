@@ -74,7 +74,7 @@ const createRegistration = (
       return registration;
     case ObjectPassedBy.VALUE:
       if (!isInternalSignature(signatureType))
-        throw new Error(DidAuthErrors.BAD_SIGNATURE_PARAMS);
+        throw new Error("Option not implemented");
       registration = {
         jwks: getPublicJWKFromPrivateHex(
           signatureType.hexPrivateKey,

@@ -16,6 +16,10 @@ import {
   DidAuthUtil,
 } from "../../src";
 import * as mockedData from "../data/mockedData";
+import {
+  createDidAuthRequestPayload,
+  createDidAuthResponsePayload,
+} from "../../src/AuxDidAuth";
 
 // importing .env variables
 dotenv.config();
@@ -485,6 +489,73 @@ describe("vidDidAuth", () => {
       );
       jest.clearAllMocks();
     });
+
+    it("should throw REGISTRATION_OBJECT_TYPE_NOT_SET when no registrationType is present", () => {
+      expect.assertions(1);
+
+      const opts = {};
+
+      expect(() => createDidAuthRequestPayload(opts as never)).toThrow(
+        DidAuthErrors.REGISTRATION_OBJECT_TYPE_NOT_SET
+      );
+    });
+    it("should throw REGISTRATION_OBJECT_TYPE_NOT_SET when no registrationType.type is present", () => {
+      expect.assertions(1);
+
+      const opts = {
+        registrationType: {},
+      };
+
+      expect(() => createDidAuthRequestPayload(opts as never)).toThrow(
+        DidAuthErrors.REGISTRATION_OBJECT_TYPE_NOT_SET
+      );
+    });
+
+    it("should throw ObjectPassedBy is REFERENCE and no referenceUri is set", () => {
+      expect.assertions(1);
+
+      const opts = {
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.REFERENCE,
+        },
+      };
+
+      expect(() => createDidAuthRequestPayload(opts as never)).toThrow(
+        DidAuthErrors.NO_REFERENCE_URI
+      );
+    });
+
+    it("should throw registration type is VALUE and is an external signature", () => {
+      expect.assertions(1);
+
+      const opts = {
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        signatureType: {
+          signatureUri: `http://localhost:8080/api/v1/signatures`,
+          did: "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0",
+        },
+      };
+
+      expect(() => createDidAuthRequestPayload(opts as never)).toThrow(
+        "Option not implemented"
+      );
+    });
+
+    it("should throw REGISTRATION_OBJECT_TYPE_NOT_SET when objectpassedby is neither REFERENCE nor VALUE", () => {
+      expect.assertions(1);
+
+      const opts = {
+        registrationType: {
+          type: "other type",
+        },
+      };
+
+      expect(() => createDidAuthRequestPayload(opts as never)).toThrow(
+        DidAuthErrors.REGISTRATION_OBJECT_TYPE_NOT_SET
+      );
+    });
   });
 
   describe("vid DID Auth Response", () => {
@@ -757,5 +828,62 @@ describe("vidDidAuth", () => {
       ).rejects.toThrow(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
       jest.clearAllMocks();
     });
+  });
+
+  it("should throw BAD_PARAMS when no opts is set", () => {
+    expect.assertions(1);
+
+    expect(() => createDidAuthResponsePayload(undefined as never)).toThrow(
+      DidAuthErrors.BAD_PARAMS
+    );
+  });
+
+  it("should throw BAD_PARAMS when no opts.redirectUri is set", () => {
+    expect.assertions(1);
+
+    const opts = {};
+
+    expect(() => createDidAuthResponsePayload(opts as never)).toThrow(
+      DidAuthErrors.BAD_PARAMS
+    );
+  });
+
+  it("should throw BAD_PARAMS when no opts.signatureType is set", () => {
+    expect.assertions(1);
+
+    const opts = {
+      redirectUri: "http://localhost.example/demo",
+    };
+
+    expect(() => createDidAuthResponsePayload(opts as never)).toThrow(
+      DidAuthErrors.BAD_PARAMS
+    );
+  });
+
+  it("should throw BAD_PARAMS when no opts.nonce is set", () => {
+    expect.assertions(1);
+
+    const opts = {
+      redirectUri: "http://localhost.example/demo",
+      signatureType: {},
+    };
+
+    expect(() => createDidAuthResponsePayload(opts as never)).toThrow(
+      DidAuthErrors.BAD_PARAMS
+    );
+  });
+
+  it("should throw BAD_PARAMS when no opts.did is set", () => {
+    expect.assertions(1);
+
+    const opts = {
+      redirectUri: "http://localhost.example/demo",
+      signatureType: {},
+      nonce: "zizu-nonce",
+    };
+
+    expect(() => createDidAuthResponsePayload(opts as never)).toThrow(
+      DidAuthErrors.BAD_PARAMS
+    );
   });
 });
