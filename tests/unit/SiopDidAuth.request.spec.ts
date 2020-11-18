@@ -1,5 +1,10 @@
 import { parse } from "querystring";
-import { createUriRequest, DidAuthErrors, DidAuthTypes } from "../../src";
+import {
+  createDidAuthRequest,
+  createUriRequest,
+  DidAuthErrors,
+  DidAuthTypes,
+} from "../../src";
 
 describe("create uri Request tests should", () => {
   it("throw BAD_PARAMS when no opts is passed", async () => {
@@ -128,5 +133,115 @@ describe("create uri Request tests should", () => {
     expect(uriDecoded).toContain(`&request=`);
     const data = parse(uriDecoded);
     expect(data.request).toBeDefined();
+  });
+});
+
+describe("create Did Auth Request tests should", () => {
+  it("throw REQUEST_OBJECT_TYPE_NOT_SET when requestObjectBy type is different from REFERENCE and VALUE", async () => {
+    expect.assertions(1);
+    const opts = {
+      redirectUri: "http://app.example/demo",
+      requestObjectBy: {
+        type: "other type",
+      },
+      signatureType: {
+        hexPrivateKey:
+          "f857544a9d1097e242ff0b287a7e6e90f19cf973efe2317f2a4678739664420f",
+        did: "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0",
+        kid: "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0#key-1",
+      },
+      registrationType: {
+        type: DidAuthTypes.ObjectPassedBy.VALUE,
+      },
+    };
+    await expect(createDidAuthRequest(opts as never)).rejects.toThrow(
+      DidAuthErrors.REQUEST_OBJECT_TYPE_NOT_SET
+    );
+  });
+
+  it("throw NO_REFERENCE_URI when no referenceUri is passed with REFERENCE requestObjectBy type is set", async () => {
+    expect.assertions(1);
+    const opts = {
+      redirectUri: "http://app.example/demo",
+      requestObjectBy: {
+        type: DidAuthTypes.ObjectPassedBy.REFERENCE,
+      },
+      signatureType: {
+        hexPrivateKey:
+          "f857544a9d1097e242ff0b287a7e6e90f19cf973efe2317f2a4678739664420f",
+        did: "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0",
+        kid: "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0#key-1",
+      },
+      registrationType: {
+        type: DidAuthTypes.ObjectPassedBy.VALUE,
+      },
+    };
+    await expect(createDidAuthRequest(opts as never)).rejects.toThrow(
+      DidAuthErrors.NO_REFERENCE_URI
+    );
+  });
+
+  it("throw BAD_SIGNATURE_PARAMS when signature Type is neither internal nor external", async () => {
+    expect.assertions(1);
+    const opts = {
+      redirectUri: "http://app.example/demo",
+      requestObjectBy: {
+        type: DidAuthTypes.ObjectPassedBy.REFERENCE,
+        referenceUri: "https://dev.vidchain.net/siop/jwts",
+      },
+      signatureType: {},
+      registrationType: {
+        type: DidAuthTypes.ObjectPassedBy.VALUE,
+      },
+    };
+    await expect(createDidAuthRequest(opts as never)).rejects.toThrow(
+      DidAuthErrors.BAD_SIGNATURE_PARAMS
+    );
+  });
+
+  it("throw REGISTRATION_OBJECT_TYPE_NOT_SET when objectPassedBy type is neither REFERENCE nor VALUE", async () => {
+    expect.assertions(1);
+    const opts = {
+      redirectUri: "http://app.example/demo",
+      requestObjectBy: {
+        type: DidAuthTypes.ObjectPassedBy.REFERENCE,
+        referenceUri: "https://dev.vidchain.net/siop/jwts",
+      },
+      signatureType: {
+        hexPrivateKey:
+          "f857544a9d1097e242ff0b287a7e6e90f19cf973efe2317f2a4678739664420f",
+        did: "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0",
+        kid: "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0#key-1",
+      },
+      registrationType: {
+        type: "other type",
+      },
+    };
+    await expect(createDidAuthRequest(opts as never)).rejects.toThrow(
+      DidAuthErrors.REGISTRATION_OBJECT_TYPE_NOT_SET
+    );
+  });
+
+  it("throw NO_REFERENCE_URI when objectPassedBy type is REFERENCE and no referenceUri is passed", async () => {
+    expect.assertions(1);
+    const opts = {
+      redirectUri: "http://app.example/demo",
+      requestObjectBy: {
+        type: DidAuthTypes.ObjectPassedBy.REFERENCE,
+        referenceUri: "https://dev.vidchain.net/siop/jwts",
+      },
+      signatureType: {
+        hexPrivateKey:
+          "f857544a9d1097e242ff0b287a7e6e90f19cf973efe2317f2a4678739664420f",
+        did: "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0",
+        kid: "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0#key-1",
+      },
+      registrationType: {
+        type: DidAuthTypes.ObjectPassedBy.REFERENCE,
+      },
+    };
+    await expect(createDidAuthRequest(opts as never)).rejects.toThrow(
+      DidAuthErrors.NO_REFERENCE_URI
+    );
   });
 });

@@ -1,5 +1,7 @@
 import { parse } from "querystring";
+import axios from "axios";
 import {
+  createDidAuthResponse,
   createUriResponse,
   DidAuthErrors,
   DidAuthTypes,
@@ -202,5 +204,48 @@ describe("SiopDidAuth creat Uri Response tests should", () => {
       DidAuthTypes.DidAuthResponseMode.FORM_POST
     );
     expect(uriResponse).toHaveProperty("bodyEncoded");
+  });
+});
+
+describe("create Did Auth response tests should", () => {
+  it("throw BAD_SIGNATURE_PARAMS when signatureType is neither internal nor external", async () => {
+    expect.assertions(1);
+
+    const opts = {
+      redirectUri: "https://entity.example/demo",
+      signatureType: {},
+      registrationType: {
+        type: DidAuthTypes.ObjectPassedBy.VALUE,
+      },
+    };
+    await expect(createDidAuthResponse(opts as never)).rejects.toThrow(
+      DidAuthErrors.BAD_SIGNATURE_PARAMS
+    );
+  });
+
+  it("throw Not implemented using external signature", async () => {
+    expect.assertions(1);
+    const state = DidAuthUtil.getState();
+    const opts: DidAuthTypes.DidAuthResponseOpts = {
+      redirectUri: "https://entity.example/demo",
+      signatureType: {
+        signatureUri: "https://localhost:8080/signature",
+        did: "did:vid:0x29A9D0FDb033BFCb39B8E6CA2A63Bd1B0a2b80c4",
+      },
+      state,
+      nonce: DidAuthUtil.getNonce(state),
+      registrationType: {
+        type: DidAuthTypes.ObjectPassedBy.VALUE,
+      },
+      did: "did:vid:0x29A9D0FDb033BFCb39B8E6CA2A63Bd1B0a2b80c4",
+    };
+
+    jest.spyOn(axios, "post").mockResolvedValue({
+      status: 200,
+      data: { jws: "a valid signature" },
+    });
+    await expect(createDidAuthResponse(opts)).rejects.toThrow(
+      "Option not implemented"
+    );
   });
 });

@@ -68,32 +68,27 @@ const createDidAuthRequest = async (
     throw new Error(DidAuthErrors.NO_REFERENCE_URI);
 
   const didAuthRequestPayload = createDidAuthRequestPayload(opts);
-  if (!didAuthRequestPayload)
-    throw new Error(DidAuthErrors.DIDAUTH_REQUEST_PAYLOAD_NOT_CREATED);
-
   const { nonce, state } = didAuthRequestPayload;
-  let jwt: string;
 
   if (isInternalSignature(opts.signatureType)) {
-    jwt = await signDidAuthInternal(
-      didAuthRequestPayload,
-      opts.signatureType.did,
-      opts.signatureType.hexPrivateKey,
-      opts.signatureType.kid
-    );
+    return {
+      jwt: await signDidAuthInternal(
+        didAuthRequestPayload,
+        opts.signatureType.did,
+        opts.signatureType.hexPrivateKey,
+        opts.signatureType.kid
+      ),
+      nonce,
+      state,
+    };
   }
-  if (isExternalSignature(opts.signatureType)) {
-    // signs payload calling the provided signatureUri
-    jwt = await signDidAuthExternal(
+  // signs payload calling the provided signatureUri
+  return {
+    jwt: await signDidAuthExternal(
       didAuthRequestPayload,
       opts.signatureType.signatureUri,
       opts.signatureType.authZToken
-    );
-  }
-  if (!jwt) throw new Error(DidAuthErrors.MALFORMED_SIGNATURE_RESPONSE);
-
-  return {
-    jwt,
+    ),
     nonce,
     state,
   };
@@ -122,29 +117,21 @@ const createDidAuthResponse = async (
   const didAuthResponsePayload: DidAuthResponsePayload = createDidAuthResponsePayload(
     opts
   );
-  if (!didAuthResponsePayload)
-    throw new Error(DidAuthErrors.DIDAUTH_REQUEST_PAYLOAD_NOT_CREATED);
-
-  let jwt: string;
 
   if (isInternalSignature(opts.signatureType)) {
-    jwt = await signDidAuthInternal(
+    return signDidAuthInternal(
       didAuthResponsePayload,
       DidAuthResponseIss.SELF_ISSUE,
       opts.signatureType.hexPrivateKey,
       opts.signatureType.kid
     );
   }
-  if (isExternalSignature(opts.signatureType)) {
-    // signs payload calling the provided signatureUri
-    jwt = await signDidAuthExternal(
-      didAuthResponsePayload,
-      opts.signatureType.signatureUri,
-      opts.signatureType.authZToken
-    );
-  }
-  if (!jwt) throw new Error(DidAuthErrors.MALFORMED_SIGNATURE_RESPONSE);
-  return jwt;
+  // signs payload calling the provided signatureUri
+  return signDidAuthExternal(
+    didAuthResponsePayload,
+    opts.signatureType.signatureUri,
+    opts.signatureType.authZToken
+  );
 };
 
 /**

@@ -169,7 +169,7 @@ const createDidAuthResponsePayload = (
   )
     throw new Error(DidAuthErrors.BAD_PARAMS);
   if (!isInternalSignature(opts.signatureType))
-    throw new Error(DidAuthErrors.BAD_SIGNATURE_PARAMS);
+    throw new Error("Option not implemented");
   return {
     iss: DidAuthResponseIss.SELF_ISSUE,
     sub: JWK.getThumbprint(opts.signatureType.hexPrivateKey),
