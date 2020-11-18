@@ -19,6 +19,7 @@ import * as mockedData from "../data/mockedData";
 import {
   createDidAuthRequestPayload,
   createDidAuthResponsePayload,
+  signDidAuthInternal,
 } from "../../src/AuxDidAuth";
 
 // importing .env variables
@@ -556,6 +557,28 @@ describe("vidDidAuth", () => {
         DidAuthErrors.REGISTRATION_OBJECT_TYPE_NOT_SET
       );
     });
+
+    it("create a registration by value when no kid is passed", () => {
+      expect.assertions(1);
+      const { hexPrivateKey, did } = mockedKeyAndDid();
+
+      const opts: DidAuthTypes.DidAuthRequestOpts = {
+        redirectUri: "http://localhost:8080/demo/spanish-university",
+        requestObjectBy: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        signatureType: {
+          hexPrivateKey,
+          did,
+        },
+      };
+
+      const requestPayload = createDidAuthRequestPayload(opts);
+      expect(requestPayload).toBeDefined();
+    });
   });
 
   describe("vid DID Auth Response", () => {
@@ -828,62 +851,109 @@ describe("vidDidAuth", () => {
       ).rejects.toThrow(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
       jest.clearAllMocks();
     });
+    it("should throw BAD_PARAMS when no opts is set", () => {
+      expect.assertions(1);
+
+      expect(() => createDidAuthResponsePayload(undefined as never)).toThrow(
+        DidAuthErrors.BAD_PARAMS
+      );
+    });
+
+    it("should throw BAD_PARAMS when no opts.redirectUri is set", () => {
+      expect.assertions(1);
+
+      const opts = {};
+
+      expect(() => createDidAuthResponsePayload(opts as never)).toThrow(
+        DidAuthErrors.BAD_PARAMS
+      );
+    });
+
+    it("should throw BAD_PARAMS when no opts.signatureType is set", () => {
+      expect.assertions(1);
+
+      const opts = {
+        redirectUri: "http://localhost.example/demo",
+      };
+
+      expect(() => createDidAuthResponsePayload(opts as never)).toThrow(
+        DidAuthErrors.BAD_PARAMS
+      );
+    });
+
+    it("should throw BAD_PARAMS when no opts.nonce is set", () => {
+      expect.assertions(1);
+
+      const opts = {
+        redirectUri: "http://localhost.example/demo",
+        signatureType: {},
+      };
+
+      expect(() => createDidAuthResponsePayload(opts as never)).toThrow(
+        DidAuthErrors.BAD_PARAMS
+      );
+    });
+
+    it("should throw BAD_PARAMS when no opts.did is set", () => {
+      expect.assertions(1);
+
+      const opts = {
+        redirectUri: "http://localhost.example/demo",
+        signatureType: {},
+        nonce: "zizu-nonce",
+      };
+
+      expect(() => createDidAuthResponsePayload(opts as never)).toThrow(
+        DidAuthErrors.BAD_PARAMS
+      );
+    });
+  });
+  describe("signDidAuthInternal tests should", () => {
+    it("sign when no kid is passed", async () => {
+      expect.assertions(1);
+      const { hexPrivateKey, did } = mockedKeyAndDid();
+      const state = DidAuthUtil.getState();
+      const requestPayload: DidAuthTypes.DidAuthRequestPayload = {
+        iss: did,
+        scope: DidAuthTypes.DidAuthScope.OPENID_DIDAUTHN,
+        registration: {
+          jwks_uri: `https://dev.vidchain.net/api/v1/identifiers/${did};transform-keys=jwks`,
+          id_token_signed_response_alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256K,
+        },
+        client_id: "http://app.example/demo",
+        state,
+        nonce: DidAuthUtil.getNonce(state),
+        response_type: DidAuthTypes.DidAuthResponseType.ID_TOKEN,
+      };
+      const response = await signDidAuthInternal(
+        requestPayload,
+        did,
+        hexPrivateKey
+      );
+      expect(response).toBeDefined();
+    });
   });
 
-  it("should throw BAD_PARAMS when no opts is set", () => {
-    expect.assertions(1);
-
-    expect(() => createDidAuthResponsePayload(undefined as never)).toThrow(
-      DidAuthErrors.BAD_PARAMS
-    );
-  });
-
-  it("should throw BAD_PARAMS when no opts.redirectUri is set", () => {
-    expect.assertions(1);
-
-    const opts = {};
-
-    expect(() => createDidAuthResponsePayload(opts as never)).toThrow(
-      DidAuthErrors.BAD_PARAMS
-    );
-  });
-
-  it("should throw BAD_PARAMS when no opts.signatureType is set", () => {
-    expect.assertions(1);
-
-    const opts = {
-      redirectUri: "http://localhost.example/demo",
-    };
-
-    expect(() => createDidAuthResponsePayload(opts as never)).toThrow(
-      DidAuthErrors.BAD_PARAMS
-    );
-  });
-
-  it("should throw BAD_PARAMS when no opts.nonce is set", () => {
-    expect.assertions(1);
-
-    const opts = {
-      redirectUri: "http://localhost.example/demo",
-      signatureType: {},
-    };
-
-    expect(() => createDidAuthResponsePayload(opts as never)).toThrow(
-      DidAuthErrors.BAD_PARAMS
-    );
-  });
-
-  it("should throw BAD_PARAMS when no opts.did is set", () => {
-    expect.assertions(1);
-
-    const opts = {
-      redirectUri: "http://localhost.example/demo",
-      signatureType: {},
-      nonce: "zizu-nonce",
-    };
-
-    expect(() => createDidAuthResponsePayload(opts as never)).toThrow(
-      DidAuthErrors.BAD_PARAMS
-    );
+  describe("createDidAuthResponsePayload tests should", () => {
+    it("create a response payload with no kid provided", () => {
+      expect.assertions(1);
+      const { hexPrivateKey, did } = mockedKeyAndDid();
+      const state = DidAuthUtil.getState();
+      const opts: DidAuthTypes.DidAuthResponseOpts = {
+        redirectUri: "https://entity.example/demo",
+        signatureType: {
+          hexPrivateKey,
+          did,
+        },
+        state,
+        nonce: DidAuthUtil.getNonce(state),
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        did,
+      };
+      const responsePayload = createDidAuthResponsePayload(opts);
+      expect(responsePayload).toBeDefined();
+    });
   });
 });

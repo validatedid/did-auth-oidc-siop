@@ -1,6 +1,7 @@
 import { JWT, JWK } from "jose";
 import { verifyJWT, decodeJWT } from "did-jwt";
 import { DidAuthErrors, DidAuthTypes, verifyDidAuthRequest } from "../../src";
+import { verifyDidAuth } from "../../src/AuxDidAuth";
 
 jest.mock("did-jwt");
 const mockVerifyJwt = verifyJWT as jest.Mock;
@@ -88,5 +89,28 @@ describe("vid DID Auth Request Validation", () => {
     expect(response.payload).toBeDefined();
     expect(response.payload).toMatchObject(payload);
     jest.clearAllMocks();
+  });
+});
+
+describe("verifyDidAuth tests should", () => {
+  it("throw VERIFY_BAD_PARAMETERS when no jwt is passed", async () => {
+    expect.assertions(1);
+    await expect(
+      verifyDidAuth(undefined as never, undefined as never)
+    ).rejects.toThrow(DidAuthErrors.VERIFY_BAD_PARAMETERS);
+  });
+
+  it("throw VERIFY_BAD_PARAMETERS when no opts is passed", async () => {
+    expect.assertions(1);
+    await expect(
+      verifyDidAuth("a valid jwt", undefined as never)
+    ).rejects.toThrow(DidAuthErrors.VERIFY_BAD_PARAMETERS);
+  });
+
+  it("throw VERIFY_BAD_PARAMETERS when no opts.verificationType is passed", async () => {
+    expect.assertions(1);
+    await expect(verifyDidAuth("a valid jwt", {} as never)).rejects.toThrow(
+      DidAuthErrors.VERIFY_BAD_PARAMETERS
+    );
   });
 });

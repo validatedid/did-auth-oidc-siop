@@ -48,12 +48,6 @@ const isInternalVerification = (
   return "registry" in object && "rpcUrl" in object;
 };
 
-const isExternalVerification = (
-  object: InternalVerification | ExternalVerification
-): object is ExternalVerification => {
-  return "verifyUri" in object;
-};
-
 const createRegistration = (
   registrationType: RegistrationType,
   signatureType: InternalSignature | ExternalSignature
@@ -210,30 +204,28 @@ const verifyDidAuth = async (
     const payload = verifiedJWT.payload as DidAuthRequestPayload;
     return { signatureValidation: true, payload };
   }
-  if (isExternalVerification(opts.verificationType)) {
-    const data = {
-      jws: jwt,
-    };
-    try {
-      const response: AxiosResponse = await doPostCallWithToken(
-        opts.verificationType.verifyUri,
-        data,
-        opts.verificationType.authZToken
-      );
+  // external verification
+  const data = {
+    jws: jwt,
+  };
+  try {
+    const response: AxiosResponse = await doPostCallWithToken(
+      opts.verificationType.verifyUri,
+      data,
+      opts.verificationType.authZToken
+    );
 
-      if (!response || !response.status || response.status !== 204)
-        throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
-    } catch (error) {
-      throw Error(
-        DidAuthErrors.ERROR_VERIFYING_SIGNATURE + (error as Error).message
-      );
-    }
-
-    return {
-      signatureValidation: true,
-    };
+    if (!response || !response.status || response.status !== 204)
+      throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
+  } catch (error) {
+    throw Error(
+      DidAuthErrors.ERROR_VERIFYING_SIGNATURE + (error as Error).message
+    );
   }
-  throw Error(DidAuthErrors.VERIFICATION_METHOD_NOT_SUPPORTED);
+
+  return {
+    signatureValidation: true,
+  };
 };
 
 export {
@@ -244,6 +236,5 @@ export {
   signDidAuthExternal,
   createDidAuthResponsePayload,
   isInternalVerification,
-  isExternalVerification,
   verifyDidAuth,
 };
