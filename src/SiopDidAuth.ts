@@ -253,20 +253,13 @@ const verifyDidAuthResponse = async (
   if (!id_token || !opts || !opts.verificationType || !opts.nonce)
     throw new Error(DidAuthErrors.VERIFY_BAD_PARAMETERS);
   const validationResponse = await verifyDidAuth(id_token, opts);
-  if (!validationResponse || !validationResponse.signatureValidation)
-    throw new Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
-  if (
-    validationResponse.payload &&
-    validationResponse.payload.nonce &&
-    validationResponse.payload.nonce !== opts.nonce
-  )
-    throw Error(DidAuthErrors.ERROR_VALIDATING_NONCE);
 
   const { payload } = decodeJWT(id_token);
   if (payload.nonce !== opts.nonce)
     throw Error(DidAuthErrors.ERROR_VALIDATING_NONCE);
+
   return {
-    signatureValidation: true,
+    signatureValidation: validationResponse.signatureValidation,
     payload: payload as DidAuthResponsePayload,
   };
 };

@@ -229,10 +229,6 @@ const verifyDidAuth = async (
       );
     }
 
-    const { payload } = decodeJWT(jwt);
-    if (payload.nonce !== opts.nonce)
-      throw Error(DidAuthErrors.ERROR_VALIDATING_NONCE);
-
     return {
       signatureValidation: true,
     };
