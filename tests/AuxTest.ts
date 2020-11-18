@@ -1,17 +1,24 @@
 import { JWT, JWK } from "jose";
 import { DIDDocument } from "did-resolver";
 import { v4 as uuidv4 } from "uuid";
-import { decodeJWT } from "did-jwt";
+import {
+  createJWT,
+  decodeJWT,
+  JWTHeader,
+  JWTPayload,
+  SimpleSigner,
+} from "did-jwt";
 import axios, { AxiosResponse } from "axios";
 import moment from "moment";
 import { ethers } from "ethers";
 
-import { DidAuthErrors, JWTClaims, DidAuthUtil } from "../src";
+import { DidAuthErrors, JWTClaims, DidAuthUtil, DidAuthTypes } from "../src";
 import { prefixWith0x } from "../src/util/Util";
 import {
   DidAuthKeyCurve,
   DidAuthKeyType,
 } from "../src/interfaces/DIDAuth.types";
+import { getPublicJWKFromPrivateHex, getThumbprint } from "../src/util/JWK";
 
 export interface TESTKEY {
   key: JWK.ECKey;
@@ -96,9 +103,9 @@ export const mockedKeyAndDid = (): {
 
 const mockedEntityAuthNToken = (
   enterpiseName?: string
-): { jwt: string; jwk: JWK.ECKey; did: string } => {
+): { jwt: string; jwk: JWK.ECKey; did: string; hexPrivateKey: string } => {
   // generate a new keypair
-  const { did, jwk } = mockedKeyAndDid();
+  const { did, jwk, hexPrivateKey } = mockedKeyAndDid();
 
   const payload: LegalEntityTestAuthN = {
     iss: enterpiseName || "Test Legal Entity",
@@ -114,7 +121,7 @@ const mockedEntityAuthNToken = (
       typ: "JWT",
     },
   });
-  return { jwt, jwk, did };
+  return { jwt, jwk, did, hexPrivateKey };
 };
 
 const testEntityAuthNToken = (enterpiseName?: string): { jwt: string } => {
@@ -235,9 +242,10 @@ export function mockedGetEnterpriseAuthToken(
   jwt: string;
   did: string;
   jwk: JWK.ECKey;
+  hexPrivateKey: string;
 } {
   const testAuth = mockedEntityAuthNToken(enterpiseName);
-  const { payload } = decodeJWT(testAuth.jwt);
+  const payload = JWT.decode(testAuth.jwt) as JWTPayload;
 
   const inputPayload: IEnterpriseAuthZToken = {
     did: testAuth.did,
@@ -266,5 +274,47 @@ export function mockedGetEnterpriseAuthToken(
     jwt,
     did: testAuth.did,
     jwk: testAuth.jwk,
+    hexPrivateKey: testAuth.hexPrivateKey,
   };
 }
+
+export interface InputToken {
+  enterpiseName?: string;
+  nonce?: string;
+}
+
+export const mockedIdToken = (
+  inputToken: InputToken
+): {
+  jwt: string;
+  did: string;
+  jwk: JWK.ECKey;
+  idToken: string;
+} => {
+  const { jwt, did, jwk, hexPrivateKey } = mockedGetEnterpriseAuthToken(
+    inputToken.enterpiseName
+  );
+  const state = DidAuthUtil.getState();
+  const didAuthResponsePayload: DidAuthTypes.DidAuthResponsePayload = {
+    iss: DidAuthTypes.DidAuthResponseIss.SELF_ISSUE,
+    sub: getThumbprint(hexPrivateKey),
+    nonce: inputToken.nonce || DidAuthUtil.getNonce(state),
+    aud: "https://app.example/demo",
+    sub_jwk: getPublicJWKFromPrivateHex(hexPrivateKey),
+    did,
+  };
+
+  const header: JWTHeader = {
+    alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256K,
+    typ: "JWT",
+    kid: `${did}#key-1`,
+  };
+
+  const idToken = JWT.sign(didAuthResponsePayload, jwk, {
+    header,
+    issuer: didAuthResponsePayload.iss,
+    kid: false,
+  });
+
+  return { jwt, did, jwk, idToken };
+};
