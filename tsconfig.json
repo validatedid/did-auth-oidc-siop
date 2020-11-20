@@ -5,13 +5,13 @@
     "allowSyntheticDefaultImports": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "declaration": true,
+    "declaration": false,
     "sourceMap": true,
     "incremental": true,
     "strict": false,
-    "outDir": "./dist",
-    "baseUrl": "./"
+    "moduleResolution": "node",
+    "outDir": "dist"
   },
-  "include": ["src/**/*"],
+  "include": ["src"],
   "exclude": ["node_modules", "dist"]
 }

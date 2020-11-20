@@ -1,10 +1,14 @@
-import { Resolver } from "did-resolver";
+import { DIDDocument } from "./oidcSsi";
+
+export interface Resolvable {
+  resolve: (did: string) => Promise<DIDDocument | null>;
+}
 
 export interface JWTVerifyOptions {
   auth?: boolean;
   audience?: string;
   callbackUrl?: string;
-  resolver: Resolver;
+  resolver?: Resolvable | string;
 }
 
 export interface JWTHeader {

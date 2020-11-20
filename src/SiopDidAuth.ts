@@ -1,4 +1,4 @@
-import { decodeJWT } from "did-jwt";
+import { decodeJwt } from "@cef-ebsi/did-jwt";
 import {
   DidAuthRequestOpts,
   UriResponse,
@@ -114,7 +114,7 @@ const createDidAuthResponse = async (
   )
     throw new Error(DidAuthErrors.BAD_SIGNATURE_PARAMS);
 
-  const didAuthResponsePayload: DidAuthResponsePayload = createDidAuthResponsePayload(
+  const didAuthResponsePayload: DidAuthResponsePayload = await createDidAuthResponsePayload(
     opts
   );
 
@@ -241,7 +241,7 @@ const verifyDidAuthResponse = async (
     throw new Error(DidAuthErrors.VERIFY_BAD_PARAMETERS);
   const validationResponse = await verifyDidAuth(id_token, opts);
 
-  const { payload } = decodeJWT(id_token);
+  const { payload } = decodeJwt(id_token);
   if (payload.nonce !== opts.nonce)
     throw Error(DidAuthErrors.ERROR_VALIDATING_NONCE);
 

@@ -1,8 +1,5 @@
-import { createJWT, SimpleSigner, decodeJWT, verifyJWT } from "did-jwt";
 import axios, { AxiosResponse } from "axios";
-import { Resolver } from "did-resolver";
-import VidDidResolver from "@validatedid/vid-did-resolver";
-
+import { ebsiVerifyJwt, createJwt, SimpleSigner } from "@cef-ebsi/did-jwt";
 import { util, JWK } from "./util";
 import DidAuthErrors from "./interfaces/Errors";
 import { getNonce, doPostCallWithToken, getState } from "./util/Util";
@@ -31,6 +28,7 @@ import {
 } from "./interfaces/DIDAuth.types";
 import { getPublicJWKFromPrivateHex } from "./util/JWK";
 import { DIDDocument } from "./interfaces/oidcSsi";
+import { JWKECKey } from "./interfaces/JWK";
 
 const isInternalSignature = (
   object: InternalSignature | ExternalSignature
@@ -136,7 +134,7 @@ const signDidAuthInternal = async (
     typ: "JWT",
     kid: kid || `${issuer}#keys-1`,
   };
-  const response = await createJWT(
+  const response = await createJwt(
     payload,
     {
       issuer,
@@ -172,9 +170,9 @@ const signDidAuthExternal = async (
   return (response.data as SignatureResponse).jws;
 };
 
-const createDidAuthResponsePayload = (
+const createDidAuthResponsePayload = async (
   opts: DidAuthResponseOpts
-): DidAuthResponsePayload => {
+): Promise<DidAuthResponsePayload> => {
   if (
     !opts ||
     !opts.redirectUri ||
@@ -183,17 +181,47 @@ const createDidAuthResponsePayload = (
     !opts.did
   )
     throw new Error(DidAuthErrors.BAD_PARAMS);
-  if (!isInternalSignature(opts.signatureType))
-    throw new Error("Option not implemented");
-  return {
-    iss: DidAuthResponseIss.SELF_ISSUE,
-    sub: JWK.getThumbprint(opts.signatureType.hexPrivateKey),
-    nonce: opts.nonce,
-    aud: opts.redirectUri,
-    sub_jwk: JWK.getPublicJWKFromPrivateHex(
+  if (
+    !isInternalSignature(opts.signatureType) &&
+    !isExternalSignature(opts.signatureType)
+  )
+    throw new Error(DidAuthErrors.SIGNATURE_OBJECT_TYPE_NOT_SET);
+
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  let sub_jwk: JWKECKey;
+  let sub: string;
+
+  if (isInternalSignature(opts.signatureType)) {
+    sub = JWK.getThumbprint(opts.signatureType.hexPrivateKey);
+    sub_jwk = JWK.getPublicJWKFromPrivateHex(
       opts.signatureType.hexPrivateKey,
       opts.signatureType.kid || `${opts.signatureType.did}#keys-1`
-    ),
+    );
+  }
+  if (isExternalSignature(opts.signatureType)) {
+    if (!opts.registrationType || !opts.registrationType.referenceUri)
+      throw new Error(DidAuthErrors.NO_REFERENCE_URI);
+    const getResponse = await axios.get(opts.registrationType.referenceUri);
+    if (!getResponse || !getResponse.data)
+      throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
+    const didDoc = getResponse.data as DIDDocument;
+    if (
+      !didDoc.verificationMethod &&
+      !didDoc.verificationMethod[0] &&
+      !didDoc.verificationMethod[0].publicKeyJwk
+    )
+      throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
+
+    sub_jwk = didDoc.verificationMethod[0].publicKeyJwk;
+    sub = JWK.getThumbprintFromJwk(sub_jwk);
+  }
+
+  return {
+    iss: DidAuthResponseIss.SELF_ISSUE,
+    sub,
+    nonce: opts.nonce,
+    aud: opts.redirectUri,
+    sub_jwk,
     did: opts.did,
     vp: opts.vp,
   };
@@ -206,20 +234,19 @@ const verifyDidAuth = async (
   if (!jwt || !opts || !opts.verificationType)
     throw new Error(DidAuthErrors.VERIFY_BAD_PARAMETERS);
   if (isInternalVerification(opts.verificationType)) {
-    const { rpcUrl } = opts.verificationType;
-    const { registry } = opts.verificationType;
-    // as audience is set in payload as a DID, it is required to be set as options
+    // if audience it is a DID, it needs to be set as options audience
+    // if not, it needs to be set as a callback url
+    const audience = util.getAudience(jwt);
     const options: JWTVerifyOptions = {
-      audience: util.getAudience(jwt),
-      resolver: new Resolver(
-        VidDidResolver.getResolver({
-          rpcUrl,
-          registry,
-        })
-      ),
+      audience,
+      resolver: await util.getUrlResolver(jwt, opts.verificationType),
+      callbackUrl:
+        audience !== undefined && !audience.match(/^did:/g)
+          ? audience
+          : undefined,
     };
-    // !!! TODO: adapt this verifyJWT to be able to admit issuer and aud as an http
-    const verifiedJWT = await verifyJWT(jwt, options);
+
+    const verifiedJWT = await ebsiVerifyJwt(jwt, options);
     if (!verifiedJWT || !verifiedJWT.payload)
       throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
     const payload = verifiedJWT.payload as DidAuthRequestPayload;

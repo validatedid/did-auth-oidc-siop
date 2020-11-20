@@ -16,6 +16,8 @@ enum DidAuthErrors {
   VERIFY_BAD_PARAMETERS = "Verify bad parameters",
   VERIFICATION_METHOD_NOT_SUPPORTED = "Verification method not supported",
   ERROR_RETRIEVING_DID_DOCUMENT = "Error retrieving did document",
+  NO_ISS_DID = "Token does not have a iss DID",
+  BAD_INTERNAL_VERIFICATION_PARAMS = "Error: One of the either didUrlResolver or both registry and rpcUrl must be set",
 }
 
 export default DidAuthErrors;

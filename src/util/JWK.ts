@@ -35,6 +35,11 @@ const getPublicJWKFromPrivateHex = (
   };
 };
 
+const getThumbprintFromJwk = (pubJwk: JWK.JWKECKey): string => {
+  const buff = SHA("sha256").update(JSON.stringify(pubJwk)).digest();
+  return base64urlEncodeBuffer(buff);
+};
+
 const getThumbprint = (hexPrivateKey: string): string => {
   const jwk = getPublicJWKFromPrivateHex(hexPrivateKey);
   const fields = {
@@ -43,10 +48,12 @@ const getThumbprint = (hexPrivateKey: string): string => {
     x: jwk.x,
     y: jwk.y,
   };
-  const buff = SHA("sha256").update(JSON.stringify(fields)).digest();
-  const thumbprint = base64urlEncodeBuffer(buff);
-
-  return thumbprint;
+  return getThumbprintFromJwk(fields);
 };
 
-export { getThumbprint, getPublicJWKFromPrivateHex, getPublicJWKFromPublicHex };
+export {
+  getThumbprint,
+  getPublicJWKFromPrivateHex,
+  getPublicJWKFromPublicHex,
+  getThumbprintFromJwk,
+};

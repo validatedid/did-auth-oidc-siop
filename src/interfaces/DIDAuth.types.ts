@@ -128,8 +128,9 @@ export interface DidAuthResponseOpts {
 }
 
 export interface InternalVerification {
-  registry: string;
-  rpcUrl: string;
+  registry?: string;
+  rpcUrl?: string;
+  didUrlResolver?: string;
 }
 
 export interface ExternalVerification {

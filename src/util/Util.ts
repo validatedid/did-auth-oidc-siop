@@ -1,8 +1,16 @@
 import SHA from "sha.js";
+import VidDidResolver from "@validatedid/vid-did-resolver";
+import { decodeJwt } from "@cef-ebsi/did-jwt";
+import { Resolver } from "did-resolver";
 import axios, { AxiosResponse } from "axios";
 import { ethers, utils } from "ethers";
-import { decodeJWT } from "did-jwt";
 import { JWK, DidAuthErrors } from "../interfaces";
+import {
+  DidAuthResponseIss,
+  DidAuthResponsePayload,
+  InternalVerification,
+} from "../interfaces/DIDAuth.types";
+import { Resolvable } from "../interfaces/JWT";
 
 export const prefixWith0x = (key: string): string => {
   return key.startsWith("0x") ? key : `0x${key}`;
@@ -63,7 +71,7 @@ async function doPostCallWithToken(
 }
 
 const getAudience = (jwt: string): string | undefined => {
-  const { payload } = decodeJWT(jwt);
+  const { payload } = decodeJwt(jwt);
   if (!payload) throw new Error(DidAuthErrors.NO_AUDIENCE);
   if (!payload.aud) return undefined;
   if (Array.isArray(payload.aud))
@@ -71,11 +79,44 @@ const getAudience = (jwt: string): string | undefined => {
   return payload.aud;
 };
 
+const getIssuerDid = (jwt: string): string => {
+  const { payload } = decodeJwt(jwt);
+  if (!payload || !payload.iss) throw new Error(DidAuthErrors.NO_ISS_DID);
+  if (payload.iss === DidAuthResponseIss.SELF_ISSUE)
+    return (payload as DidAuthResponsePayload).did;
+  return payload.iss;
+};
+
+const getUrlResolver = async (
+  jwt: string,
+  internalVerification: InternalVerification
+): Promise<Resolvable | string> => {
+  if (!internalVerification.didUrlResolver)
+    throw new Error(DidAuthErrors.BAD_INTERNAL_VERIFICATION_PARAMS);
+  try {
+    // check if the token issuer DID can be resolved
+    await axios.get(
+      `${internalVerification.didUrlResolver}/${getIssuerDid(jwt)}`
+    );
+    return internalVerification.didUrlResolver;
+  } catch (error) {
+    if (!internalVerification.registry || !internalVerification.rpcUrl)
+      throw new Error(DidAuthErrors.BAD_INTERNAL_VERIFICATION_PARAMS);
+    return new Resolver(
+      VidDidResolver.getResolver({
+        rpcUrl: internalVerification.rpcUrl,
+        registry: internalVerification.registry,
+      })
+    );
+  }
+};
+
 export {
   getNonce,
   getState,
   getAudience,
   getDIDFromKey,
+  getUrlResolver,
   getHexPrivateKey,
   doPostCallWithToken,
   base64urlEncodeBuffer,
