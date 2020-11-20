@@ -37,7 +37,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
         signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
         did: entityDid,
         authZToken,
-        kid: `${entityDid}#key-1`,
+        kid: `${entityDid}#keys-1`,
       },
       registrationType: {
         type: DidAuthTypes.ObjectPassedBy.REFERENCE,
@@ -119,7 +119,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
       signatureType: {
         hexPrivateKey,
         did,
-        kid: `${did}#key-1`,
+        kid: `${did}#keys-1`,
       },
       nonce: requestPayload.nonce,
       state: requestPayload.state,
@@ -188,7 +188,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
         signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
         did: entityDid,
         authZToken,
-        kid: `${entityDid}#key-1`,
+        kid: `${entityDid}#keys-1`,
       },
       registrationType: {
         type: DidAuthTypes.ObjectPassedBy.REFERENCE,
@@ -265,7 +265,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
       signatureType: {
         hexPrivateKey,
         did,
-        kid: `${did}#key-1`,
+        kid: `${did}#keys-1`,
       },
       nonce: requestPayload.nonce,
       state: requestPayload.state,

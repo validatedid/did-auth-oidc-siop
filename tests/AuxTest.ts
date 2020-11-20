@@ -307,7 +307,7 @@ export const mockedIdToken = (
   const header: JWTHeader = {
     alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256K,
     typ: "JWT",
-    kid: `${did}#key-1`,
+    kid: `${did}#keys-1`,
   };
 
   const idToken = JWT.sign(didAuthResponsePayload, jwk, {

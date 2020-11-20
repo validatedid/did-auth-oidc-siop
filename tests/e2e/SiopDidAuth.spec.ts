@@ -31,7 +31,7 @@ describe("VidDidAuth tests should", () => {
           hexPrivateKey:
             "f857544a9d1097e242ff0b287a7e6e90f19cf973efe2317f2a4678739664420f",
           did: "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0",
-          kid: "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0#key-1",
+          kid: "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0#keys-1",
         },
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.VALUE,
@@ -69,7 +69,7 @@ describe("VidDidAuth tests should", () => {
           hexPrivateKey:
             "f857544a9d1097e242ff0b287a7e6e90f19cf973efe2317f2a4678739664420f",
           did: "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0",
-          kid: "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0#key-1",
+          kid: "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0#keys-1",
         },
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.VALUE,
@@ -128,7 +128,7 @@ describe("VidDidAuth tests should", () => {
       const { header, payload } = didJwt.decodeJWT(jwt);
 
       const expectedHeader = mockedData.DIDAUTH_HEADER;
-      expectedHeader.kid = `${did}#key-1`;
+      expectedHeader.kid = `${did}#keys-1`;
       const expectedPayload = mockedData.DIDAUTH_REQUEST_PAYLOAD;
       expectedPayload.iss = did;
       expectedPayload.nonce = expect.any(String) as string;
@@ -217,7 +217,7 @@ describe("VidDidAuth tests should", () => {
         signatureType: {
           hexPrivateKey,
           did,
-          kid: `${did}#key-1`,
+          kid: `${did}#keys-1`,
         },
         nonce,
         state,
@@ -256,7 +256,7 @@ describe("VidDidAuth tests should", () => {
         signatureType: {
           hexPrivateKey,
           did,
-          kid: `${did}#key-1`,
+          kid: `${did}#keys-1`,
         },
         nonce,
         state,
@@ -296,7 +296,7 @@ describe("VidDidAuth tests should", () => {
         signatureType: {
           hexPrivateKey,
           did,
-          kid: `${did}#key-1`,
+          kid: `${did}#keys-1`,
         },
         nonce,
         state,
@@ -373,7 +373,7 @@ describe("VidDidAuth tests should", () => {
       expectedPayload.registration = {
         jwks: DidAuthJwk.getPublicJWKFromPrivateHex(
           hexPrivateKey,
-          `${did}#key-1`
+          `${did}#keys-1`
         ),
       };
 
@@ -395,7 +395,7 @@ describe("VidDidAuth tests should", () => {
         signatureType: {
           hexPrivateKey,
           did,
-          kid: `${did}#key-1`,
+          kid: `${did}#keys-1`,
         },
         nonce,
         state,
@@ -430,7 +430,7 @@ describe("VidDidAuth tests should", () => {
       expectedPayload.sub = expect.any(String) as string;
       expectedPayload.sub_jwk = DidAuthJwk.getPublicJWKFromPrivateHex(
         hexPrivateKey,
-        `${did}#key-1`
+        `${did}#keys-1`
       );
 
       expect(validationResponse.payload.iat).toBeDefined();
@@ -453,7 +453,7 @@ describe("VidDidAuth tests should", () => {
         signatureType: {
           hexPrivateKey,
           did,
-          kid: `${did}#key-1`,
+          kid: `${did}#keys-1`,
         },
         nonce,
         state,
@@ -487,7 +487,7 @@ describe("VidDidAuth tests should", () => {
       expectedPayload.sub = expect.any(String) as string;
       expectedPayload.sub_jwk = DidAuthJwk.getPublicJWKFromPrivateHex(
         hexPrivateKey,
-        `${did}#key-1`
+        `${did}#keys-1`
       );
 
       expect(validationResponse.payload.iat).toBeDefined();
@@ -511,7 +511,7 @@ describe("VidDidAuth tests should", () => {
           signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
           did,
           authZToken,
-          kid: `${did}#key-1`,
+          kid: `${did}#keys-1`,
         },
         nonce,
         state,
@@ -546,7 +546,7 @@ describe("VidDidAuth tests should", () => {
       expectedPayload.sub = expect.any(String) as string;
       expectedPayload.sub_jwk = DidAuthJwk.getPublicJWKFromPrivateHex(
         hexPrivateKey,
-        `${did}#key-1`
+        `${did}#keys-1`
       );
 
       expect(validationResponse.payload.iat).toBeDefined();

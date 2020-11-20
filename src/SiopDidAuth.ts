@@ -67,7 +67,7 @@ const createDidAuthRequest = async (
   )
     throw new Error(DidAuthErrors.NO_REFERENCE_URI);
 
-  const didAuthRequestPayload = createDidAuthRequestPayload(opts);
+  const didAuthRequestPayload = await createDidAuthRequestPayload(opts);
   const { nonce, state } = didAuthRequestPayload;
 
   if (isInternalSignature(opts.signatureType)) {

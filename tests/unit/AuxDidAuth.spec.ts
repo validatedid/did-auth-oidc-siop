@@ -67,7 +67,7 @@ describe("vidDidAuth", () => {
           signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
           did: didAA,
           authZToken: tokenEntityAA,
-          kid: `${didAA}#key-1`,
+          kid: `${didAA}#keys-1`,
         },
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.REFERENCE,
@@ -78,7 +78,7 @@ describe("vidDidAuth", () => {
         const header: JWTHeader = {
           alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
           typ: "JWT",
-          kid: `${entityAA.did}#key-1`,
+          kid: `${entityAA.did}#keys-1`,
         };
         const state = DidAuthUtil.getState();
         const payload: DidAuthTypes.DidAuthRequestPayload = {
@@ -151,7 +151,7 @@ describe("vidDidAuth", () => {
           signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
           did: didAA,
           authZToken: tokenEntityAA,
-          kid: `${didAA}#key-1`,
+          kid: `${didAA}#keys-1`,
         },
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.REFERENCE,
@@ -198,7 +198,7 @@ describe("vidDidAuth", () => {
           signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
           did: didAA,
           authZToken: tokenEntityAA,
-          kid: `${didAA}#key-1`,
+          kid: `${didAA}#keys-1`,
         },
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.REFERENCE,
@@ -209,7 +209,7 @@ describe("vidDidAuth", () => {
         const header: JWTHeader = {
           alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
           typ: "JWT",
-          kid: `${entityAA.did}#key-1`,
+          kid: `${entityAA.did}#keys-1`,
         };
         const state = DidAuthUtil.getState();
         const payload: DidAuthTypes.DidAuthRequestPayload = {
@@ -251,7 +251,7 @@ describe("vidDidAuth", () => {
       const { header, payload } = didJwt.decodeJWT(jwt);
 
       const expectedHeader = mockedData.DIDAUTH_HEADER;
-      expectedHeader.kid = `${entityAA.did}#key-1`;
+      expectedHeader.kid = `${entityAA.did}#keys-1`;
       const expectedPayload = mockedData.DIDAUTH_REQUEST_PAYLOAD;
       expectedPayload.iss = entityAA.did;
       expectedPayload.nonce = expect.any(String) as string;
@@ -288,7 +288,7 @@ describe("vidDidAuth", () => {
           signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
           did: didAA,
           authZToken: tokenEntityAA,
-          kid: `${didAA}#key-1`,
+          kid: `${didAA}#keys-1`,
         },
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.REFERENCE,
@@ -300,7 +300,7 @@ describe("vidDidAuth", () => {
         const header: JWTHeader = {
           alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
           typ: "JWT",
-          kid: `${entityAA.did}#key-1`,
+          kid: `${entityAA.did}#keys-1`,
         };
         const state = DidAuthUtil.getState();
         const payload: DidAuthTypes.DidAuthRequestPayload = {
@@ -343,7 +343,7 @@ describe("vidDidAuth", () => {
       const { header, payload } = didJwt.decodeJWT(jwt);
 
       const expectedHeader = mockedData.DIDAUTH_HEADER;
-      expectedHeader.kid = `${entityAA.did}#key-1`;
+      expectedHeader.kid = `${entityAA.did}#keys-1`;
       const expectedPayload = mockedData.DIDAUTH_REQUEST_PAYLOAD_CLAIMS;
       expectedPayload.iss = entityAA.did;
       expectedPayload.nonce = expect.any(String) as string;
@@ -384,7 +384,7 @@ describe("vidDidAuth", () => {
           signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
           did: didAA,
           authZToken: tokenEntityAA,
-          kid: `${didAA}#key-1`,
+          kid: `${didAA}#keys-1`,
         },
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.REFERENCE,
@@ -395,7 +395,7 @@ describe("vidDidAuth", () => {
         const header: JWTHeader = {
           alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
           typ: "JWT",
-          kid: `${entityAA.did}#key-1`,
+          kid: `${entityAA.did}#keys-1`,
         };
         const state = DidAuthUtil.getState();
         const payload: DidAuthTypes.DidAuthRequestPayload = {
@@ -606,7 +606,7 @@ describe("vidDidAuth", () => {
         signatureType: {
           hexPrivateKey,
           did,
-          kid: `${did}#key-1`,
+          kid: `${did}#keys-1`,
         },
         nonce,
         state,
@@ -620,7 +620,7 @@ describe("vidDidAuth", () => {
       const { header, payload } = didJwt.decodeJWT(didAuthJwt);
 
       const expectedHeader = mockedData.DIDAUTH_HEADER;
-      expectedHeader.kid = `${did}#key-1`;
+      expectedHeader.kid = `${did}#keys-1`;
       const expectedPayload = mockedData.DIDAUTH_RESPONSE_PAYLOAD;
       expectedPayload.iss = expect.stringMatching(
         DidAuthTypes.DidAuthResponseIss.SELF_ISSUE
@@ -654,7 +654,7 @@ describe("vidDidAuth", () => {
         signatureType: {
           hexPrivateKey,
           did,
-          kid: `${did}#key-1`,
+          kid: `${did}#keys-1`,
         },
         nonce,
         state,
@@ -669,7 +669,7 @@ describe("vidDidAuth", () => {
       const { header, payload } = didJwt.decodeJWT(didAuthJwt);
 
       const expectedHeader = mockedData.DIDAUTH_HEADER;
-      expectedHeader.kid = `${did}#key-1`;
+      expectedHeader.kid = `${did}#keys-1`;
       const expectedPayload = mockedData.DIDAUTH_RESPONSE_PAYLOAD_VP;
       expectedPayload.iss = expect.stringMatching(
         DidAuthTypes.DidAuthResponseIss.SELF_ISSUE
@@ -705,7 +705,7 @@ describe("vidDidAuth", () => {
         signatureType: {
           hexPrivateKey,
           did,
-          kid: `${did}#key-1`,
+          kid: `${did}#keys-1`,
         },
         nonce,
         state,
@@ -748,7 +748,7 @@ describe("vidDidAuth", () => {
         signatureType: {
           hexPrivateKey,
           did,
-          kid: `${did}#key-1`,
+          kid: `${did}#keys-1`,
         },
         nonce: requestDIDAuthNonce,
         state,
@@ -787,7 +787,7 @@ describe("vidDidAuth", () => {
         signatureType: {
           hexPrivateKey,
           did,
-          kid: `${did}#key-1`,
+          kid: `${did}#keys-1`,
         },
         nonce: requestDIDAuthNonce,
         state,
@@ -826,7 +826,7 @@ describe("vidDidAuth", () => {
         signatureType: {
           hexPrivateKey,
           did,
-          kid: `${did}#key-1`,
+          kid: `${did}#keys-1`,
         },
         nonce: requestDIDAuthNonce,
         state,

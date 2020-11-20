@@ -43,7 +43,7 @@ describe("SiopDidAuth creat Uri Response tests should", () => {
       signatureType: {
         hexPrivateKey,
         did,
-        kid: `${did}#key-1`,
+        kid: `${did}#keys-1`,
       },
     };
     await expect(createUriResponse(opts as never)).rejects.toThrow(
@@ -60,7 +60,7 @@ describe("SiopDidAuth creat Uri Response tests should", () => {
       signatureType: {
         hexPrivateKey,
         did,
-        kid: `${did}#key-1`,
+        kid: `${did}#keys-1`,
       },
       state,
     };
@@ -77,7 +77,7 @@ describe("SiopDidAuth creat Uri Response tests should", () => {
       signatureType: {
         hexPrivateKey,
         did,
-        kid: `${did}#key-1`,
+        kid: `${did}#keys-1`,
       },
       state,
       nonce: DidAuthUtil.getNonce(state),
@@ -96,7 +96,7 @@ describe("SiopDidAuth creat Uri Response tests should", () => {
       signatureType: {
         hexPrivateKey,
         did,
-        kid: `${did}#key-1`,
+        kid: `${did}#keys-1`,
       },
       state,
       nonce: DidAuthUtil.getNonce(state),
@@ -133,7 +133,7 @@ describe("SiopDidAuth creat Uri Response tests should", () => {
       signatureType: {
         hexPrivateKey,
         did,
-        kid: `${did}#key-1`,
+        kid: `${did}#keys-1`,
       },
       state,
       nonce: DidAuthUtil.getNonce(state),
@@ -160,7 +160,7 @@ describe("SiopDidAuth creat Uri Response tests should", () => {
       signatureType: {
         hexPrivateKey,
         did,
-        kid: `${did}#key-1`,
+        kid: `${did}#keys-1`,
       },
       state,
       nonce: DidAuthUtil.getNonce(state),
@@ -187,7 +187,7 @@ describe("SiopDidAuth creat Uri Response tests should", () => {
       signatureType: {
         hexPrivateKey,
         did,
-        kid: `${did}#key-1`,
+        kid: `${did}#keys-1`,
       },
       state,
       nonce: DidAuthUtil.getNonce(state),

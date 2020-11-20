@@ -86,7 +86,7 @@ export type RequestObjectBy = {
 export interface InternalSignature {
   hexPrivateKey: string; // hex private key Only secp256k1 format
   did: string;
-  kid?: string; // Optional: key identifier. default did#key-1
+  kid?: string; // Optional: key identifier. default did#keys-1
 }
 
 export interface ExternalSignature {
@@ -94,7 +94,7 @@ export interface ExternalSignature {
   did: string;
   authZToken?: string; // Optional: bearer token to use to the call
   hexPublicKey?: string; // Optional: hex encoded public key to compute JWK key, if not possible from DID Document
-  kid?: string; // Optional: key identifier. default did#key-1
+  kid?: string; // Optional: key identifier. default did#keys-1
 }
 
 export interface RegistrationType extends RequestObjectBy {

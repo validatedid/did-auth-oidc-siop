@@ -158,7 +158,7 @@ Let's first explain the different Request elements and then show you an example:
     "signatureUri": "https://api.vidchain.net/api/v1/signatures",
     "did": "did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670",
     "authZToken": "eyJhbGciOiJFUzI1NksiLCJ0eXAiOiJKV1QiLCJraWQiOiJ2aWRjaGFpbi1hcGkifQ.eyJzdWIiOiJPRFlTU0VZIEFQUCBURVNUIiwiZGlkIjoiZGlkOnZpZDoweDg0QjYwQWRiNzBmNTVjNWNkOGVhMzk3MUFhQzI3MmMzYTBiZEI2NzAiLCJub25jZSI6IjY1MmFhN2Q0LWVhYTctNDEyZi04YjFlLTZhMzJhOWYzODQxNiIsImlhdCI6MTYwNTM2MDI1OSwiZXhwIjoxNjA1MzYxMTU5LCJhdWQiOiJ2aWRjaGFpbi1hcGkifQ.ooEH46tETgCRxFe_UMlPrnkJja2lyxuoF_MdlPgQKDqkeLjOESd_Qev6hKiV-ksdpH3E99Oq_OMdsgmnw-57WA",
-    "kid": "did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670#key-1"
+    "kid": "did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670#keys-1"
   },
   "registrationType": {
     "type": "REFERENCE",
@@ -295,7 +295,7 @@ Example:
   "signatureType": {
     "hexPrivateKey": "58ab64245715ee6c67f51abe86de3d07cc0a6555b638becae7dab21d6bbe83b2",
     "did": "did:vid:0x8D851667cC475114085F24A145134F2AA8223b00",
-    "kid": "did:vid:0x8D851667cC475114085F24A145134F2AA8223b00#key-1"
+    "kid": "did:vid:0x8D851667cC475114085F24A145134F2AA8223b00#keys-1"
   },
   "nonce": "agxZnO7jbSDvKhRK2BIgx0he-w3TU035pigj6sRXk7s",
   "state": "ac675fe2981496fad688b3ac",
@@ -333,7 +333,7 @@ Example:
           "type": "EcdsaSecp256k1Signature2019",
           "created": "2019-11-17T14:00:00Z",
           "proofPurpose": "assertionMethod",
-          "verificationMethod": "did:vid:0x5208431C6EC2ec4097aeA7182bB92d018766498c#key-1",
+          "verificationMethod": "did:vid:0x5208431C6EC2ec4097aeA7182bB92d018766498c#keys-1",
           "jws": "eyJhbGciOiJFUzI1NkstUiIsInR5cCI6IkpXVCIsImtpZCI6ImRpZDp2aWQ6MHgzYWQzZkY4RTVhQjhENjkzQzI4QmREOUI0N2VkRDFmNzQ0NUY4YzNGI2tleS0xIn0.eyJpYXQiOjE1OTE3OTk1MDQsInZjIjp7IkBjb250ZXh0IjpbImh0dHBzOi8vd3d3LnczLm9yZy8yMDE4L2NyZWRlbnRpYWxzL3YxIiwiaHR0cHM6Ly9hcGkudmlkY2hhaW4ubmV0L2NyZWRlbnRpYWxzL3ZlcmlmaWFibGUtaWQvdjEiXSwiaWQiOiJodHRwczovL2FwaS52aWRjaGFpbi5uZXQvYXBpL3YxL3NjaGVtYXMvMjM5MSIsInR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJWZXJpZmlhYmxlSWRDcmVkZW50aWFsIl0sImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImlkIjoiZGlkOnZpZDoweDQyYjg5OEUyN0M1NmU3ZDVBMmQ0RTY0NmRCMmQ0MThCRDVDMTcwYzQiLCJmaXJzdE5hbWUiOiJFdmEiLCJsYXN0TmFtZSI6Ik1vbnJvZSIsImdlbmRlciI6IkZlbWFsZSIsImRhdGVPZkJpcnRoIjoiMTIvMTEvMTk3MCIsInBsYWNlT2ZCaXJ0aCI6Ik1hZHJpZCIsImN1cnJlbnRBZGRyZXNzIjoiQXJhZ28gMTc5IDRhIiwiY2l0eSI6IkJhcmNlbG9uYSIsInN0YXRlIjoiQ2F0YWxvbmlhIiwiemlwIjoiMDgwMTEifSwiaXNzdWVyIjoiZGlkOnZpZDoweDNhZDNmRjhFNWFCOEQ2OTNDMjhCZEQ5QjQ3ZWREMWY3NDQ1RjhjM0YifSwiaXNzIjoiZGlkOnZpZDoweDNhZDNmRjhFNWFCOEQ2OTNDMjhCZEQ5QjQ3ZWREMWY3NDQ1RjhjM0YifQ.B7e4Zp9jGLDXTRG8ID1j0_EVwoQlI_XDzSagKWmDR-INjMVSFG1142asC1r5RedNuu3SR8VIcE9yrbDw9cRuEQA"
         }
       }
@@ -342,7 +342,7 @@ Example:
       "type": "EcdsaSecp256k1Signature2019",
       "created": "2019-06-22T14:11:44Z",
       "proofPurpose": "assertionMethod",
-      "verificationMethod": "did:vid:0x16048B83FAdaCdCB20198ABc45562Df1A3e289aF#key-1",
+      "verificationMethod": "did:vid:0x16048B83FAdaCdCB20198ABc45562Df1A3e289aF#keys-1",
       "jws": "eyJhbGciOiJFUzI1NksifQ.eyJzdWIiOiJFQlNJIDIwMTkifQ.oggE3ft3kJYPGGa9eBibpbjgeJXw4fLbVMouVoM2NfcDxsl_UUUIarsS1VpBoYEs7s9cBlc4uC0EbnJCHfVJIw"
     }
   }
@@ -425,7 +425,7 @@ const validationResponse = await verifyDidAuthResponse(
     "nonce": "duXGNS_U3A5Sj3S0afYFRMQTy5Z_YskadTj9RLbjLXo",
     "aud": "odysseyapp://example/did-auth",
     "sub_jwk": {
-      "kid": "did:vid:0x6B789EF94e1669176e9A414D617e29FbD89f1413#key-1",
+      "kid": "did:vid:0x6B789EF94e1669176e9A414D617e29FbD89f1413#keys-1",
       "kty": "EC",
       "crv": "secp256k1",
       "x": "d08288b39daabe0b37d5721da890e76ff846ac46f24e4ad1b94dcaa1ca99d7dc",
@@ -461,7 +461,7 @@ const validationResponse = await verifyDidAuthResponse(
             "type": "EcdsaSecp256k1Signature2019",
             "created": "2019-11-17T14:00:00Z",
             "proofPurpose": "assertionMethod",
-            "verificationMethod": "did:vid:0x5208431C6EC2ec4097aeA7182bB92d018766498c#key-1",
+            "verificationMethod": "did:vid:0x5208431C6EC2ec4097aeA7182bB92d018766498c#keys-1",
             "jws": "eyJhbGciOiJFUzI1NkstUiIsInR5cCI6IkpXVCIsImtpZCI6ImRpZDp2aWQ6MHgzYWQzZkY4RTVhQjhENjkzQzI4QmREOUI0N2VkRDFmNzQ0NUY4YzNGI2tleS0xIn0.eyJpYXQiOjE1OTE3OTk1MDQsInZjIjp7IkBjb250ZXh0IjpbImh0dHBzOi8vd3d3LnczLm9yZy8yMDE4L2NyZWRlbnRpYWxzL3YxIiwiaHR0cHM6Ly9hcGkudmlkY2hhaW4ubmV0L2NyZWRlbnRpYWxzL3ZlcmlmaWFibGUtaWQvdjEiXSwiaWQiOiJodHRwczovL2FwaS52aWRjaGFpbi5uZXQvYXBpL3YxL3NjaGVtYXMvMjM5MSIsInR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJWZXJpZmlhYmxlSWRDcmVkZW50aWFsIl0sImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImlkIjoiZGlkOnZpZDoweDQyYjg5OEUyN0M1NmU3ZDVBMmQ0RTY0NmRCMmQ0MThCRDVDMTcwYzQiLCJmaXJzdE5hbWUiOiJFdmEiLCJsYXN0TmFtZSI6Ik1vbnJvZSIsImdlbmRlciI6IkZlbWFsZSIsImRhdGVPZkJpcnRoIjoiMTIvMTEvMTk3MCIsInBsYWNlT2ZCaXJ0aCI6Ik1hZHJpZCIsImN1cnJlbnRBZGRyZXNzIjoiQXJhZ28gMTc5IDRhIiwiY2l0eSI6IkJhcmNlbG9uYSIsInN0YXRlIjoiQ2F0YWxvbmlhIiwiemlwIjoiMDgwMTEifSwiaXNzdWVyIjoiZGlkOnZpZDoweDNhZDNmRjhFNWFCOEQ2OTNDMjhCZEQ5QjQ3ZWREMWY3NDQ1RjhjM0YifSwiaXNzIjoiZGlkOnZpZDoweDNhZDNmRjhFNWFCOEQ2OTNDMjhCZEQ5QjQ3ZWREMWY3NDQ1RjhjM0YifQ.B7e4Zp9jGLDXTRG8ID1j0_EVwoQlI_XDzSagKWmDR-INjMVSFG1142asC1r5RedNuu3SR8VIcE9yrbDw9cRuEQA"
           }
         }
@@ -470,7 +470,7 @@ const validationResponse = await verifyDidAuthResponse(
         "type": "EcdsaSecp256k1Signature2019",
         "created": "2019-06-22T14:11:44Z",
         "proofPurpose": "assertionMethod",
-        "verificationMethod": "did:vid:0x16048B83FAdaCdCB20198ABc45562Df1A3e289aF#key-1",
+        "verificationMethod": "did:vid:0x16048B83FAdaCdCB20198ABc45562Df1A3e289aF#keys-1",
         "jws": "eyJhbGciOiJFUzI1NksifQ.eyJzdWIiOiJFQlNJIDIwMTkifQ.oggE3ft3kJYPGGa9eBibpbjgeJXw4fLbVMouVoM2NfcDxsl_UUUIarsS1VpBoYEs7s9cBlc4uC0EbnJCHfVJIw"
       }
     }
