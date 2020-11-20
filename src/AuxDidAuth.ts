@@ -1,7 +1,8 @@
 import { createJWT, SimpleSigner, decodeJWT, verifyJWT } from "did-jwt";
+import axios, { AxiosResponse } from "axios";
 import { Resolver } from "did-resolver";
 import VidDidResolver from "@validatedid/vid-did-resolver";
-import { AxiosResponse } from "axios";
+
 import { util, JWK } from "./util";
 import DidAuthErrors from "./interfaces/Errors";
 import { getNonce, doPostCallWithToken, getState } from "./util/Util";
@@ -29,6 +30,7 @@ import {
   DidAuthVerifyOpts,
 } from "./interfaces/DIDAuth.types";
 import { getPublicJWKFromPrivateHex } from "./util/JWK";
+import { DIDDocument } from "./interfaces/oidcSsi";
 
 const isInternalSignature = (
   object: InternalSignature | ExternalSignature
@@ -48,10 +50,10 @@ const isInternalVerification = (
   return "registry" in object && "rpcUrl" in object;
 };
 
-const createRegistration = (
+const createRegistration = async (
   registrationType: RegistrationType,
   signatureType: InternalSignature | ExternalSignature
-): RegistrationJwksUri | RegistrationJwks => {
+): Promise<RegistrationJwksUri | RegistrationJwks> => {
   if (!registrationType || !registrationType.type)
     throw new Error(DidAuthErrors.REGISTRATION_OBJECT_TYPE_NOT_SET);
 
@@ -67,25 +69,44 @@ const createRegistration = (
       };
       return registration;
     case ObjectPassedBy.VALUE:
-      if (!isInternalSignature(signatureType))
-        throw new Error("Option not implemented");
-      registration = {
-        jwks: getPublicJWKFromPrivateHex(
-          signatureType.hexPrivateKey,
-          signatureType.kid || `${signatureType.did}#key-1`
-        ),
-      };
-      return registration;
+      if (isInternalSignature(signatureType)) {
+        registration = {
+          jwks: getPublicJWKFromPrivateHex(
+            signatureType.hexPrivateKey,
+            signatureType.kid || `${signatureType.did}#keys-1`
+          ),
+        };
+        return registration;
+      }
+      if (isExternalSignature(signatureType)) {
+        if (!registrationType.referenceUri)
+          throw new Error(DidAuthErrors.NO_REFERENCE_URI);
+        const getResponse = await axios.get(registrationType.referenceUri);
+        if (!getResponse || !getResponse.data)
+          throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
+        const didDoc = getResponse.data as DIDDocument;
+        if (
+          !didDoc.verificationMethod &&
+          !didDoc.verificationMethod[0] &&
+          !didDoc.verificationMethod[0].publicKeyJwk
+        )
+          throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
+        registration = {
+          jwks: didDoc.verificationMethod[0].publicKeyJwk,
+        };
+        return registration;
+      }
+      throw new Error(DidAuthErrors.SIGNATURE_OBJECT_TYPE_NOT_SET);
     default:
       throw new Error(DidAuthErrors.REGISTRATION_OBJECT_TYPE_NOT_SET);
   }
 };
 
-const createDidAuthRequestPayload = (
+const createDidAuthRequestPayload = async (
   opts: DidAuthRequestOpts
-): DidAuthRequestPayload => {
+): Promise<DidAuthRequestPayload> => {
   const state = opts.state || getState();
-  const registration = createRegistration(
+  const registration = await createRegistration(
     opts.registrationType,
     opts.signatureType
   );
@@ -113,7 +134,7 @@ const signDidAuthInternal = async (
   const header: JWTHeader = {
     alg: DidAuthKeyAlgorithm.ES256KR,
     typ: "JWT",
-    kid: kid || `${issuer}#key-1`,
+    kid: kid || `${issuer}#keys-1`,
   };
   const response = await createJWT(
     payload,
@@ -171,7 +192,7 @@ const createDidAuthResponsePayload = (
     aud: opts.redirectUri,
     sub_jwk: JWK.getPublicJWKFromPrivateHex(
       opts.signatureType.hexPrivateKey,
-      opts.signatureType.kid || `${opts.signatureType.did}#key-1`
+      opts.signatureType.kid || `${opts.signatureType.did}#keys-1`
     ),
     did: opts.did,
     vp: opts.vp,
