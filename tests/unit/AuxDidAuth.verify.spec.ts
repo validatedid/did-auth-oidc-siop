@@ -1,11 +1,11 @@
 import { JWT, JWK } from "jose";
-import { verifyJWT, decodeJWT } from "did-jwt";
+import { verifyJwt, decodeJwt } from "@cef-ebsi/did-jwt";
 import { DidAuthErrors, DidAuthTypes, verifyDidAuthRequest } from "../../src";
 import { verifyDidAuth } from "../../src/AuxDidAuth";
 
-jest.mock("did-jwt");
-const mockVerifyJwt = verifyJWT as jest.Mock;
-const mockDecodeJWT = decodeJWT as jest.Mock;
+jest.mock("@cef-ebsi/did-jwt");
+const mockVerifyJwt = verifyJwt as jest.Mock;
+const mockDecodeJWT = decodeJwt as jest.Mock;
 
 describe("vid DID Auth Request Validation", () => {
   it("should throw ERROR_VERIFYING_SIGNATURE", async () => {

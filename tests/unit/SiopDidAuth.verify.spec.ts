@@ -1,15 +1,15 @@
 import * as dotenv from "dotenv";
 import axios from "axios";
-import { verifyJWT, decodeJWT } from "did-jwt";
+import { verifyJwt, decodeJwt } from "@cef-ebsi/did-jwt";
 import { mockedIdToken } from "../AuxTest";
 import { DidAuthErrors, DidAuthTypes, verifyDidAuthResponse } from "../../src";
 
 // importing .env variables
 dotenv.config();
 jest.mock("axios");
-jest.mock("did-jwt");
-const mockDecodeJWT = decodeJWT as jest.Mock;
-const mockVerifyJwt = verifyJWT as jest.Mock;
+jest.mock("@cef-ebsi/did-jwt");
+const mockDecodeJWT = decodeJwt as jest.Mock;
+const mockVerifyJwt = verifyJwt as jest.Mock;
 describe("SiopDidAuth tests should", () => {
   it("throw ERROR_VALIDATING_NONCE when nonce passed is not the same as in the id_token", async () => {
     expect.assertions(1);

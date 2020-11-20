@@ -1,6 +1,6 @@
 import * as dotenv from "dotenv";
 import axios from "axios";
-import * as didJwt from "did-jwt";
+import * as didJwt from "@cef-ebsi/did-jwt";
 import { JWT } from "jose";
 import { parse } from "querystring";
 import { mockedGetEnterpriseAuthToken, mockedKeyAndDid } from "../AuxTest";
@@ -94,7 +94,7 @@ describe("vidDidAuth", () => {
               DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
           },
         };
-        const jws = await didJwt.createJWT(
+        const jws = await didJwt.createJwt(
           payload,
           {
             issuer: entityAA.did,
@@ -225,7 +225,7 @@ describe("vidDidAuth", () => {
               DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
           },
         };
-        const jws = await didJwt.createJWT(
+        const jws = await didJwt.createJwt(
           payload,
           {
             issuer: entityAA.did,
@@ -248,7 +248,7 @@ describe("vidDidAuth", () => {
       expect(jwt).toBeDefined();
       expect(nonce).toBeDefined();
       expect(state).toBeDefined();
-      const { header, payload } = didJwt.decodeJWT(jwt);
+      const { header, payload } = didJwt.decodeJwt(jwt);
 
       const expectedHeader = mockedData.DIDAUTH_HEADER;
       expectedHeader.kid = `${entityAA.did}#keys-1`;
@@ -317,7 +317,7 @@ describe("vidDidAuth", () => {
           },
           claims: mockedData.verifiableIdOidcClaim,
         };
-        const jws = await didJwt.createJWT(
+        const jws = await didJwt.createJwt(
           payload,
           {
             issuer: entityAA.did,
@@ -340,7 +340,7 @@ describe("vidDidAuth", () => {
       expect(jwt).toBeDefined();
       expect(nonce).toBeDefined();
       expect(state).toBeDefined();
-      const { header, payload } = didJwt.decodeJWT(jwt);
+      const { header, payload } = didJwt.decodeJwt(jwt);
 
       const expectedHeader = mockedData.DIDAUTH_HEADER;
       expectedHeader.kid = `${entityAA.did}#keys-1`;
@@ -411,7 +411,7 @@ describe("vidDidAuth", () => {
               DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
           },
         };
-        const jws = await didJwt.createJWT(
+        const jws = await didJwt.createJwt(
           payload,
           {
             issuer: entityAA.did,
@@ -617,7 +617,7 @@ describe("vidDidAuth", () => {
       };
 
       const didAuthJwt = await createDidAuthResponse(opts);
-      const { header, payload } = didJwt.decodeJWT(didAuthJwt);
+      const { header, payload } = didJwt.decodeJwt(didAuthJwt);
 
       const expectedHeader = mockedData.DIDAUTH_HEADER;
       expectedHeader.kid = `${did}#keys-1`;
@@ -666,7 +666,7 @@ describe("vidDidAuth", () => {
       };
 
       const didAuthJwt = await createDidAuthResponse(opts);
-      const { header, payload } = didJwt.decodeJWT(didAuthJwt);
+      const { header, payload } = didJwt.decodeJwt(didAuthJwt);
 
       const expectedHeader = mockedData.DIDAUTH_HEADER;
       expectedHeader.kid = `${did}#keys-1`;

@@ -1,7 +1,7 @@
 import { parse } from "querystring";
 import * as dotenv from "dotenv";
 import { JWT } from "jose";
-import { decodeJWT } from "did-jwt";
+import { decodeJwt } from "@cef-ebsi/did-jwt";
 import * as siopDidAuth from "../../src";
 import {
   DidAuthTypes,
@@ -71,7 +71,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     );
     expect(uriRequest).toHaveProperty("jwt");
     expect(uriRequest.jwt).toBeDefined();
-    const decodedPayload = decodeJWT(uriRequest.jwt);
+    const decodedPayload = decodeJwt(uriRequest.jwt);
     const requestPayload = decodedPayload.payload as DidAuthTypes.DidAuthRequestPayload;
     expect(requestPayload.response_mode).toBe(
       DidAuthTypes.DidAuthResponseMode.FORM_POST
@@ -217,7 +217,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     expect(uriDecoded).toContain(`&request=`);
     const data = parse(uriDecoded);
     expect(data.request).toBeDefined();
-    const decodedPayload = decodeJWT(data.request as string);
+    const decodedPayload = decodeJwt(data.request as string);
     const requestPayload = decodedPayload.payload as DidAuthTypes.DidAuthRequestPayload;
     expect(requestPayload.response_mode).toBe(
       DidAuthTypes.DidAuthResponseMode.FRAGMENT

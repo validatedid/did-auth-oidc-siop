@@ -35,3 +35,21 @@ export interface EnterpriseAuthZToken extends JWTClaims {
   enterpriseName: string;
   nonce: string;
 }
+
+export interface JWTPayload {
+  iss?: string;
+  sub?: string;
+  aud?: string;
+  iat?: number;
+  nbf?: number;
+  type?: string;
+  exp?: number;
+  rexp?: number;
+  [x: string]: unknown;
+}
+export interface JWTDecoded {
+  header: JWTHeader;
+  payload: JWTPayload;
+  signature: string;
+  data: string;
+}

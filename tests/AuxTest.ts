@@ -1,13 +1,6 @@
 import { JWT, JWK } from "jose";
 import { DIDDocument } from "did-resolver";
 import { v4 as uuidv4 } from "uuid";
-import {
-  createJWT,
-  decodeJWT,
-  JWTHeader,
-  JWTPayload,
-  SimpleSigner,
-} from "did-jwt";
 import axios, { AxiosResponse } from "axios";
 import moment from "moment";
 import { ethers } from "ethers";
@@ -19,6 +12,7 @@ import {
   DidAuthKeyType,
 } from "../src/interfaces/DIDAuth.types";
 import { getPublicJWKFromPrivateHex, getThumbprint } from "../src/util/JWK";
+import { JWTHeader, JWTPayload } from "../src/interfaces/JWT";
 
 export interface TESTKEY {
   key: JWK.ECKey;
@@ -250,7 +244,7 @@ export function mockedGetEnterpriseAuthToken(
   const inputPayload: IEnterpriseAuthZToken = {
     did: testAuth.did,
     aud: payload?.iss ? payload.iss : "Test Legal Entity",
-    nonce: (payload as IEnterpriseAuthZToken).nonce,
+    nonce: ((payload as unknown) as IEnterpriseAuthZToken).nonce,
   };
 
   const vidPayload = {

@@ -1,5 +1,5 @@
 import { parse } from "querystring";
-import * as didJwt from "did-jwt";
+import * as didJwt from "@cef-ebsi/did-jwt";
 import * as dotenv from "dotenv";
 import * as siopDidAuth from "../../src";
 import {
@@ -125,7 +125,7 @@ describe("VidDidAuth tests should", () => {
       expect(jwt).toBeDefined();
       expect(nonce).toBeDefined();
       expect(state).toBeDefined();
-      const { header, payload } = didJwt.decodeJWT(jwt);
+      const { header, payload } = didJwt.decodeJwt(jwt);
 
       const expectedHeader = mockedData.DIDAUTH_HEADER;
       expectedHeader.kid = `${did}#keys-1`;
@@ -179,7 +179,7 @@ describe("VidDidAuth tests should", () => {
       const { jwt } = await siopDidAuth.createDidAuthRequest(opts);
 
       expect(jwt).toBeDefined();
-      const { header, payload } = didJwt.decodeJWT(jwt);
+      const { header, payload } = didJwt.decodeJwt(jwt);
 
       const expectedHeader = mockedData.DIDAUTH_HEADER;
       expectedHeader.kid = `${did}#key-2`;
