@@ -491,28 +491,28 @@ describe("vidDidAuth", () => {
       jest.clearAllMocks();
     });
 
-    it("should throw REGISTRATION_OBJECT_TYPE_NOT_SET when no registrationType is present", () => {
+    it("should throw REGISTRATION_OBJECT_TYPE_NOT_SET when no registrationType is present", async () => {
       expect.assertions(1);
 
       const opts = {};
 
-      expect(() => createDidAuthRequestPayload(opts as never)).toThrow(
+      await expect(createDidAuthRequestPayload(opts as never)).rejects.toThrow(
         DidAuthErrors.REGISTRATION_OBJECT_TYPE_NOT_SET
       );
     });
-    it("should throw REGISTRATION_OBJECT_TYPE_NOT_SET when no registrationType.type is present", () => {
+    it("should throw REGISTRATION_OBJECT_TYPE_NOT_SET when no registrationType.type is present", async () => {
       expect.assertions(1);
 
       const opts = {
         registrationType: {},
       };
 
-      expect(() => createDidAuthRequestPayload(opts as never)).toThrow(
+      await expect(createDidAuthRequestPayload(opts as never)).rejects.toThrow(
         DidAuthErrors.REGISTRATION_OBJECT_TYPE_NOT_SET
       );
     });
 
-    it("should throw ObjectPassedBy is REFERENCE and no referenceUri is set", () => {
+    it("should throw ObjectPassedBy is REFERENCE and no referenceUri is set", async () => {
       expect.assertions(1);
 
       const opts = {
@@ -521,30 +521,171 @@ describe("vidDidAuth", () => {
         },
       };
 
-      expect(() => createDidAuthRequestPayload(opts as never)).toThrow(
+      await expect(createDidAuthRequestPayload(opts as never)).rejects.toThrow(
         DidAuthErrors.NO_REFERENCE_URI
       );
     });
 
-    it("should throw registration type is VALUE and is an external signature", () => {
-      expect.assertions(1);
-
+    it("should create a valid payload when registration type is VALUE and is an external signature", async () => {
+      expect.assertions(3);
+      const did = "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0";
       const opts = {
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.VALUE,
         },
         signatureType: {
-          signatureUri: `http://localhost:8080/api/v1/signatures`,
-          did: "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0",
+          signatureUri: `http://localhost:8080/api/v1/identifiers/${did}`,
+          did,
         },
       };
 
-      expect(() => createDidAuthRequestPayload(opts as never)).toThrow(
-        "Option not implemented"
+      jest.spyOn(axios, "get").mockResolvedValue({
+        data: {
+          verificationMethod: [
+            {
+              publicKeyJwk: {
+                kty: "EC",
+                crv: "secp256k1",
+                x:
+                  "62451c7a3e0c6e2276960834b79ae491ba0a366cd6a1dd814571212ffaeaaf5a",
+                y:
+                  "1ede3d754090437db67eca78c1659498c9cf275d2becc19cdc8f1ef76b9d8159",
+                kid: "JTa8+HgHPyId90xmMFw6KRD4YUYLosBuWJw33nAuRS0=",
+              },
+            },
+          ],
+        },
+      } as never);
+
+      const response = await createDidAuthRequestPayload(opts as never);
+      expect(response).toBeDefined();
+      expect(response.registration).toBeDefined();
+      expect(response.registration).toHaveProperty("jwks");
+    });
+
+    it("should throw ERROR_RETRIEVING_DID_DOCUMENT when DID Document could not be retrieved", async () => {
+      expect.assertions(1);
+      const did = "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0";
+      const opts = {
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        signatureType: {
+          signatureUri: `http://localhost:8080/api/v1/identifiers/${did}`,
+          did,
+        },
+      };
+      jest.spyOn(axios, "get").mockResolvedValue(undefined as never);
+
+      await expect(createDidAuthRequestPayload(opts as never)).rejects.toThrow(
+        DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT
       );
     });
 
-    it("should throw REGISTRATION_OBJECT_TYPE_NOT_SET when objectpassedby is neither REFERENCE nor VALUE", () => {
+    it("should throw ERROR_RETRIEVING_DID_DOCUMENT when DID Document data is not set", async () => {
+      expect.assertions(1);
+      const did = "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0";
+      const opts = {
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        signatureType: {
+          signatureUri: `http://localhost:8080/api/v1/identifiers/${did}`,
+          did,
+        },
+      };
+      jest.spyOn(axios, "get").mockResolvedValue({} as never);
+
+      await expect(createDidAuthRequestPayload(opts as never)).rejects.toThrow(
+        DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT
+      );
+    });
+
+    it("should throw ERROR_RETRIEVING_DID_DOCUMENT when DID Document verificationMethod is not set", async () => {
+      expect.assertions(1);
+      const did = "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0";
+      const opts = {
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        signatureType: {
+          signatureUri: `http://localhost:8080/api/v1/identifiers/${did}`,
+          did,
+        },
+      };
+      jest.spyOn(axios, "get").mockResolvedValue({
+        data: {},
+      } as never);
+
+      await expect(createDidAuthRequestPayload(opts as never)).rejects.toThrow(
+        DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT
+      );
+    });
+
+    it("should throw ERROR_RETRIEVING_DID_DOCUMENT when DID Document verificationMethod is an empty array", async () => {
+      expect.assertions(1);
+      const did = "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0";
+      const opts = {
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        signatureType: {
+          signatureUri: `http://localhost:8080/api/v1/identifiers/${did}`,
+          did,
+        },
+      };
+      jest.spyOn(axios, "get").mockResolvedValue({
+        data: {
+          verificationMethod: [],
+        },
+      } as never);
+
+      await expect(createDidAuthRequestPayload(opts as never)).rejects.toThrow(
+        DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT
+      );
+    });
+
+    it("should throw ERROR_RETRIEVING_DID_DOCUMENT when DID Document verificationMethod[0].publicKeyJwk is not set", async () => {
+      expect.assertions(1);
+      const did = "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0";
+      const opts = {
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        signatureType: {
+          signatureUri: `http://localhost:8080/api/v1/identifiers/${did}`,
+          did,
+        },
+      };
+      jest.spyOn(axios, "get").mockResolvedValue({
+        data: {
+          verificationMethod: [{}],
+        },
+      } as never);
+
+      await expect(createDidAuthRequestPayload(opts as never)).rejects.toThrow(
+        DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT
+      );
+    });
+
+    it("should throw SIGNATURE_OBJECT_TYPE_NOT_SET when reference URI is not set and it is not an internal signature", async () => {
+      expect.assertions(1);
+      const did = "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0";
+      const opts = {
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        signatureType: {
+          did,
+        },
+      };
+
+      await expect(createDidAuthRequestPayload(opts as never)).rejects.toThrow(
+        DidAuthErrors.SIGNATURE_OBJECT_TYPE_NOT_SET
+      );
+    });
+
+    it("should throw REGISTRATION_OBJECT_TYPE_NOT_SET when objectpassedby is neither REFERENCE nor VALUE", async () => {
       expect.assertions(1);
 
       const opts = {
@@ -553,12 +694,12 @@ describe("vidDidAuth", () => {
         },
       };
 
-      expect(() => createDidAuthRequestPayload(opts as never)).toThrow(
+      await expect(createDidAuthRequestPayload(opts as never)).rejects.toThrow(
         DidAuthErrors.REGISTRATION_OBJECT_TYPE_NOT_SET
       );
     });
 
-    it("create a registration by value when no kid is passed", () => {
+    it("create a registration by value when no kid is passed", async () => {
       expect.assertions(1);
       const { hexPrivateKey, did } = mockedKeyAndDid();
 
@@ -576,7 +717,7 @@ describe("vidDidAuth", () => {
         },
       };
 
-      const requestPayload = createDidAuthRequestPayload(opts);
+      const requestPayload = await createDidAuthRequestPayload(opts);
       expect(requestPayload).toBeDefined();
     });
   });
@@ -851,37 +992,37 @@ describe("vidDidAuth", () => {
       ).rejects.toThrow(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
       jest.clearAllMocks();
     });
-    it("should throw BAD_PARAMS when no opts is set", () => {
+    it("should throw BAD_PARAMS when no opts is set", async () => {
       expect.assertions(1);
 
-      expect(() => createDidAuthResponsePayload(undefined as never)).toThrow(
-        DidAuthErrors.BAD_PARAMS
-      );
+      await expect(
+        createDidAuthResponsePayload(undefined as never)
+      ).rejects.toThrow(DidAuthErrors.BAD_PARAMS);
     });
 
-    it("should throw BAD_PARAMS when no opts.redirectUri is set", () => {
+    it("should throw BAD_PARAMS when no opts.redirectUri is set", async () => {
       expect.assertions(1);
 
       const opts = {};
 
-      expect(() => createDidAuthResponsePayload(opts as never)).toThrow(
+      await expect(createDidAuthResponsePayload(opts as never)).rejects.toThrow(
         DidAuthErrors.BAD_PARAMS
       );
     });
 
-    it("should throw BAD_PARAMS when no opts.signatureType is set", () => {
+    it("should throw BAD_PARAMS when no opts.signatureType is set", async () => {
       expect.assertions(1);
 
       const opts = {
         redirectUri: "http://localhost.example/demo",
       };
 
-      expect(() => createDidAuthResponsePayload(opts as never)).toThrow(
+      await expect(createDidAuthResponsePayload(opts as never)).rejects.toThrow(
         DidAuthErrors.BAD_PARAMS
       );
     });
 
-    it("should throw BAD_PARAMS when no opts.nonce is set", () => {
+    it("should throw BAD_PARAMS when no opts.nonce is set", async () => {
       expect.assertions(1);
 
       const opts = {
@@ -889,12 +1030,12 @@ describe("vidDidAuth", () => {
         signatureType: {},
       };
 
-      expect(() => createDidAuthResponsePayload(opts as never)).toThrow(
+      await expect(createDidAuthResponsePayload(opts as never)).rejects.toThrow(
         DidAuthErrors.BAD_PARAMS
       );
     });
 
-    it("should throw BAD_PARAMS when no opts.did is set", () => {
+    it("should throw BAD_PARAMS when no opts.did is set", async () => {
       expect.assertions(1);
 
       const opts = {
@@ -903,7 +1044,7 @@ describe("vidDidAuth", () => {
         nonce: "zizu-nonce",
       };
 
-      expect(() => createDidAuthResponsePayload(opts as never)).toThrow(
+      await expect(createDidAuthResponsePayload(opts as never)).rejects.toThrow(
         DidAuthErrors.BAD_PARAMS
       );
     });

@@ -77,15 +77,14 @@ const createRegistration = async (
         return registration;
       }
       if (isExternalSignature(signatureType)) {
-        if (!registrationType.referenceUri)
-          throw new Error(DidAuthErrors.NO_REFERENCE_URI);
+        // referenceUri will always be set on an external signature
         const getResponse = await axios.get(registrationType.referenceUri);
         if (!getResponse || !getResponse.data)
           throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
         const didDoc = getResponse.data as DIDDocument;
         if (
-          !didDoc.verificationMethod &&
-          !didDoc.verificationMethod[0] &&
+          !didDoc.verificationMethod ||
+          !didDoc.verificationMethod[0] ||
           !didDoc.verificationMethod[0].publicKeyJwk
         )
           throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);

@@ -1,11 +1,13 @@
 import { parse } from "querystring";
 import axios from "axios";
+import { decodeJwt, createJwt, SimpleSigner } from "@cef-ebsi/did-jwt";
 import {
   createDidAuthResponse,
   createUriResponse,
   DidAuthErrors,
   DidAuthTypes,
   DidAuthUtil,
+  JWTHeader,
 } from "../../src";
 import { mockedKeyAndDid } from "../AuxTest";
 
@@ -223,29 +225,77 @@ describe("create Did Auth response tests should", () => {
     );
   });
 
-  it("throw Not implemented using external signature", async () => {
-    expect.assertions(1);
+  it("create a valid response token with external signature and registration by value", async () => {
+    expect.assertions(4);
     const state = DidAuthUtil.getState();
+    const did = "did:vid:0x29A9D0FDb033BFCb39B8E6CA2A63Bd1B0a2b80c4";
     const opts: DidAuthTypes.DidAuthResponseOpts = {
       redirectUri: "https://entity.example/demo",
       signatureType: {
-        signatureUri: "https://localhost:8080/signature",
-        did: "did:vid:0x29A9D0FDb033BFCb39B8E6CA2A63Bd1B0a2b80c4",
+        signatureUri: `https://localhost:8080/api/v1/signatures`,
+        did,
       },
       state,
       nonce: DidAuthUtil.getNonce(state),
       registrationType: {
         type: DidAuthTypes.ObjectPassedBy.VALUE,
+        referenceUri: `https://localhost:8080/api/v1/identifiers/${did}`,
       },
-      did: "did:vid:0x29A9D0FDb033BFCb39B8E6CA2A63Bd1B0a2b80c4",
+      did,
+    };
+    jest.spyOn(axios, "get").mockResolvedValue({
+      data: {
+        verificationMethod: [
+          {
+            publicKeyJwk: {
+              kty: "EC",
+              crv: "secp256k1",
+              x:
+                "62451c7a3e0c6e2276960834b79ae491ba0a366cd6a1dd814571212ffaeaaf5a",
+              y:
+                "1ede3d754090437db67eca78c1659498c9cf275d2becc19cdc8f1ef76b9d8159",
+              kid: "JTa8+HgHPyId90xmMFw6KRD4YUYLosBuWJw33nAuRS0=",
+            },
+          },
+        ],
+      },
+    } as never);
+
+    type DataInput = {
+      payload: unknown;
     };
 
-    jest.spyOn(axios, "post").mockResolvedValue({
-      status: 200,
-      data: { jws: "a valid signature" },
-    });
-    await expect(createDidAuthResponse(opts)).rejects.toThrow(
-      "Option not implemented"
-    );
+    jest
+      .spyOn(axios, "post")
+      .mockImplementation(async (_url: string, data: DataInput) => {
+        // assign specific JWT header
+        const header: JWTHeader = {
+          alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
+          typ: "JWT",
+          kid: `${did}#keys-1`,
+        };
+        const jws = await createJwt(
+          data.payload,
+          {
+            issuer: did,
+            alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
+            signer: SimpleSigner(
+              "278a5de700e29faae8e40e366ec5012b5ec63d36ec77e8a2417154cc1d25383f"
+            ),
+          },
+          header
+        );
+        return Promise.resolve({
+          status: 200,
+          data: { jws },
+        });
+      });
+    const response = await createDidAuthResponse(opts);
+    expect(response).toBeDefined();
+    const responsePayload = decodeJwt(response)
+      .payload as DidAuthTypes.DidAuthResponsePayload;
+    expect(responsePayload).toBeDefined();
+    expect(responsePayload).toHaveProperty("sub");
+    expect(responsePayload).toHaveProperty("sub_jwk");
   });
 });

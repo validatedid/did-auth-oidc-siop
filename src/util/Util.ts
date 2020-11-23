@@ -91,9 +91,9 @@ const getUrlResolver = async (
   jwt: string,
   internalVerification: InternalVerification
 ): Promise<Resolvable | string> => {
-  if (!internalVerification.didUrlResolver)
-    throw new Error(DidAuthErrors.BAD_INTERNAL_VERIFICATION_PARAMS);
   try {
+    if (!internalVerification.didUrlResolver)
+      throw new Error(DidAuthErrors.BAD_INTERNAL_VERIFICATION_PARAMS);
     // check if the token issuer DID can be resolved
     await axios.get(
       `${internalVerification.didUrlResolver}/${getIssuerDid(jwt)}`
