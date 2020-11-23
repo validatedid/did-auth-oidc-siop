@@ -1,16 +1,22 @@
 import SHA from "sha.js";
+import base58 from "bs58";
+import { ec as EC } from "elliptic";
+import base64url from "base64url";
 import VidDidResolver from "@validatedid/vid-did-resolver";
-import { decodeJwt } from "@validatedid/did-jwt";
+import { decodeJwt, EcdsaSignature } from "@validatedid/did-jwt";
 import { Resolver } from "did-resolver";
 import axios, { AxiosResponse } from "axios";
 import { ethers, utils } from "ethers";
 import { JWK, DidAuthErrors } from "../interfaces";
 import {
+  DidAuthRequestPayload,
   DidAuthResponseIss,
   DidAuthResponsePayload,
   InternalVerification,
+  RegistrationJwksUri,
 } from "../interfaces/DIDAuth.types";
 import { Resolvable } from "../interfaces/JWT";
+import { DIDDocument, VerificationMethod } from "../interfaces/oidcSsi";
 
 export const prefixWith0x = (key: string): string => {
   return key.startsWith("0x") ? key : `0x${key}`;
@@ -111,13 +117,104 @@ const getUrlResolver = async (
   }
 };
 
+const hasJwksUri = (jwt: string): boolean => {
+  const { payload } = decodeJwt(jwt);
+  if (!payload) return false;
+  if (
+    !(payload as DidAuthRequestPayload).registration ||
+    !((payload as DidAuthRequestPayload).registration as RegistrationJwksUri)
+      .jwks_uri
+  )
+    return false;
+  return true;
+};
+
+const DidMatchFromJwksUri = (jwt: string, issuerDid: string): boolean => {
+  const requestPayload = decodeJwt(jwt).payload as DidAuthRequestPayload;
+  const jwksUri = (requestPayload.registration as RegistrationJwksUri).jwks_uri;
+  return jwksUri.includes(issuerDid);
+};
+
+const getVerificationMethod = (
+  jwt: string,
+  didDoc: DIDDocument
+): VerificationMethod => {
+  if (
+    !didDoc ||
+    !didDoc.verificationMethod ||
+    didDoc.verificationMethod.length < 1
+  )
+    throw new Error(DidAuthErrors.ERROR_RETRIEVING_VERIFICATION_METHOD);
+  const { verificationMethod } = didDoc;
+  const { header } = decodeJwt(jwt);
+  const { kid } = header;
+
+  return verificationMethod.find((elem) => elem.id === kid);
+};
+
+const extractPublicKeyBytes = (
+  vm: VerificationMethod
+): string | { x: string; y: string } => {
+  if (vm.publicKeyBase58) {
+    return base58.decode(vm.publicKeyBase58).toString("hex");
+  }
+
+  if (vm.publicKeyJwk) {
+    return { x: vm.publicKeyJwk.x, y: vm.publicKeyJwk.y };
+  }
+  throw new Error("No public key found!");
+};
+
+function toSignatureObject(
+  signature: string,
+  recoverable = false
+): EcdsaSignature {
+  const rawsig: Buffer = base64url.toBuffer(signature);
+  if (rawsig.length !== (recoverable ? 65 : 64)) {
+    throw new Error("wrong signature length");
+  }
+
+  const r: string = rawsig.slice(0, 32).toString("hex");
+  const s: string = rawsig.slice(32, 64).toString("hex");
+  const sigObj: EcdsaSignature = { r, s };
+
+  if (recoverable) {
+    const n = rawsig[64];
+    sigObj.recoveryParam = n;
+  }
+
+  return sigObj;
+}
+
+const verifySignatureFromVerificationMethod = (
+  jwt: string,
+  vm: VerificationMethod
+): boolean => {
+  try {
+    const publicKey = extractPublicKeyBytes(vm);
+    const secp256k1 = new EC("secp256k1");
+    const { data, signature } = decodeJwt(jwt);
+    const hash = SHA("sha256").update(data).digest();
+    const sigObj = toSignatureObject(signature);
+
+    return secp256k1.keyFromPublic(publicKey, "hex").verify(hash, sigObj);
+  } catch (err) {
+    return false;
+  }
+};
+
 export {
   getNonce,
   getState,
+  hasJwksUri,
   getAudience,
+  getIssuerDid,
   getDIDFromKey,
   getUrlResolver,
   getHexPrivateKey,
+  DidMatchFromJwksUri,
   doPostCallWithToken,
   base64urlEncodeBuffer,
+  getVerificationMethod,
+  verifySignatureFromVerificationMethod,
 };

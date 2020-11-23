@@ -1,4 +1,5 @@
 import { decodeJwt } from "@validatedid/did-jwt";
+import axios from "axios";
 import {
   DidAuthRequestOpts,
   UriResponse,
@@ -25,6 +26,9 @@ import {
   createDidAuthResponsePayload,
   verifyDidAuth,
 } from "./AuxDidAuth";
+import VID_RESOLVE_DID_URL from "./config";
+import { util } from "./util";
+import { DIDDocument } from "./interfaces/oidcSsi";
 
 /**
  * Creates a didAuth Request Object
@@ -226,7 +230,38 @@ const createUriResponse = async (
  * @param requestJwt signed DidAuth Request Token
  * @param opts Verify options to use internal or external verification method
  */
-const verifyDidAuthRequest = verifyDidAuth;
+const verifyDidAuthRequest = async (
+  jwt: string,
+  opts: DidAuthVerifyOpts
+): Promise<DidAuthValidationResponse> => {
+  if (!jwt || !opts || !opts.verificationType)
+    throw new Error(DidAuthErrors.VERIFY_BAD_PARAMETERS);
+  // Resolve the DID Document from the RP's DID specified in the iss request parameter.
+  const resolverUrl =
+    opts.verificationType.didUrlResolver || VID_RESOLVE_DID_URL;
+  const issuerDid = util.getIssuerDid(jwt);
+  const response = await axios.get(`${resolverUrl}/${issuerDid}`);
+  if (!response || response.data)
+    throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
+  const didDoc = response.data as DIDDocument;
+
+  // If jwks_uri is present, ensure that the DID in the jwks_uri matches the DID in the iss claim.
+  if (util.hasJwksUri(jwt) && !util.DidMatchFromJwksUri(jwt, issuerDid))
+    throw new Error(DidAuthErrors.ISS_DID_NOT_JWKS_URI_DID);
+
+  // Determine the verification method from the RP's DID Document that matches the kid of the SIOP Request.
+  const verificationMethod = util.getVerificationMethod(jwt, didDoc);
+  if (!verificationMethod)
+    throw new Error(DidAuthErrors.VERIFICATION_METHOD_NOT_MATCHES);
+
+  // Verify the SIOP Request according to the verification method above.
+  if (!util.verifySignatureFromVerificationMethod(jwt, verificationMethod))
+    return {
+      signatureValidation: false,
+    };
+  // Additionally performs a complete token validation via vidVerifyJwt
+  return verifyDidAuth(jwt, opts);
+};
 
 /**
  * Verifies an id_token result of a DID Auth Response

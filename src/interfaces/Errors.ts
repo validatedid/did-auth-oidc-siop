@@ -18,6 +18,9 @@ enum DidAuthErrors {
   ERROR_RETRIEVING_DID_DOCUMENT = "Error retrieving did document",
   NO_ISS_DID = "Token does not have a iss DID",
   BAD_INTERNAL_VERIFICATION_PARAMS = "Error: One of the either didUrlResolver or both registry and rpcUrl must be set",
+  ISS_DID_NOT_JWKS_URI_DID = " DID in the jwks_uri does NOT match the DID in the iss claim",
+  ERROR_RETRIEVING_VERIFICATION_METHOD = "Error retrieving verificaton method from did document",
+  VERIFICATION_METHOD_NOT_MATCHES = "The verification method from the RP's DID Document does NOT match the kid of the SIOP Request",
 }
 
 export default DidAuthErrors;

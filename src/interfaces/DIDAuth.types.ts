@@ -136,6 +136,7 @@ export interface InternalVerification {
 export interface ExternalVerification {
   verifyUri: string; // url to call to verify the id_token signature
   authZToken?: string; // Optional: bearer token to use to the call
+  didUrlResolver?: string;
 }
 
 export interface DidAuthVerifyOpts {
