@@ -1,10 +1,10 @@
 import { JWT, JWK } from "jose";
-import { verifyJwt, decodeJwt } from "@validatedid/did-jwt";
+import { vidVerifyJwt, decodeJwt } from "@validatedid/did-jwt";
 import { DidAuthErrors, DidAuthTypes, verifyDidAuthRequest } from "../../src";
 import { verifyDidAuth } from "../../src/AuxDidAuth";
 
 jest.mock("@validatedid/did-jwt");
-const mockVerifyJwt = verifyJwt as jest.Mock;
+const mockVerifyJwt = vidVerifyJwt as jest.Mock;
 const mockDecodeJWT = decodeJwt as jest.Mock;
 
 describe("vid DID Auth Request Validation", () => {

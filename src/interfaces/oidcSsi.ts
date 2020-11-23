@@ -1,4 +1,4 @@
-import { JWKECKey } from "./JWK";
+import { VidJWKECKey } from "./JWK";
 
 export interface CredentialSubject {
   [x: string]: unknown;
@@ -69,7 +69,7 @@ export interface PublicKey {
   publicKeyBase58?: string;
   publicKeyHex?: string;
   publicKeyPem?: string;
-  publicKeyJwk?: JWKECKey;
+  publicKeyJwk?: VidJWKECKey;
 }
 
 export interface DIDDocument {
@@ -97,7 +97,7 @@ export interface VerificationMethod {
   type: string;
   controller: string;
   publicKeyBase58?: string;
-  publicKeyJwk?: JWKECKey;
+  publicKeyJwk?: VidJWKECKey;
 }
 
 export interface Authentication {

@@ -262,7 +262,7 @@ describe("create Did Auth response tests should", () => {
     } as never);
 
     type DataInput = {
-      payload: unknown;
+      payload: Record<string, unknown>;
     };
 
     jest
