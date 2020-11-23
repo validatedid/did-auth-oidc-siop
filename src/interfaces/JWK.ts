@@ -29,7 +29,7 @@ export interface KeyParameters extends BasicParameters {
   "x5t#S256"?: string;
 }
 
-export type ECCurve = "P-256" | "secp256k1" | "P-384" | "P-521";
+export type ECCurve = "secp256k1";
 
 export interface JWKECKey extends KeyParameters {
   kty: "EC";

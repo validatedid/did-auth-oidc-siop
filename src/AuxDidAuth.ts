@@ -250,10 +250,7 @@ const verifyDidAuth = async (
           : undefined,
     };
 
-    const verifiedJWT = await vidVerifyJwt(
-      jwt,
-      options as Record<string, unknown>
-    );
+    const verifiedJWT = await vidVerifyJwt(jwt, options);
     if (!verifiedJWT || !verifiedJWT.payload)
       throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
     const payload = verifiedJWT.payload as DidAuthRequestPayload;
