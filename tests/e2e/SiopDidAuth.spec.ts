@@ -1,5 +1,5 @@
 import { parse } from "querystring";
-import * as didJwt from "@cef-ebsi/did-jwt";
+import * as didJwt from "@validatedid/did-jwt";
 import * as dotenv from "dotenv";
 import * as siopDidAuth from "../../src";
 import {

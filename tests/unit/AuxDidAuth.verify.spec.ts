@@ -1,9 +1,9 @@
 import { JWT, JWK } from "jose";
-import { verifyJwt, decodeJwt } from "@cef-ebsi/did-jwt";
+import { verifyJwt, decodeJwt } from "@validatedid/did-jwt";
 import { DidAuthErrors, DidAuthTypes, verifyDidAuthRequest } from "../../src";
 import { verifyDidAuth } from "../../src/AuxDidAuth";
 
-jest.mock("@cef-ebsi/did-jwt");
+jest.mock("@validatedid/did-jwt");
 const mockVerifyJwt = verifyJwt as jest.Mock;
 const mockDecodeJWT = decodeJwt as jest.Mock;
 

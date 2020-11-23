@@ -1,6 +1,6 @@
 import SHA from "sha.js";
 import VidDidResolver from "@validatedid/vid-did-resolver";
-import { decodeJwt } from "@cef-ebsi/did-jwt";
+import { decodeJwt } from "@validatedid/did-jwt";
 import { Resolver } from "did-resolver";
 import axios, { AxiosResponse } from "axios";
 import { ethers, utils } from "ethers";
@@ -83,7 +83,7 @@ const getIssuerDid = (jwt: string): string => {
   const { payload } = decodeJwt(jwt);
   if (!payload || !payload.iss) throw new Error(DidAuthErrors.NO_ISS_DID);
   if (payload.iss === DidAuthResponseIss.SELF_ISSUE)
-    return (payload as DidAuthResponsePayload).did;
+    return ((payload as unknown) as DidAuthResponsePayload).did;
   return payload.iss;
 };
 

@@ -12,7 +12,7 @@ export interface JWTVerifyOptions {
 }
 
 export interface JWTHeader {
-  typ: "JWT";
+  typ: string;
   alg: string;
   jwk?: string;
   jku?: string;

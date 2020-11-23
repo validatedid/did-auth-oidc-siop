@@ -1,6 +1,6 @@
 import { parse } from "querystring";
 import axios from "axios";
-import { decodeJwt, createJwt, SimpleSigner } from "@cef-ebsi/did-jwt";
+import { decodeJwt, createJwt, SimpleSigner } from "@validatedid/did-jwt";
 import {
   createDidAuthResponse,
   createUriResponse,

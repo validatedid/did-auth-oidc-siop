@@ -1,9 +1,14 @@
 import axios, { AxiosResponse } from "axios";
-import { ebsiVerifyJwt, createJwt, SimpleSigner } from "@cef-ebsi/did-jwt";
+import {
+  vidVerifyJwt,
+  createJwt,
+  SimpleSigner,
+  JWTHeader,
+} from "@validatedid/did-jwt";
 import { util, JWK } from "./util";
 import DidAuthErrors from "./interfaces/Errors";
 import { getNonce, doPostCallWithToken, getState } from "./util/Util";
-import { JWTHeader, JWTVerifyOptions } from "./interfaces/JWT";
+import { JWTVerifyOptions } from "./interfaces/JWT";
 import {
   DidAuthKeyAlgorithm,
   DidAuthRequestOpts,
@@ -129,8 +134,8 @@ const signDidAuthInternal = async (
 ): Promise<string> => {
   // assign specific JWT header
   const header: JWTHeader = {
-    alg: DidAuthKeyAlgorithm.ES256KR,
     typ: "JWT",
+    alg: DidAuthKeyAlgorithm.ES256KR,
     kid: kid || `${issuer}#keys-1`,
   };
   const response = await createJwt(
@@ -245,7 +250,10 @@ const verifyDidAuth = async (
           : undefined,
     };
 
-    const verifiedJWT = await ebsiVerifyJwt(jwt, options);
+    const verifiedJWT = await vidVerifyJwt(
+      jwt,
+      options as Record<string, unknown>
+    );
     if (!verifiedJWT || !verifiedJWT.payload)
       throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
     const payload = verifiedJWT.payload as DidAuthRequestPayload;

@@ -1,4 +1,4 @@
-import { JWTClaims } from "./JWT";
+import { JWTClaims, JWTPayload } from "./JWT";
 import { JWKECKey } from "./JWK";
 import { OidcClaim, VerifiablePresentation } from "./oidcSsi";
 
@@ -143,7 +143,7 @@ export interface DidAuthVerifyOpts {
   nonce?: string;
 }
 
-export interface DidAuthRequestPayload extends JWTClaims {
+export interface DidAuthRequestPayload extends JWTPayload {
   iss: string;
   scope: DidAuthScope;
   registration: RegistrationJwksUri | RegistrationJwks;
@@ -156,7 +156,7 @@ export interface DidAuthRequestPayload extends JWTClaims {
   claims?: OidcClaim;
 }
 
-export interface DidAuthResponsePayload extends JWTClaims {
+export interface DidAuthResponsePayload extends JWTPayload {
   iss: DidAuthResponseIss.SELF_ISSUE;
   sub: string;
   aud: string;

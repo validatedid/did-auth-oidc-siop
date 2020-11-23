@@ -1,4 +1,4 @@
-import { decodeJwt } from "@cef-ebsi/did-jwt";
+import { decodeJwt } from "@validatedid/did-jwt";
 import {
   DidAuthRequestOpts,
   UriResponse,

@@ -1,7 +1,7 @@
 import { parse } from "querystring";
 import * as dotenv from "dotenv";
 import { JWT } from "jose";
-import { decodeJwt } from "@cef-ebsi/did-jwt";
+import { decodeJwt } from "@validatedid/did-jwt";
 import * as siopDidAuth from "../../src";
 import {
   DidAuthTypes,

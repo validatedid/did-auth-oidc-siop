@@ -1,6 +1,6 @@
 import * as dotenv from "dotenv";
 import axios from "axios";
-import * as didJwt from "@cef-ebsi/did-jwt";
+import * as didJwt from "@validatedid/did-jwt";
 import { JWT } from "jose";
 import { parse } from "querystring";
 import { mockedGetEnterpriseAuthToken, mockedKeyAndDid } from "../AuxTest";

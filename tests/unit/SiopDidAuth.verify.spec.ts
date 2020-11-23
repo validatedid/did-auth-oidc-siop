@@ -1,13 +1,13 @@
 import * as dotenv from "dotenv";
 import axios from "axios";
-import { verifyJwt, decodeJwt } from "@cef-ebsi/did-jwt";
+import { verifyJwt, decodeJwt } from "@validatedid/did-jwt";
 import { mockedIdToken } from "../AuxTest";
 import { DidAuthErrors, DidAuthTypes, verifyDidAuthResponse } from "../../src";
 
 // importing .env variables
 dotenv.config();
 jest.mock("axios");
-jest.mock("@cef-ebsi/did-jwt");
+jest.mock("@validatedid/did-jwt");
 const mockDecodeJWT = decodeJwt as jest.Mock;
 const mockVerifyJwt = verifyJwt as jest.Mock;
 describe("SiopDidAuth tests should", () => {
