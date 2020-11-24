@@ -21,6 +21,11 @@ enum DidAuthErrors {
   ISS_DID_NOT_JWKS_URI_DID = " DID in the jwks_uri does NOT match the DID in the iss claim",
   ERROR_RETRIEVING_VERIFICATION_METHOD = "Error retrieving verificaton method from did document",
   VERIFICATION_METHOD_NOT_MATCHES = "The verification method from the RP's DID Document does NOT match the kid of the SIOP Request",
+  NO_SELFISSUED_ISS = "The Response Token Issuer Claim (iss) MUST be https://self-isued.me",
+  REPONSE_AUD_MISMATCH_REDIRECT_URI = "The audience (aud) in Response Token does NOT match the redirect_uri value sent in the Authentication Request",
+  SUB_JWK_NOT_FOUND_OR_NOT_KID = "Response Token does not contains sub_jwk claim or sub_jwk does not contain kid attribute.",
+  NO_ALG_SUPPORTED_YET = "Algorithm is not supported yet. Only ES256 supported for this version.",
+  JWK_THUMBPRINT_MISMATCH_SUB = "JWK computed thumbprint does not match thumbprint included in Response Token sub claim",
 }
 
 export default DidAuthErrors;

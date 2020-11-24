@@ -15,6 +15,8 @@ import {
   DidAuthResponseMode,
   DidAuthResponsePayload,
   DidAuthResponseIss,
+  DidAuthRequestPayload,
+  DidAuthKeyAlgorithm,
 } from "./interfaces/DIDAuth.types";
 import { DidAuthErrors } from "./interfaces";
 import {
@@ -29,6 +31,7 @@ import {
 import VID_RESOLVE_DID_URL from "./config";
 import { util } from "./util";
 import { DIDDocument } from "./interfaces/oidcSsi";
+import { JWTHeader } from ".";
 
 /**
  * Creates a didAuth Request Object
@@ -236,6 +239,7 @@ const verifyDidAuthRequest = async (
 ): Promise<DidAuthValidationResponse> => {
   if (!jwt || !opts || !opts.verificationType)
     throw new Error(DidAuthErrors.VERIFY_BAD_PARAMETERS);
+  const { header, payload } = decodeJwt(jwt);
   // Resolve the DID Document from the RP's DID specified in the iss request parameter.
   const resolverUrl =
     opts.verificationType.didUrlResolver || VID_RESOLVE_DID_URL;
@@ -246,11 +250,17 @@ const verifyDidAuthRequest = async (
   const didDoc = response.data as DIDDocument;
 
   // If jwks_uri is present, ensure that the DID in the jwks_uri matches the DID in the iss claim.
-  if (util.hasJwksUri(jwt) && !util.DidMatchFromJwksUri(jwt, issuerDid))
+  if (
+    util.hasJwksUri(payload as DidAuthRequestPayload) &&
+    !util.DidMatchFromJwksUri(payload as DidAuthRequestPayload, issuerDid)
+  )
     throw new Error(DidAuthErrors.ISS_DID_NOT_JWKS_URI_DID);
 
   // Determine the verification method from the RP's DID Document that matches the kid of the SIOP Request.
-  const verificationMethod = util.getVerificationMethod(jwt, didDoc);
+  const verificationMethod = util.getVerificationMethod(
+    (header as JWTHeader).kid,
+    didDoc
+  );
   if (!verificationMethod)
     throw new Error(DidAuthErrors.VERIFICATION_METHOD_NOT_MATCHES);
 
@@ -272,13 +282,75 @@ const verifyDidAuthResponse = async (
   id_token: string,
   opts: DidAuthVerifyOpts
 ): Promise<DidAuthValidationResponse> => {
-  if (!id_token || !opts || !opts.verificationType || !opts.nonce)
+  if (
+    !id_token ||
+    !opts ||
+    !opts.verificationType ||
+    !opts.nonce ||
+    !opts.redirectUri
+  )
     throw new Error(DidAuthErrors.VERIFY_BAD_PARAMETERS);
-  const validationResponse = await verifyDidAuth(id_token, opts);
+  // The Client MUST validate that the value of the iss (issuer) Claim is https://self-isued.me.
+  const { header, payload } = decodeJwt(id_token);
+  if (payload.iss !== DidAuthResponseIss.SELF_ISSUE)
+    throw new Error(DidAuthErrors.NO_SELFISSUED_ISS);
+  // The Client MUST validate that the aud (audience) Claim contains the value of the
+  // redirect_uri that the Client sent in the Authentication Request as an audience.
+  if (payload.aud !== opts.redirectUri)
+    throw new Error(DidAuthErrors.REPONSE_AUD_MISMATCH_REDIRECT_URI);
+  // Resolve the DID Document from the SIOP's DID specified in the did claim.
+  const resolverUrl =
+    opts.verificationType.didUrlResolver || VID_RESOLVE_DID_URL;
+  const issuerDid = util.getIssuerDid(id_token);
+  const response = await axios.get(`${resolverUrl}/${issuerDid}`);
+  if (!response || response.data)
+    throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
+  const didDoc = response.data as DIDDocument;
+  // Determine the verification method from the SIOP's DID Document that matches the kid
+  // of the sub_jwk claim in the id_token.
+  if (
+    !(payload as DidAuthResponsePayload).sub_jwk ||
+    !(payload as DidAuthResponsePayload).sub_jwk.kid
+  )
+    throw new Error(DidAuthErrors.SUB_JWK_NOT_FOUND_OR_NOT_KID);
+  const verificationMethod = util.getVerificationMethod(
+    (payload as DidAuthResponsePayload).sub_jwk.kid,
+    didDoc
+  );
+  if (!verificationMethod)
+    throw new Error(DidAuthErrors.VERIFICATION_METHOD_NOT_MATCHES);
+  // The alg value SHOULD be the default of RS256. It MAY also be ES256.
+  // In addition to RS256, an SIOP according to this specification MUST support EdDSA and ES256K.
+  // --> https://identity.foundation/did-siop/#generate-siop-request
+  // Note: this library implements only ES256
+  if (
+    header.alg !== DidAuthKeyAlgorithm.ES256K &&
+    header.alg !== DidAuthKeyAlgorithm.ES256KR
+  )
+    throw new Error(DidAuthErrors.NO_ALG_SUPPORTED_YET);
 
-  const { payload } = decodeJwt(id_token);
+  // The Client MUST validate the signature of the ID Token according to JWS [JWS]
+  // using the algorithm specified in the alg Header Parameter of the JOSE Header,
+  // using the key in the sub_jwk Claim; the key is a bare key in JWK format (not an X.509 certificate value).
+  // SIOP: Verify the id_token according to the verification method above.
+  // Verifying that the id_token was signed by the key specified in the sub_jwk claim.
+  if (!util.verifySignatureFromVerificationMethod(id_token, verificationMethod))
+    return {
+      signatureValidation: false,
+    };
+  // The Client MUST validate that the sub Claim value is the base64url encoded representation
+  // of the thumbprint of the key in the sub_jwk Claim.
+  if (
+    util.getThumbprint((payload as DidAuthResponsePayload).sub_jwk) !==
+    payload.sub
+  )
+    throw new Error(DidAuthErrors.JWK_THUMBPRINT_MISMATCH_SUB);
+  // If a nonce value was sent in the Authentication Request, a nonce Claim MUST be present and
+  // its value checked to verify that it is the same value as the one that was sent in the Authentication Request.
   if (payload.nonce !== opts.nonce)
     throw Error(DidAuthErrors.ERROR_VALIDATING_NONCE);
+  // Additionally performs a complete token validation via vidVerifyJwt
+  const validationResponse = await verifyDidAuth(id_token, opts);
 
   return {
     signatureValidation: validationResponse.signatureValidation,

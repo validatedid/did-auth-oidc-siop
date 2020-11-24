@@ -17,6 +17,7 @@ import {
 } from "../interfaces/DIDAuth.types";
 import { Resolvable } from "../interfaces/JWT";
 import { DIDDocument, VerificationMethod } from "../interfaces/oidcSsi";
+import { JWKECKey } from "../interfaces/JWK";
 
 export const prefixWith0x = (key: string): string => {
   return key.startsWith("0x") ? key : `0x${key}`;
@@ -89,7 +90,7 @@ const getIssuerDid = (jwt: string): string => {
   const { payload } = decodeJwt(jwt);
   if (!payload || !payload.iss) throw new Error(DidAuthErrors.NO_ISS_DID);
   if (payload.iss === DidAuthResponseIss.SELF_ISSUE)
-    return ((payload as unknown) as DidAuthResponsePayload).did;
+    return (payload as DidAuthResponsePayload).did;
   return payload.iss;
 };
 
@@ -117,26 +118,26 @@ const getUrlResolver = async (
   }
 };
 
-const hasJwksUri = (jwt: string): boolean => {
-  const { payload } = decodeJwt(jwt);
+const hasJwksUri = (payload: DidAuthRequestPayload): boolean => {
   if (!payload) return false;
   if (
-    !(payload as DidAuthRequestPayload).registration ||
-    !((payload as DidAuthRequestPayload).registration as RegistrationJwksUri)
-      .jwks_uri
+    !payload.registration ||
+    !(payload.registration as RegistrationJwksUri).jwks_uri
   )
     return false;
   return true;
 };
 
-const DidMatchFromJwksUri = (jwt: string, issuerDid: string): boolean => {
-  const requestPayload = decodeJwt(jwt).payload as DidAuthRequestPayload;
-  const jwksUri = (requestPayload.registration as RegistrationJwksUri).jwks_uri;
+const DidMatchFromJwksUri = (
+  payload: DidAuthRequestPayload,
+  issuerDid: string
+): boolean => {
+  const jwksUri = (payload.registration as RegistrationJwksUri).jwks_uri;
   return jwksUri.includes(issuerDid);
 };
 
 const getVerificationMethod = (
-  jwt: string,
+  kid: string,
   didDoc: DIDDocument
 ): VerificationMethod => {
   if (
@@ -146,9 +147,6 @@ const getVerificationMethod = (
   )
     throw new Error(DidAuthErrors.ERROR_RETRIEVING_VERIFICATION_METHOD);
   const { verificationMethod } = didDoc;
-  const { header } = decodeJwt(jwt);
-  const { kid } = header;
-
   return verificationMethod.find((elem) => elem.id === kid);
 };
 
@@ -188,10 +186,10 @@ function toSignatureObject(
 
 const verifySignatureFromVerificationMethod = (
   jwt: string,
-  vm: VerificationMethod
+  verificationMethod: VerificationMethod
 ): boolean => {
   try {
-    const publicKey = extractPublicKeyBytes(vm);
+    const publicKey = extractPublicKeyBytes(verificationMethod);
     const secp256k1 = new EC("secp256k1");
     const { data, signature } = decodeJwt(jwt);
     const hash = SHA("sha256").update(data).digest();
@@ -203,6 +201,10 @@ const verifySignatureFromVerificationMethod = (
   }
 };
 
+const getThumbprint = (pubJwk: JWKECKey): string => {
+  return SHA("sha256").update(JSON.stringify(pubJwk)).digest("base64");
+};
+
 export {
   getNonce,
   getState,
@@ -210,6 +212,7 @@ export {
   getAudience,
   getIssuerDid,
   getDIDFromKey,
+  getThumbprint,
   getUrlResolver,
   getHexPrivateKey,
   DidMatchFromJwksUri,

@@ -1,4 +1,4 @@
-import { JWTClaims, JWTPayload } from "./JWT";
+import { JWTPayload } from "./JWT";
 import { JWKECKey } from "./JWK";
 import { OidcClaim, VerifiablePresentation } from "./oidcSsi";
 
@@ -142,6 +142,7 @@ export interface ExternalVerification {
 export interface DidAuthVerifyOpts {
   verificationType: InternalVerification | ExternalVerification;
   nonce?: string;
+  redirectUri?: string;
 }
 
 export interface DidAuthRequestPayload extends JWTPayload {
