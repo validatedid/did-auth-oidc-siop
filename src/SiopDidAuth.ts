@@ -32,6 +32,7 @@ import VID_RESOLVE_DID_URL from "./config";
 import { util } from "./util";
 import { DIDDocument } from "./interfaces/oidcSsi";
 import { JWTHeader } from "./interfaces/JWT";
+import { getThumbprintFromJwk } from "./util/JWK";
 
 /**
  * Creates a didAuth Request Object
@@ -245,7 +246,7 @@ const verifyDidAuthRequest = async (
     opts.verificationType.didUrlResolver || VID_RESOLVE_DID_URL;
   const issuerDid = util.getIssuerDid(jwt);
   const response = await axios.get(`${resolverUrl}/${issuerDid}`);
-  if (!response || response.data)
+  if (!response || !response.data)
     throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
   const didDoc = response.data as DIDDocument;
 
@@ -265,6 +266,7 @@ const verifyDidAuthRequest = async (
     throw new Error(DidAuthErrors.VERIFICATION_METHOD_NOT_MATCHES);
 
   // Verify the SIOP Request according to the verification method above.
+
   if (!util.verifySignatureFromVerificationMethod(jwt, verificationMethod))
     return {
       signatureValidation: false,
@@ -303,7 +305,7 @@ const verifyDidAuthResponse = async (
     opts.verificationType.didUrlResolver || VID_RESOLVE_DID_URL;
   const issuerDid = util.getIssuerDid(id_token);
   const response = await axios.get(`${resolverUrl}/${issuerDid}`);
-  if (!response || response.data)
+  if (!response || !response.data)
     throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
   const didDoc = response.data as DIDDocument;
   // Determine the verification method from the SIOP's DID Document that matches the kid
@@ -341,7 +343,7 @@ const verifyDidAuthResponse = async (
   // The Client MUST validate that the sub Claim value is the base64url encoded representation
   // of the thumbprint of the key in the sub_jwk Claim.
   if (
-    util.getThumbprint((payload as DidAuthResponsePayload).sub_jwk) !==
+    getThumbprintFromJwk((payload as DidAuthResponsePayload).sub_jwk) !==
     payload.sub
   )
     throw new Error(DidAuthErrors.JWK_THUMBPRINT_MISMATCH_SUB);

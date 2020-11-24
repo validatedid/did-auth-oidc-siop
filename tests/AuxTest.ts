@@ -1,10 +1,10 @@
 import { JWT, JWK } from "jose";
-import { DIDDocument } from "did-resolver";
 import { v4 as uuidv4 } from "uuid";
 import axios, { AxiosResponse } from "axios";
 import moment from "moment";
 import { ethers } from "ethers";
 
+import base58 from "bs58";
 import { DidAuthErrors, JWTClaims, DidAuthUtil, DidAuthTypes } from "../src";
 import { prefixWith0x } from "../src/util/Util";
 import {
@@ -13,6 +13,12 @@ import {
 } from "../src/interfaces/DIDAuth.types";
 import { getPublicJWKFromPrivateHex, getThumbprint } from "../src/util/JWK";
 import { JWTHeader, JWTPayload } from "../src/interfaces/JWT";
+import { JWKECKey, VidJWKECKey } from "../src/interfaces/JWK";
+import {
+  DID_DOCUMENT_PUBKEY_B58,
+  DID_DOCUMENT_PUBKEY_JWK,
+} from "./data/mockedData";
+import { DIDDocument } from "../src/interfaces/oidcSsi";
 
 export interface TESTKEY {
   key: JWK.ECKey;
@@ -86,20 +92,28 @@ export const mockedKeyAndDid = (): {
   hexPrivateKey: string;
   did: string;
   jwk: JWK.ECKey;
+  hexPublicKey: string;
 } => {
   // generate a new keypair
   const jwk = JWK.generateSync("EC", "secp256k1", { use: "sig" });
   const hexPrivateKey = Buffer.from(jwk.d, "base64").toString("hex");
   const wallet: ethers.Wallet = new ethers.Wallet(prefixWith0x(hexPrivateKey));
   const did = `did:vid:${wallet.address}`;
-  return { hexPrivateKey, did, jwk };
+  const hexPublicKey = wallet.publicKey;
+  return { hexPrivateKey, did, jwk, hexPublicKey };
 };
 
 const mockedEntityAuthNToken = (
   enterpiseName?: string
-): { jwt: string; jwk: JWK.ECKey; did: string; hexPrivateKey: string } => {
+): {
+  jwt: string;
+  jwk: JWK.ECKey;
+  did: string;
+  hexPrivateKey: string;
+  hexPublicKey: string;
+} => {
   // generate a new keypair
-  const { did, jwk, hexPrivateKey } = mockedKeyAndDid();
+  const { did, jwk, hexPrivateKey, hexPublicKey } = mockedKeyAndDid();
 
   const payload: LegalEntityTestAuthN = {
     iss: enterpiseName || "Test Legal Entity",
@@ -115,7 +129,7 @@ const mockedEntityAuthNToken = (
       typ: "JWT",
     },
   });
-  return { jwt, jwk, did, hexPrivateKey };
+  return { jwt, jwk, did, hexPrivateKey, hexPublicKey };
 };
 
 const testEntityAuthNToken = (enterpiseName?: string): { jwt: string } => {
@@ -231,14 +245,15 @@ export async function getLegalEntityTestAuthZToken(
 }
 
 export function mockedGetEnterpriseAuthToken(
-  enterpiseName?: string
+  enterpriseName?: string
 ): {
   jwt: string;
   did: string;
   jwk: JWK.ECKey;
   hexPrivateKey: string;
+  hexPublicKey: string;
 } {
-  const testAuth = mockedEntityAuthNToken(enterpiseName);
+  const testAuth = mockedEntityAuthNToken(enterpriseName);
   const payload = JWT.decode(testAuth.jwt) as JWTPayload;
 
   const inputPayload: IEnterpriseAuthZToken = {
@@ -269,6 +284,7 @@ export function mockedGetEnterpriseAuthToken(
     did: testAuth.did,
     jwk: testAuth.jwk,
     hexPrivateKey: testAuth.hexPrivateKey,
+    hexPublicKey: testAuth.hexPublicKey,
   };
 }
 
@@ -311,4 +327,34 @@ export const mockedIdToken = (
   });
 
   return { jwt, did, jwk, idToken };
+};
+
+export interface DidKey {
+  did: string;
+  publicKeyHex?: string;
+  jwk?: JWKECKey;
+}
+
+export const getParsedDidDocument = (didKey: DidKey): DIDDocument => {
+  if (didKey.publicKeyHex) {
+    const didDocB58 = DID_DOCUMENT_PUBKEY_B58;
+    didDocB58.id = didKey.did;
+    didDocB58.controller = didKey.did;
+    didDocB58.authentication[0].publicKey = `${didKey.did}#keys-1`;
+    didDocB58.verificationMethod[0].id = `${didKey.did}#keys-1`;
+    didDocB58.verificationMethod[0].controller = didKey.did;
+    didDocB58.verificationMethod[0].publicKeyBase58 = base58.encode(
+      Buffer.from(didKey.publicKeyHex.replace("0x", ""), "hex")
+    );
+    return didDocB58;
+  }
+  // then didKey jws public key
+  const didDocJwk = DID_DOCUMENT_PUBKEY_JWK;
+  didDocJwk.id = didKey.did;
+  didDocJwk.controller = didKey.did;
+  didDocJwk.authentication[0].publicKey = `${didKey.did}#keys-1`;
+  didDocJwk.verificationMethod[0].id = `${didKey.did}#keys-1`;
+  didDocJwk.verificationMethod[0].controller = didKey.did;
+  didDocJwk.verificationMethod[0].publicKeyJwk = didKey.jwk as VidJWKECKey;
+  return didDocJwk;
 };

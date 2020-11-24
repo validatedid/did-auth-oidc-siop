@@ -17,7 +17,6 @@ import {
 } from "../interfaces/DIDAuth.types";
 import { Resolvable } from "../interfaces/JWT";
 import { DIDDocument, VerificationMethod } from "../interfaces/oidcSsi";
-import { JWKECKey } from "../interfaces/JWK";
 
 export const prefixWith0x = (key: string): string => {
   return key.startsWith("0x") ? key : `0x${key}`;
@@ -163,23 +162,15 @@ const extractPublicKeyBytes = (
   throw new Error("No public key found!");
 };
 
-function toSignatureObject(
-  signature: string,
-  recoverable = false
-): EcdsaSignature {
+function toSignatureObject(signature: string): EcdsaSignature {
   const rawsig: Buffer = base64url.toBuffer(signature);
-  if (rawsig.length !== (recoverable ? 65 : 64)) {
+  if (rawsig.length !== 64 && rawsig.length !== 65) {
     throw new Error("wrong signature length");
   }
 
   const r: string = rawsig.slice(0, 32).toString("hex");
   const s: string = rawsig.slice(32, 64).toString("hex");
   const sigObj: EcdsaSignature = { r, s };
-
-  if (recoverable) {
-    const n = rawsig[64];
-    sigObj.recoveryParam = n;
-  }
 
   return sigObj;
 }
@@ -201,10 +192,6 @@ const verifySignatureFromVerificationMethod = (
   }
 };
 
-const getThumbprint = (pubJwk: JWKECKey): string => {
-  return SHA("sha256").update(JSON.stringify(pubJwk)).digest("base64");
-};
-
 export {
   getNonce,
   getState,
@@ -212,7 +199,6 @@ export {
   getAudience,
   getIssuerDid,
   getDIDFromKey,
-  getThumbprint,
   getUrlResolver,
   getHexPrivateKey,
   DidMatchFromJwksUri,

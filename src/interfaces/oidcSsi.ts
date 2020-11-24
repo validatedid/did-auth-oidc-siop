@@ -77,7 +77,7 @@ export interface DIDDocument {
   id: string;
   controller?: string;
   owner?: string;
-  publicKey: PublicKey[];
+  publicKey?: PublicKey[];
   authentication?: Authentication[];
   verificationMethod?: VerificationMethod[];
   service?: ServiceEndpoint[];

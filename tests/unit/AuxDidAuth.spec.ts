@@ -3,7 +3,11 @@ import axios from "axios";
 import * as didJwt from "@validatedid/did-jwt";
 import { JWT } from "jose";
 import { parse } from "querystring";
-import { mockedGetEnterpriseAuthToken, mockedKeyAndDid } from "../AuxTest";
+import {
+  getParsedDidDocument,
+  mockedGetEnterpriseAuthToken,
+  mockedKeyAndDid,
+} from "../AuxTest";
 import {
   createUriRequest,
   createDidAuthRequest,
@@ -391,6 +395,12 @@ describe("vidDidAuth", () => {
           referenceUri: `https://dev.vidchain.net/api/v1/identifiers/${didAA};transform-keys=jwks`,
         },
       };
+      jest.spyOn(axios, "get").mockResolvedValue({
+        data: getParsedDidDocument({
+          did: entityAA.did,
+          publicKeyHex: entityAA.hexPublicKey,
+        }),
+      });
       jest.spyOn(axios, "post").mockImplementation(async () => {
         const header: JWTHeader = {
           alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
