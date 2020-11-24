@@ -1,7 +1,7 @@
 import * as dotenv from "dotenv";
 import axios from "axios";
 import { verifyJwt, decodeJwt } from "@validatedid/did-jwt";
-import { mockedIdToken } from "../AuxTest";
+import { getParsedDidDocument, mockedIdToken } from "../AuxTest";
 import { DidAuthErrors, DidAuthTypes, verifyDidAuthResponse } from "../../src";
 
 // importing .env variables
@@ -16,14 +16,19 @@ describe("SiopDidAuth tests should", () => {
     const WALLET_API_BASE_URL =
       process.env.WALLET_API_URL || "http://localhost:9000";
     const nonce = "zizu-nonce";
-    const { jwt, idToken } = mockedIdToken({ nonce });
-
-    const payload = {
+    const { jwt, idToken, did, hexPublicKey, header, payload } = mockedIdToken({
       nonce,
-    };
+    });
+
+    jest.spyOn(axios, "get").mockResolvedValue({
+      data: getParsedDidDocument({
+        did,
+        publicKeyHex: hexPublicKey,
+      }),
+    });
 
     mockVerifyJwt.mockResolvedValue({ payload } as never);
-    mockDecodeJWT.mockReturnValue({ payload } as never);
+    mockDecodeJWT.mockReturnValue({ header, payload } as never);
     jest.spyOn(axios, "post").mockResolvedValue({ status: 204 });
     const optsVerify: DidAuthTypes.DidAuthVerifyOpts = {
       verificationType: {
@@ -31,6 +36,7 @@ describe("SiopDidAuth tests should", () => {
         authZToken: jwt,
       },
       nonce: "some bad nonce",
+      redirectUri: "https://app.example/demo",
     };
 
     await expect(verifyDidAuthResponse(idToken, optsVerify)).rejects.toThrow(

@@ -300,17 +300,24 @@ export const mockedIdToken = (
   did: string;
   jwk: JWK.ECKey;
   idToken: string;
+  hexPublicKey: string;
+  header: JWTHeader;
+  payload: DidAuthTypes.DidAuthResponsePayload;
 } => {
-  const { jwt, did, jwk, hexPrivateKey } = mockedGetEnterpriseAuthToken(
-    inputToken.enterpiseName
-  );
+  const {
+    jwt,
+    did,
+    jwk,
+    hexPrivateKey,
+    hexPublicKey,
+  } = mockedGetEnterpriseAuthToken(inputToken.enterpiseName);
   const state = DidAuthUtil.getState();
   const didAuthResponsePayload: DidAuthTypes.DidAuthResponsePayload = {
     iss: DidAuthTypes.DidAuthResponseIss.SELF_ISSUE,
     sub: getThumbprint(hexPrivateKey),
     nonce: inputToken.nonce || DidAuthUtil.getNonce(state),
     aud: "https://app.example/demo",
-    sub_jwk: getPublicJWKFromPrivateHex(hexPrivateKey),
+    sub_jwk: getPublicJWKFromPrivateHex(hexPrivateKey, `${did}#keys-1`),
     did,
   };
 
@@ -326,7 +333,15 @@ export const mockedIdToken = (
     kid: false,
   });
 
-  return { jwt, did, jwk, idToken };
+  return {
+    jwt,
+    did,
+    jwk,
+    idToken,
+    hexPublicKey,
+    header,
+    payload: didAuthResponsePayload,
+  };
 };
 
 export interface DidKey {

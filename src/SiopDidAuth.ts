@@ -268,9 +268,7 @@ const verifyDidAuthRequest = async (
   // Verify the SIOP Request according to the verification method above.
 
   if (!util.verifySignatureFromVerificationMethod(jwt, verificationMethod))
-    return {
-      signatureValidation: false,
-    };
+    throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
   // Additionally performs a complete token validation via vidVerifyJwt
   return verifyDidAuth(jwt, opts);
 };
@@ -321,6 +319,17 @@ const verifyDidAuthResponse = async (
   );
   if (!verificationMethod)
     throw new Error(DidAuthErrors.VERIFICATION_METHOD_NOT_MATCHES);
+  // If a nonce value was sent in the Authentication Request, a nonce Claim MUST be present and
+  // its value checked to verify that it is the same value as the one that was sent in the Authentication Request.
+  if (payload.nonce !== opts.nonce)
+    throw Error(DidAuthErrors.ERROR_VALIDATING_NONCE);
+  // The Client MUST validate that the sub Claim value is the base64url encoded representation
+  // of the thumbprint of the key in the sub_jwk Claim.
+  if (
+    getThumbprintFromJwk((payload as DidAuthResponsePayload).sub_jwk) !==
+    payload.sub
+  )
+    throw new Error(DidAuthErrors.JWK_THUMBPRINT_MISMATCH_SUB);
   // The alg value SHOULD be the default of RS256. It MAY also be ES256.
   // In addition to RS256, an SIOP according to this specification MUST support EdDSA and ES256K.
   // --> https://identity.foundation/did-siop/#generate-siop-request
@@ -337,20 +346,7 @@ const verifyDidAuthResponse = async (
   // SIOP: Verify the id_token according to the verification method above.
   // Verifying that the id_token was signed by the key specified in the sub_jwk claim.
   if (!util.verifySignatureFromVerificationMethod(id_token, verificationMethod))
-    return {
-      signatureValidation: false,
-    };
-  // The Client MUST validate that the sub Claim value is the base64url encoded representation
-  // of the thumbprint of the key in the sub_jwk Claim.
-  if (
-    getThumbprintFromJwk((payload as DidAuthResponsePayload).sub_jwk) !==
-    payload.sub
-  )
-    throw new Error(DidAuthErrors.JWK_THUMBPRINT_MISMATCH_SUB);
-  // If a nonce value was sent in the Authentication Request, a nonce Claim MUST be present and
-  // its value checked to verify that it is the same value as the one that was sent in the Authentication Request.
-  if (payload.nonce !== opts.nonce)
-    throw Error(DidAuthErrors.ERROR_VALIDATING_NONCE);
+    throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
   // Additionally performs a complete token validation via vidVerifyJwt
   const validationResponse = await verifyDidAuth(id_token, opts);
 
