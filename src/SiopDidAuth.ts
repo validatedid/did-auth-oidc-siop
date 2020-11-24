@@ -31,7 +31,7 @@ import {
 import VID_RESOLVE_DID_URL from "./config";
 import { util } from "./util";
 import { DIDDocument } from "./interfaces/oidcSsi";
-import { JWTHeader } from ".";
+import { JWTHeader } from "./interfaces/JWT";
 
 /**
  * Creates a didAuth Request Object
