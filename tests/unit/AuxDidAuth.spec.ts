@@ -472,35 +472,6 @@ describe("vidDidAuth", () => {
       jest.clearAllMocks();
     });
 
-    it("should throw INVALID_AUDIENCE", async () => {
-      expect.assertions(1);
-      const RPC_PROVIDER =
-        process.env.DID_PROVIDER_RPC_URL ||
-        "https://ropsten.infura.io/v3/f03e98e0dc2b855be647c39abe984fcf";
-      const RPC_ADDRESS = process.env.DID_REGISTRY_SC_ADDRESS || "0x00000000";
-      const entityAA = mockedGetEnterpriseAuthToken("COMPANY AA INC");
-      const payload = {
-        aud: ["test", "test2"],
-      };
-      const jwt = JWT.sign(payload, entityAA.jwk, {
-        header: {
-          alg: "ES256K",
-          typ: "JWT",
-        },
-      });
-      const optsVerify: DidAuthTypes.DidAuthVerifyOpts = {
-        verificationType: {
-          registry: RPC_ADDRESS,
-          rpcUrl: RPC_PROVIDER,
-        },
-      };
-
-      await expect(verifyDidAuthRequest(jwt, optsVerify)).rejects.toThrow(
-        DidAuthErrors.INVALID_AUDIENCE
-      );
-      jest.clearAllMocks();
-    });
-
     it("should throw REGISTRATION_OBJECT_TYPE_NOT_SET when no registrationType is present", async () => {
       expect.assertions(1);
 
