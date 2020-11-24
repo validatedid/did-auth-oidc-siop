@@ -1,7 +1,6 @@
 import * as dotenv from "dotenv";
 import axios from "axios";
 import * as didJwt from "@validatedid/did-jwt";
-import { JWT } from "jose";
 import { parse } from "querystring";
 import {
   getParsedDidDocument,
@@ -819,7 +818,7 @@ describe("vidDidAuth", () => {
         process.env.WALLET_API_URL || "http://localhost:9000";
       const entityAA = mockedGetEnterpriseAuthToken("COMPANY AA INC");
       const tokenEntityAA = entityAA.jwt;
-      const { hexPrivateKey, did } = mockedKeyAndDid();
+      const { hexPrivateKey, did, hexPublicKey } = mockedKeyAndDid();
       const state = DidAuthUtil.getState();
       const nonce = DidAuthUtil.getNonce(state);
       const opts: DidAuthTypes.DidAuthResponseOpts = {
@@ -836,6 +835,12 @@ describe("vidDidAuth", () => {
         },
         did,
       };
+      jest.spyOn(axios, "get").mockResolvedValue({
+        data: getParsedDidDocument({
+          did,
+          publicKeyHex: hexPublicKey,
+        }),
+      });
 
       jest.spyOn(axios, "post").mockResolvedValue({ status: 204 });
       const didAuthJwt = await createDidAuthResponse(opts);
@@ -845,6 +850,7 @@ describe("vidDidAuth", () => {
           authZToken: tokenEntityAA,
         },
         nonce,
+        redirectUri: opts.redirectUri,
       };
       const validationResponse = await verifyDidAuthResponse(
         didAuthJwt,
@@ -864,7 +870,7 @@ describe("vidDidAuth", () => {
       const tokenEntityAA = entityAA.jwt;
       const state = DidAuthUtil.getState();
       const requestDIDAuthNonce = DidAuthUtil.getNonce(state);
-      const { hexPrivateKey, did } = mockedKeyAndDid();
+      const { hexPrivateKey, did, hexPublicKey } = mockedKeyAndDid();
       const opts: DidAuthTypes.DidAuthResponseOpts = {
         redirectUri: "https://app.example/demo",
         signatureType: {
@@ -879,6 +885,12 @@ describe("vidDidAuth", () => {
         },
         did,
       };
+      jest.spyOn(axios, "get").mockResolvedValue({
+        data: getParsedDidDocument({
+          did,
+          publicKeyHex: hexPublicKey,
+        }),
+      });
       jest.spyOn(axios, "post").mockResolvedValue({ status: 204 });
       const didAuthJwt = await createDidAuthResponse(opts);
       const optsVerify: DidAuthTypes.DidAuthVerifyOpts = {
@@ -887,6 +899,7 @@ describe("vidDidAuth", () => {
           authZToken: tokenEntityAA,
         },
         nonce: "a bad nonce",
+        redirectUri: opts.redirectUri,
       };
       await expect(
         verifyDidAuthResponse(didAuthJwt, optsVerify)
@@ -903,7 +916,7 @@ describe("vidDidAuth", () => {
       const state = DidAuthUtil.getState();
       const nonce = DidAuthUtil.getNonce(state);
       const requestDIDAuthNonce = DidAuthUtil.getNonce(state);
-      const { hexPrivateKey, did } = mockedKeyAndDid();
+      const { hexPrivateKey, did, hexPublicKey } = mockedKeyAndDid();
       const opts: DidAuthTypes.DidAuthResponseOpts = {
         redirectUri: "https://app.example/demo",
         signatureType: {
@@ -918,6 +931,12 @@ describe("vidDidAuth", () => {
         },
         did,
       };
+      jest.spyOn(axios, "get").mockResolvedValue({
+        data: getParsedDidDocument({
+          did,
+          publicKeyHex: hexPublicKey,
+        }),
+      });
       jest.spyOn(axios, "post").mockResolvedValue({ status: 400 });
       const didAuthJwt = await createDidAuthResponse(opts);
       const optsVerify: DidAuthTypes.DidAuthVerifyOpts = {
@@ -926,6 +945,7 @@ describe("vidDidAuth", () => {
           authZToken: tokenEntityAA,
         },
         nonce,
+        redirectUri: opts.redirectUri,
       };
       await expect(
         verifyDidAuthResponse(didAuthJwt, optsVerify)
@@ -942,7 +962,7 @@ describe("vidDidAuth", () => {
       const state = DidAuthUtil.getState();
       const nonce = DidAuthUtil.getNonce(state);
       const requestDIDAuthNonce = DidAuthUtil.getNonce(state);
-      const { hexPrivateKey, did } = mockedKeyAndDid();
+      const { hexPrivateKey, did, hexPublicKey } = mockedKeyAndDid();
       const opts: DidAuthTypes.DidAuthResponseOpts = {
         redirectUri: "https://app.example/demo",
         signatureType: {
@@ -957,6 +977,12 @@ describe("vidDidAuth", () => {
         },
         did,
       };
+      jest.spyOn(axios, "get").mockResolvedValue({
+        data: getParsedDidDocument({
+          did,
+          publicKeyHex: hexPublicKey,
+        }),
+      });
       jest
         .spyOn(axios, "post")
         .mockRejectedValue(new Error("Invalid Signature"));
@@ -967,6 +993,7 @@ describe("vidDidAuth", () => {
           authZToken: tokenEntityAA,
         },
         nonce,
+        redirectUri: opts.redirectUri,
       };
       await expect(
         verifyDidAuthResponse(didAuthJwt, optsVerify)

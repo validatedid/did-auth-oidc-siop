@@ -35,20 +35,20 @@ const getPublicJWKFromPrivateHex = (
   };
 };
 
-const getThumbprintFromJwk = (pubJwk: JWK.JWKECKey): string => {
-  const buff = SHA("sha256").update(JSON.stringify(pubJwk)).digest();
-  return base64urlEncodeBuffer(buff);
-};
-
-const getThumbprint = (hexPrivateKey: string): string => {
-  const jwk = getPublicJWKFromPrivateHex(hexPrivateKey);
+const getThumbprintFromJwk = (jwk: JWK.JWKECKey): string => {
   const fields = {
     crv: jwk.crv,
     kty: jwk.kty,
     x: jwk.x,
     y: jwk.y,
   };
-  return getThumbprintFromJwk(fields);
+  const buff = SHA("sha256").update(JSON.stringify(fields)).digest();
+  return base64urlEncodeBuffer(buff);
+};
+
+const getThumbprint = (hexPrivateKey: string): string => {
+  const jwk = getPublicJWKFromPrivateHex(hexPrivateKey);
+  return getThumbprintFromJwk(jwk);
 };
 
 export {
