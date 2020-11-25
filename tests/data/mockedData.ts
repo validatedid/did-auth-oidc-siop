@@ -3,7 +3,7 @@ import { DIDDocument } from "../../src/interfaces/oidcSsi";
 
 export const DIDAUTH_HEADER: JWTHeader = {
   typ: "JWT",
-  alg: "ES256K-R",
+  alg: "ES256K",
   kid: "did:vid:0x416e6e6162656c2e4c65652e452d412d506f652e#key1",
 };
 

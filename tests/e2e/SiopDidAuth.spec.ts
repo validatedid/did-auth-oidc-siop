@@ -13,7 +13,6 @@ import {
   getLegalEntityTestAuthZToken,
   getPublicJWKFromDid,
   getUserEntityTestAuthZToken,
-  mockedKeyAndDid,
 } from "../AuxTest";
 import * as mockedData from "../data/mockedData";
 import {
@@ -107,7 +106,7 @@ describe("VidDidAuth tests should", () => {
   describe("create a Did Auth Request JWT with", () => {
     it("a JWT request by reference that contains the required parameters", async () => {
       expect.assertions(7);
-      const { hexPrivateKey, did } = mockedKeyAndDid();
+      const { hexPrivateKey, did } = await getUserEntityTestAuthZToken();
 
       const opts: DidAuthTypes.DidAuthRequestOpts = {
         redirectUri: "http://app.example/demo",
@@ -156,7 +155,7 @@ describe("VidDidAuth tests should", () => {
 
     it("a JWT request by reference that contains all possible parameters signing internally", async () => {
       expect.assertions(5);
-      const { hexPrivateKey, did } = mockedKeyAndDid();
+      const { hexPrivateKey, did } = await getUserEntityTestAuthZToken();
       const state = DidAuthUtil.getState();
       const nonce = DidAuthUtil.getNonce(state);
 
@@ -215,7 +214,7 @@ describe("VidDidAuth tests should", () => {
   describe("create Uri Response tests with", () => {
     it("an id_token and state using the default response_mode=fragment with only required params", async () => {
       expect.assertions(10);
-      const { hexPrivateKey, did } = mockedKeyAndDid();
+      const { hexPrivateKey, did } = await getUserEntityTestAuthZToken();
       const state = DidAuthUtil.getState();
       const nonce = DidAuthUtil.getNonce(state);
       const opts: DidAuthTypes.DidAuthResponseOpts = {
@@ -254,7 +253,7 @@ describe("VidDidAuth tests should", () => {
     });
     it("an id_token and state using response_mode=query with only required params", async () => {
       expect.assertions(10);
-      const { hexPrivateKey, did } = mockedKeyAndDid();
+      const { hexPrivateKey, did } = await getUserEntityTestAuthZToken();
       const state = DidAuthUtil.getState();
       const nonce = DidAuthUtil.getNonce(state);
       const opts: DidAuthTypes.DidAuthResponseOpts = {
@@ -294,7 +293,7 @@ describe("VidDidAuth tests should", () => {
     });
     it("an id_token and state using response_mode=form_post with only required params", async () => {
       expect.assertions(11);
-      const { hexPrivateKey, did } = mockedKeyAndDid();
+      const { hexPrivateKey, did } = await getUserEntityTestAuthZToken();
       const state = DidAuthUtil.getState();
       const nonce = DidAuthUtil.getNonce(state);
       const opts: DidAuthTypes.DidAuthResponseOpts = {
@@ -338,7 +337,8 @@ describe("VidDidAuth tests should", () => {
   describe("verifyDidAuthRequest tests should", () => {
     it("verify internally a DidAuth Request JWT", async () => {
       expect.assertions(7);
-      const { hexPrivateKey, did } = mockedKeyAndDid();
+      const WALLET_API_BASE_URL = process.env.WALLET_API_URL;
+      const { hexPrivateKey, did } = await getUserEntityTestAuthZToken();
 
       const opts: DidAuthTypes.DidAuthRequestOpts = {
         redirectUri: "http://app.example/demo",
@@ -362,6 +362,7 @@ describe("VidDidAuth tests should", () => {
         verificationType: {
           registry: process.env.DID_REGISTRY_SC_ADDRESS,
           rpcUrl: process.env.DID_PROVIDER_RPC_URL,
+          didUrlResolver: `${WALLET_API_BASE_URL}/api/v1/identifiers`,
         },
       };
       const validationResponse = await verifyDidAuthRequest(jwt, optsVerify);
@@ -392,8 +393,8 @@ describe("VidDidAuth tests should", () => {
 
     it("verify internally a DidAuth Response JWT", async () => {
       expect.assertions(7);
-
-      const { hexPrivateKey, did } = mockedKeyAndDid();
+      const WALLET_API_BASE_URL = process.env.WALLET_API_URL;
+      const { hexPrivateKey, did } = await getUserEntityTestAuthZToken();
       const state = DidAuthUtil.getState();
       const nonce = DidAuthUtil.getNonce(state);
       const opts: DidAuthTypes.DidAuthResponseOpts = {
@@ -419,8 +420,10 @@ describe("VidDidAuth tests should", () => {
         verificationType: {
           registry: process.env.DID_REGISTRY_SC_ADDRESS,
           rpcUrl: process.env.DID_PROVIDER_RPC_URL,
+          didUrlResolver: `${WALLET_API_BASE_URL}/api/v1/identifiers`,
         },
         nonce,
+        redirectUri: opts.redirectUri,
       };
       const validationResponse = await verifyDidAuthResponse(jwt, optsVerify);
       expect(validationResponse).toBeDefined();

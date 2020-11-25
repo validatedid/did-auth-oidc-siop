@@ -267,7 +267,7 @@ const verifyDidAuth = async (
     // if not, it needs to be set as a callback url
     const audience = util.getAudience(jwt);
     const options: JWTVerifyOptions = {
-      audience,
+      audience: audience?.match(/^did:/g) ? audience : undefined,
       resolver: await util.getUrlResolver(jwt, opts.verificationType),
       callbackUrl:
         audience !== undefined && !audience.match(/^did:/g)

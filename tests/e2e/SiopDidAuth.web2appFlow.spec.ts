@@ -9,7 +9,10 @@ import {
   verifyDidAuthRequest,
   verifyDidAuthResponse,
 } from "../../src";
-import { getLegalEntityAuthZToken, mockedKeyAndDid } from "../AuxTest";
+import {
+  getLegalEntityAuthZToken,
+  getUserEntityTestAuthZToken,
+} from "../AuxTest";
 import { DidAuthVerifyOpts } from "../../src/interfaces/DIDAuth.types";
 import * as mockedData from "../data/mockedData";
 
@@ -113,7 +116,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     ); // 5 minutes of expiration time
 
     // CREATE URI RESPONSE
-    const { hexPrivateKey, did } = mockedKeyAndDid();
+    const { hexPrivateKey, did } = await getUserEntityTestAuthZToken();
     const responseOpts: DidAuthTypes.DidAuthResponseOpts = {
       redirectUri: requestPayload.client_id,
       signatureType: {
@@ -259,7 +262,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     ); // 5 minutes of expiration time
 
     // CREATE URI RESPONSE
-    const { hexPrivateKey, did } = mockedKeyAndDid();
+    const { hexPrivateKey, did } = await getUserEntityTestAuthZToken();
     const responseOpts: DidAuthTypes.DidAuthResponseOpts = {
       redirectUri: requestPayload.client_id,
       signatureType: {

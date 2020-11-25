@@ -11,7 +11,7 @@ import {
 import {
   getLegalEntityAuthZToken,
   getLegalEntityTestAuthZToken,
-  mockedKeyAndDid,
+  getUserEntityTestAuthZToken,
 } from "../AuxTest";
 import {
   DidAuthResponseMode,
@@ -70,7 +70,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     expect(validationRequestResponse.payload).toBeDefined();
 
     // create a response internally
-    const { hexPrivateKey, did } = mockedKeyAndDid();
+    const { hexPrivateKey, did } = await getUserEntityTestAuthZToken();
     const state = DidAuthUtil.getState();
     const nonce = DidAuthUtil.getNonce(state);
     const responseOpts: DidAuthTypes.DidAuthResponseOpts = {
@@ -169,7 +169,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     expect(validationRequestResponse).toBeDefined();
     expect(validationRequestResponse.payload).toBeDefined();
 
-    const { hexPrivateKey, did } = mockedKeyAndDid();
+    const { hexPrivateKey, did } = await getUserEntityTestAuthZToken();
     const requestPayload = validationRequestResponse.payload as DidAuthTypes.DidAuthRequestPayload;
     const stateRequest = requestPayload.state;
     const nonceRequest = requestPayload.nonce;
