@@ -253,7 +253,8 @@ describe("vidDidAuth", () => {
       expect(state).toBeDefined();
       const { header, payload } = didJwt.decodeJwt(jwt);
 
-      const expectedHeader = mockedData.DIDAUTH_HEADER;
+      const expectedHeader = { ...mockedData.DIDAUTH_HEADER };
+      expectedHeader.alg = "ES256K-R";
       expectedHeader.kid = `${entityAA.did}#keys-1`;
       const expectedPayload = mockedData.DIDAUTH_REQUEST_PAYLOAD;
       expectedPayload.iss = entityAA.did;
@@ -345,7 +346,8 @@ describe("vidDidAuth", () => {
       expect(state).toBeDefined();
       const { header, payload } = didJwt.decodeJwt(jwt);
 
-      const expectedHeader = mockedData.DIDAUTH_HEADER;
+      const expectedHeader = { ...mockedData.DIDAUTH_HEADER };
+      expectedHeader.alg = "ES256K-R";
       expectedHeader.kid = `${entityAA.did}#keys-1`;
       const expectedPayload = mockedData.DIDAUTH_REQUEST_PAYLOAD_CLAIMS;
       expectedPayload.iss = entityAA.did;
@@ -740,8 +742,9 @@ describe("vidDidAuth", () => {
       const didAuthJwt = await createDidAuthResponse(opts);
       const { header, payload } = didJwt.decodeJwt(didAuthJwt);
 
-      const expectedHeader = mockedData.DIDAUTH_HEADER;
+      const expectedHeader = { ...mockedData.DIDAUTH_HEADER };
       expectedHeader.kid = `${did}#keys-1`;
+      expectedHeader.alg = "ES256K";
       const expectedPayload = mockedData.DIDAUTH_RESPONSE_PAYLOAD;
       expectedPayload.iss = expect.stringMatching(
         DidAuthTypes.DidAuthResponseIss.SELF_ISSUE
@@ -789,7 +792,7 @@ describe("vidDidAuth", () => {
       const didAuthJwt = await createDidAuthResponse(opts);
       const { header, payload } = didJwt.decodeJwt(didAuthJwt);
 
-      const expectedHeader = mockedData.DIDAUTH_HEADER;
+      const expectedHeader = { ...mockedData.DIDAUTH_HEADER };
       expectedHeader.kid = `${did}#keys-1`;
       const expectedPayload = mockedData.DIDAUTH_RESPONSE_PAYLOAD_VP;
       expectedPayload.iss = expect.stringMatching(
