@@ -32,10 +32,10 @@ describe("SIOP DID Auth end to end flow tests should", () => {
 
     // create request internally
     const requestOpts: DidAuthTypes.DidAuthRequestOpts = {
-      redirectUri: "http://app.example/demo",
+      redirectUri: "https://app.example/demo",
       requestObjectBy: {
         type: DidAuthTypes.ObjectPassedBy.REFERENCE,
-        referenceUri: "https://dev.vidchain.net/siop/jwts",
+        referenceUri: `${WALLET_API_BASE_URL}/siop/jwts`,
       },
       signatureType: {
         signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
@@ -45,7 +45,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
       },
       registrationType: {
         type: DidAuthTypes.ObjectPassedBy.REFERENCE,
-        referenceUri: `https://dev.vidchain.net/api/v1/identifiers/${entityDid};transform-keys=jwks`,
+        referenceUri: `${WALLET_API_BASE_URL}/api/v1/identifiers/${entityDid};transform-keys=jwks`,
       },
     };
 
@@ -59,6 +59,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
       verificationType: {
         registry: process.env.DID_REGISTRY_SC_ADDRESS,
         rpcUrl: process.env.DID_PROVIDER_RPC_URL,
+        didUrlResolver: `${WALLET_API_BASE_URL}/api/v1/identifiers`,
       },
     };
     const validationRequestResponse = await verifyDidAuthRequest(
@@ -100,8 +101,10 @@ describe("SIOP DID Auth end to end flow tests should", () => {
       verificationType: {
         verifyUri: `${WALLET_API_BASE_URL}/api/v1/signature-validations`,
         authZToken,
+        didUrlResolver: `${WALLET_API_BASE_URL}/api/v1/identifiers`,
       },
       nonce,
+      redirectUri: requestOpts.redirectUri,
     };
     const validationResponse = await verifyDidAuthResponse(
       data.id_token as string,
@@ -135,7 +138,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
       },
       registrationType: {
         type: DidAuthTypes.ObjectPassedBy.REFERENCE,
-        referenceUri: `https://dev.vidchain.net/api/v1/identifiers/${entityDid};transform-keys=jwks`,
+        referenceUri: `${WALLET_API_BASE_URL}/api/v1/identifiers/${entityDid};transform-keys=jwks`,
       },
       responseMode: DidAuthTypes.DidAuthResponseMode.FRAGMENT,
       responseContext: DidAuthTypes.DidAuthResponseContext.RP,
@@ -160,6 +163,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
       verificationType: {
         registry: process.env.DID_REGISTRY_SC_ADDRESS,
         rpcUrl: process.env.DID_PROVIDER_RPC_URL,
+        didUrlResolver: `${WALLET_API_BASE_URL}/api/v1/identifiers`,
       },
     };
     const validationRequestResponse = await siopDidAuth.verifyDidAuthRequest(
@@ -204,8 +208,10 @@ describe("SIOP DID Auth end to end flow tests should", () => {
       verificationType: {
         verifyUri: `${WALLET_API_BASE_URL}/api/v1/signature-validations`,
         authZToken,
+        didUrlResolver: `${WALLET_API_BASE_URL}/api/v1/identifiers`,
       },
       nonce: (payload as DidAuthTypes.DidAuthResponsePayload).nonce,
+      redirectUri: requestPayload.client_id,
     };
     const validationResponse = await verifyDidAuthResponse(
       authResponseToken,
