@@ -85,6 +85,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
       verificationType: {
         registry: process.env.DID_REGISTRY_SC_ADDRESS,
         rpcUrl: process.env.DID_PROVIDER_RPC_URL,
+        didUrlResolver: `${WALLET_API_BASE_URL}/api/v1/identifiers`,
       },
     };
     const validationRequestResponse = await verifyDidAuthRequest(
@@ -160,8 +161,10 @@ describe("SIOP DID Auth end to end flow tests should", () => {
       verificationType: {
         verifyUri: `${WALLET_API_BASE_URL}/api/v1/signature-validations`,
         authZToken,
+        didUrlResolver: `${WALLET_API_BASE_URL}/api/v1/identifiers`,
       },
       nonce: (payload as DidAuthTypes.DidAuthResponsePayload).nonce,
+      redirectUri: validationRequestResponse.payload.client_id as string,
     };
     const validationResponse = await verifyDidAuthResponse(
       authResponseToken,
