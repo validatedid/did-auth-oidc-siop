@@ -138,7 +138,8 @@ const createDidAuthResponse = async (
   return signDidAuthExternal(
     didAuthResponsePayload,
     opts.signatureType.signatureUri,
-    opts.signatureType.authZToken
+    opts.signatureType.authZToken,
+    opts.signatureType.kid
   );
 };
 
@@ -302,7 +303,18 @@ const verifyDidAuthResponse = async (
   const resolverUrl =
     opts.verificationType.didUrlResolver || VID_RESOLVE_DID_URL;
   const issuerDid = util.getIssuerDid(id_token);
-  const response = await axios.get(`${resolverUrl}/${issuerDid}`);
+  // when sub_jwk.kid is like "did:vid:0x9C28b8A941e14f17832D5cABd426D65E7DD02311#keys-1"
+  // it can be resolved as a regular DID Doc
+  // when it is a key thumbprint like "kid": "zcia2OVav6TYlsEqRosUUjFRQwJiLI/qT1dn4zDcaoU="
+  // it requires a DID Document request witn jwks key transformation
+  const tranformKeysUrl = !(payload as DidAuthResponsePayload).sub_jwk.kid.includes(
+    "did:"
+  )
+    ? ";transform-keys=jwks"
+    : "";
+  const response = await axios.get(
+    `${resolverUrl}/${issuerDid}${tranformKeysUrl}`
+  );
   if (!response || !response.data)
     throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
   const didDoc = response.data as DIDDocument;
@@ -313,6 +325,7 @@ const verifyDidAuthResponse = async (
     !(payload as DidAuthResponsePayload).sub_jwk.kid
   )
     throw new Error(DidAuthErrors.SUB_JWK_NOT_FOUND_OR_NOT_KID);
+
   const verificationMethod = util.getVerificationMethod(
     (payload as DidAuthResponsePayload).sub_jwk.kid,
     didDoc

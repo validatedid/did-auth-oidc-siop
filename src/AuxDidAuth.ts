@@ -83,20 +83,28 @@ const createRegistration = async (
       }
       if (isExternalSignature(signatureType)) {
         // referenceUri will always be set on an external signature
-        const getResponse = await axios.get(registrationType.referenceUri);
-        if (!getResponse || !getResponse.data)
-          throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
-        const didDoc = getResponse.data as DIDDocument;
-        if (
-          !didDoc.verificationMethod ||
-          !didDoc.verificationMethod[0] ||
-          !didDoc.verificationMethod[0].publicKeyJwk
-        )
-          throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
-        registration = {
-          jwks: didDoc.verificationMethod[0].publicKeyJwk,
-        };
-        return registration;
+        try {
+          const getResponse = await axios.get(registrationType.referenceUri);
+          if (!getResponse || !getResponse.data)
+            throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
+          const didDoc = getResponse.data as DIDDocument;
+          if (
+            !didDoc.verificationMethod ||
+            !didDoc.verificationMethod[0] ||
+            !didDoc.verificationMethod[0].publicKeyJwk
+          )
+            throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
+          registration = {
+            jwks: didDoc.verificationMethod[0].publicKeyJwk,
+          };
+          return registration;
+        } catch (error) {
+          throw new Error(
+            `${
+              DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT
+            } Error: ${JSON.stringify(error, null, 2)}`
+          );
+        }
       }
       throw new Error(DidAuthErrors.SIGNATURE_OBJECT_TYPE_NOT_SET);
     default:
@@ -135,14 +143,14 @@ const signDidAuthInternal = async (
   // assign specific JWT header
   const header: JWTHeader = {
     typ: "JWT",
-    alg: DidAuthKeyAlgorithm.ES256KR,
+    alg: DidAuthKeyAlgorithm.ES256K,
     kid: kid || `${issuer}#keys-1`,
   };
   const response = await createJwt(
     payload,
     {
       issuer,
-      alg: DidAuthKeyAlgorithm.ES256KR,
+      alg: DidAuthKeyAlgorithm.ES256K,
       signer: SimpleSigner(hexPrivateKey.replace("0x", "")), // Removing 0x from private key as input of SimpleSigner
       expiresIn: expirationTime,
     },
@@ -154,14 +162,21 @@ const signDidAuthInternal = async (
 const signDidAuthExternal = async (
   payload: DidAuthRequestPayload | DidAuthResponsePayload,
   signatureUri: string,
-  authZToken: string
+  authZToken: string,
+  kid?: string
 ): Promise<string> => {
   const data = {
-    issuer: payload.iss,
+    issuer: payload.iss.includes("did:") ? payload.iss : payload.did,
     payload,
     type: "EcdsaSecp256k1Signature2019", // fixed type
     expiresIn: expirationTime,
+    alg: DidAuthKeyAlgorithm.ES256K,
+    selfIssued: payload.iss.includes(DidAuthResponseIss.SELF_ISSUE)
+      ? payload.iss
+      : undefined,
+    kid,
   };
+
   const response = await doPostCallWithToken(signatureUri, data, authZToken);
   if (
     !response ||
@@ -205,19 +220,29 @@ const createDidAuthResponsePayload = async (
   if (isExternalSignature(opts.signatureType)) {
     if (!opts.registrationType || !opts.registrationType.referenceUri)
       throw new Error(DidAuthErrors.NO_REFERENCE_URI);
-    const getResponse = await axios.get(opts.registrationType.referenceUri);
-    if (!getResponse || !getResponse.data)
-      throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
-    const didDoc = getResponse.data as DIDDocument;
-    if (
-      !didDoc.verificationMethod &&
-      !didDoc.verificationMethod[0] &&
-      !didDoc.verificationMethod[0].publicKeyJwk
-    )
-      throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
+    try {
+      const getResponse = await axios.get(opts.registrationType.referenceUri);
+      if (!getResponse || !getResponse.data)
+        throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
+      const didDoc = getResponse.data as DIDDocument;
+      if (
+        !didDoc.verificationMethod &&
+        !didDoc.verificationMethod[0] &&
+        !didDoc.verificationMethod[0].publicKeyJwk
+      )
+        throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
 
-    sub_jwk = didDoc.verificationMethod[0].publicKeyJwk;
-    sub = JWK.getThumbprintFromJwk(sub_jwk);
+      sub_jwk = didDoc.verificationMethod[0].publicKeyJwk;
+      sub = JWK.getThumbprintFromJwk(sub_jwk);
+    } catch (error) {
+      throw new Error(
+        `${DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT} Error: ${JSON.stringify(
+          error,
+          null,
+          2
+        )}`
+      );
+    }
   }
 
   return {

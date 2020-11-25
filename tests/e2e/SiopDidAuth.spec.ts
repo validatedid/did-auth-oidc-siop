@@ -9,12 +9,18 @@ import {
   verifyDidAuthRequest,
   verifyDidAuthResponse,
 } from "../../src";
-import { getLegalEntityTestAuthZToken, mockedKeyAndDid } from "../AuxTest";
+import {
+  getLegalEntityTestAuthZToken,
+  getPublicJWKFromDid,
+  getUserEntityTestAuthZToken,
+  mockedKeyAndDid,
+} from "../AuxTest";
 import * as mockedData from "../data/mockedData";
 import {
   DidAuthResponseMode,
   DidAuthVerifyOpts,
 } from "../../src/interfaces/DIDAuth.types";
+import { getPublicJWKFromPublicHex } from "../../src/util/JWK";
 
 dotenv.config();
 
@@ -383,7 +389,7 @@ describe("VidDidAuth tests should", () => {
         validationResponse.payload.iat + 5 * 60
       ); // 5 minutes of expiration time
     });
-    /*
+
     it("verify internally a DidAuth Response JWT", async () => {
       expect.assertions(7);
 
@@ -439,13 +445,17 @@ describe("VidDidAuth tests should", () => {
         validationResponse.payload.iat + 5 * 60
       ); // 5 minutes of expiration time
     });
-    */
+
     it("verify externally a DidAuth Response JWT generated internally", async () => {
       expect.assertions(7);
       const WALLET_API_BASE_URL = process.env.WALLET_API_URL;
       const entityAA = await getLegalEntityTestAuthZToken("COMPANY E2E INC");
       const authZToken = entityAA.jwt;
-      const { hexPrivateKey, did } = mockedKeyAndDid();
+      const {
+        hexPrivateKey,
+        did,
+        hexPublicKey,
+      } = await getUserEntityTestAuthZToken();
       const state = DidAuthUtil.getState();
       const nonce = DidAuthUtil.getNonce(state);
       const opts: DidAuthTypes.DidAuthResponseOpts = {
@@ -470,8 +480,10 @@ describe("VidDidAuth tests should", () => {
         verificationType: {
           verifyUri: `${WALLET_API_BASE_URL}/api/v1/signature-validations`,
           authZToken,
+          didUrlResolver: `${WALLET_API_BASE_URL}/api/v1/identifiers`,
         },
         nonce,
+        redirectUri: opts.redirectUri,
       };
       const validationResponse = await verifyDidAuthResponse(jwt, optsVerify);
       expect(validationResponse).toBeDefined();
@@ -485,9 +497,9 @@ describe("VidDidAuth tests should", () => {
       expectedPayload.iat = expect.any(Number) as number;
       expectedPayload.exp = expect.any(Number) as number;
       expectedPayload.sub = expect.any(String) as string;
-      expectedPayload.sub_jwk = DidAuthJwk.getPublicJWKFromPrivateHex(
-        hexPrivateKey,
-        `${did}#keys-1`
+      expectedPayload.sub_jwk = getPublicJWKFromPublicHex(
+        hexPublicKey,
+        opts.signatureType.kid
       );
 
       expect(validationResponse.payload.iat).toBeDefined();
@@ -496,7 +508,7 @@ describe("VidDidAuth tests should", () => {
         validationResponse.payload.iat + 5 * 60
       ); // 5 minutes of expiration time
     });
-    /*
+
     it("verify externally a DidAuth Response JWT generated externally with a test entity", async () => {
       expect.assertions(7);
       const WALLET_API_BASE_URL = process.env.WALLET_API_URL;
@@ -518,19 +530,22 @@ describe("VidDidAuth tests should", () => {
         responseMode: DidAuthResponseMode.FORM_POST,
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.VALUE,
+          referenceUri: `${WALLET_API_BASE_URL}/api/v1/identifiers/${did};transform-keys=jwks`,
         },
         did,
       };
 
       const jwt = await siopDidAuth.createDidAuthResponse(opts);
       expect(jwt).toBeDefined();
-      console.log(jwt);
+
       const optsVerify: DidAuthVerifyOpts = {
         verificationType: {
           verifyUri: `${WALLET_API_BASE_URL}/api/v1/signature-validations`,
           authZToken,
+          didUrlResolver: `${WALLET_API_BASE_URL}/api/v1/identifiers`,
         },
         nonce,
+        redirectUri: opts.redirectUri,
       };
       const validationResponse = await verifyDidAuthResponse(jwt, optsVerify);
       expect(validationResponse).toBeDefined();
@@ -544,10 +559,7 @@ describe("VidDidAuth tests should", () => {
       expectedPayload.iat = expect.any(Number) as number;
       expectedPayload.exp = expect.any(Number) as number;
       expectedPayload.sub = expect.any(String) as string;
-      expectedPayload.sub_jwk = DidAuthJwk.getPublicJWKFromPrivateHex(
-        hexPrivateKey,
-        `${did}#keys-1`
-      );
+      expectedPayload.sub_jwk = await getPublicJWKFromDid(did);
 
       expect(validationResponse.payload.iat).toBeDefined();
       expect(validationResponse.payload).toMatchObject(expectedPayload);
@@ -555,6 +567,5 @@ describe("VidDidAuth tests should", () => {
         validationResponse.payload.iat + 5 * 60
       ); // 5 minutes of expiration time
     });
-    */
   });
 });

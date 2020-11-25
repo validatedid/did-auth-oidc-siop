@@ -88,6 +88,20 @@ export interface LegalEntityTestAuthN {
   icon?: string; // base64 encoded image icon data
 }
 
+export interface UserTestAuthNToken extends JWTClaims {
+  iss: string; // DID of the User
+  aud: string; // RP Application Name. usually vidchain-wallet
+  publicKey: string; // MUST be user's public key from which the `iss` DID is derived.
+}
+
+export interface UserAuthZToken extends JWTClaims {
+  sub: string;
+  iat?: number; // The date at a time when the Access Token was issued.
+  exp?: number; // The date and time on or after which the token MUST NOT be accepted for processing. (expiry is 900s)
+  aud?: string; // Name of the application,  as registered in the Trusted Apps Registry, to which the Access Token is intended for.
+  did: string; // DID of the user as specified in the Access Token Request.
+}
+
 export const mockedKeyAndDid = (): {
   hexPrivateKey: string;
   did: string;
@@ -101,6 +115,30 @@ export const mockedKeyAndDid = (): {
   const did = `did:vid:${wallet.address}`;
   const hexPublicKey = wallet.publicKey;
   return { hexPrivateKey, did, jwk, hexPublicKey };
+};
+
+export const getUserTestAuthNToken = (): {
+  hexPrivateKey: string;
+  did: string;
+  jwk: JWK.ECKey;
+  hexPublicKey: string;
+  assertion: string;
+} => {
+  const { hexPrivateKey, did, jwk, hexPublicKey } = mockedKeyAndDid();
+  const payload: UserTestAuthNToken = {
+    iss: did,
+    aud: "vidchain-api",
+    iat: moment().unix(),
+    exp: moment().add(15, "seconds").unix(),
+    publicKey: hexPublicKey,
+  };
+  return {
+    hexPrivateKey,
+    did,
+    jwk,
+    hexPublicKey,
+    assertion: Buffer.from(JSON.stringify(payload)).toString("base64"),
+  };
 };
 
 const mockedEntityAuthNToken = (
@@ -244,6 +282,43 @@ export async function getLegalEntityTestAuthZToken(
   };
 }
 
+export async function getUserEntityTestAuthZToken(): Promise<{
+  jwt: string;
+  did: string;
+  hexPrivateKey: string;
+  jwk: JWK.ECKey;
+  hexPublicKey: string;
+}> {
+  const {
+    hexPrivateKey,
+    did,
+    jwk,
+    hexPublicKey,
+    assertion,
+  } = getUserTestAuthNToken();
+  const payload = {
+    grantType: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+    assertion,
+    scope: "vidchain profile test user",
+  };
+  const WALLET_API_BASE_URL =
+    process.env.WALLET_API_URL || "http://localhost:9000";
+  // Create and sign JWT
+  const result = await doPostCall(
+    `${WALLET_API_BASE_URL}/api/v1/sessions`,
+    payload
+  );
+  const { accessToken } = result.data as AccessTokenResponseBody;
+
+  return {
+    jwt: accessToken,
+    did,
+    hexPrivateKey,
+    jwk,
+    hexPublicKey,
+  };
+}
+
 export function mockedGetEnterpriseAuthToken(
   enterpriseName?: string
 ): {
@@ -372,4 +447,13 @@ export const getParsedDidDocument = (didKey: DidKey): DIDDocument => {
   didDocJwk.verificationMethod[0].controller = didKey.did;
   didDocJwk.verificationMethod[0].publicKeyJwk = didKey.jwk as VidJWKECKey;
   return didDocJwk;
+};
+
+export const getPublicJWKFromDid = async (did: string): Promise<JWKECKey> => {
+  const API_BASE_URL = process.env.WALLET_API_URL || "https://api.vidchain.net";
+  const response = await axios.get(
+    `${API_BASE_URL}/api/v1/identifiers/${did};transform-keys=jwks`
+  );
+
+  return (response.data as DIDDocument).verificationMethod[0].publicKeyJwk;
 };

@@ -26,6 +26,7 @@ enum DidAuthErrors {
   SUB_JWK_NOT_FOUND_OR_NOT_KID = "Response Token does not contains sub_jwk claim or sub_jwk does not contain kid attribute.",
   NO_ALG_SUPPORTED_YET = "Algorithm is not supported yet. Only ES256 supported for this version.",
   JWK_THUMBPRINT_MISMATCH_SUB = "JWK computed thumbprint does not match thumbprint included in Response Token sub claim",
+  ERROR_ON_POST_CALL = "Error on Post call: ",
 }
 
 export default DidAuthErrors;

@@ -72,8 +72,14 @@ async function doPostCallWithToken(
       Authorization: `Bearer ${token}`,
     },
   };
-  const response = await axios.post(url, data, config);
-  return response;
+  try {
+    const response = await axios.post(url, data, config);
+    return response;
+  } catch (error) {
+    throw new Error(
+      `${DidAuthErrors.ERROR_ON_POST_CALL}${(error as Error).message}`
+    );
+  }
 }
 
 const getAudience = (jwt: string): string | undefined => {
@@ -146,7 +152,12 @@ const getVerificationMethod = (
   )
     throw new Error(DidAuthErrors.ERROR_RETRIEVING_VERIFICATION_METHOD);
   const { verificationMethod } = didDoc;
-  return verificationMethod.find((elem) => elem.id === kid);
+  // kid can be "kid": "H7j7N4Phx2U1JQZ2SBjczz2omRjnMgT8c2gjDBv2Bf0="
+  // or "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0#keys-1
+  // and id always contains did:vid:xxx#kid
+  return verificationMethod.find((elem) =>
+    kid.includes("did:") ? elem.id === kid : elem.id.split("#")[1] === kid
+  );
 };
 
 const extractPublicKeyBytes = (
