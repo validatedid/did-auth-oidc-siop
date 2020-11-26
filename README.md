@@ -4,21 +4,22 @@
 
 The current DID Auth implementation follows [DID SIOP Auth](https://identity.foundation/did-siop/), which uses two JSON Web Tokens (JWT) signed by both two parties DID keys in a double challenge-response authentication. It is also supported the protocol to exchange Verifiable Credentials as part of the ID token response.
 
-Current version supports only `ES256k` algorithm (the EC secp256k1).
+Current version supports only `ES256k` (and `ES256K-R`) algorithm (the EC secp256k1).
 
 ## Table of Contents
 
 1. [Installation](#Installation)
-2. [App 2 App Authentication Flow with VIDcredentials API](#App-2-App-Authentication-Flow-with-VIDcredentials-API)
-   1. [Ask ValidatedID for a new API KEY to access VIDcredentials API](Ask-ValidatedId-for-a-new-API-KEY-to-access-VIDcredentials-API)
-   2. [Request an Access Token to VIDcredentials API for further calls](#request-an-access-token-to-vidcredentials-api-for-further-calls)
-   3. [Prepare Authentication Request Data](#prepare-authentication-request-data)
-   4. [Create an Authentication Request URI](#create-an-authentication-request-uri)
-   5. [VIDwallet App verifies the received deeplink Url](#vidwallet-app-verifies-the-received-deeplink-url)
-   6. [VIDwallet prepares the Authentication Response Structure](#vidwallet-prepares-the-authentication-response-structure)
-   7. [VIDwallet creates an Authentication Response URI](#vidwallet-creates-an-authentication-response-uri)
-   8. [On Your App, Validate the Authentication Response and retrieve the user DID and requested Verifiable Credentials](#on-your-app-validate-the-authentication-response-and-retrieve-the-user-did-and-requested-verifiable-credentials)
-3. [Library Test](#Library-Test)
+2. [Onboarding a New Entity](#Onboaring-a-New-Entity)
+3. [App 2 App Authentication Flow with VIDcredentials API](#App-2-App-Authentication-Flow-with-VIDcredentials-API)
+   1. [Prepare Authentication Request Data](#prepare-authentication-request-data)
+   2. [Create an Authentication Request URI](#create-an-authentication-request-uri)
+   3. [VIDwallet App verifies the received deeplink Url](#vidwallet-app-verifies-the-received-deeplink-url)
+   4. [VIDwallet prepares the Authentication Response Structure](#vidwallet-prepares-the-authentication-response-structure)
+   5. [VIDwallet creates an Authentication Response URI](#vidwallet-creates-an-authentication-response-uri)
+   6. [On Your App, Validate the Authentication Response and retrieve the user DID and requested Verifiable Credentials](#on-your-app-validate-the-authentication-response-and-retrieve-the-user-did-and-requested-verifiable-credentials)
+4. [Mobile Web 2 App Authentication Flow with VIDcredentials API](#Mobile-Web-2-App-Authentication-Flow-with-VIDcredentials-API)
+5. [Desktop Web 2 App Authentication Flow with VIDcredentials API](#Mobile-Web-2-App-Authentication-Flow-with-VIDcredentials-API)
+6. [Library Test](#Library-Test)
 
 ## Installation
 
@@ -32,13 +33,11 @@ or if you use `yarn`
 yarn add @validatedid/did-auth
 ```
 
-## App 2 App Authentication Flow with VIDcredentials API
+## Onboarding a New Entity
 
-![App 2 App Authentication Flow Design](img/siop-vc-exchange.png "Design")
+There is an initial step to onboard a new entity to be able to use the Validated ID SSI API.
 
-When a new App, called Odyssey App, wants to connect to to the VIDwallet App, and perform an app2app authentication with an exchange of DIDs and request a Verifiable Credential to a user, it can use this flow to make it possible.
-
-Let's explain the steps of this authentication:
+Let's explain the steps of this onboarding:
 
 ### Ask ValidatedID for a new API KEY to access VIDcredentials API
 
@@ -129,6 +128,12 @@ console.log(entityDid);
 // did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670
 ```
 
+## App 2 App Authentication Flow with VIDcredentials API
+
+![App 2 App Authentication Flow Design](img/siop-vc-exchange.png "Design")
+
+This flow explains when a new Entity is an app, called Odyssey App, that wants to connect to a VIDwallet App user, and perform an app2app authentication with an exchange of DIDs and request a Verifiable Credential to a user, it can use this flow to make it possible.
+
 ### Prepare Authentication Request Data
 
 To initate the flow you need to set the Authentication Request Data.
@@ -212,11 +217,12 @@ console.log(uriDecoded);
 
 VIDwallet App receives the deeplink, decodes it, and obtains the Authentication Request Token to validated it.
 
-To call `verifyDidAuthRequest` requires a `DidAuthVerifyOpts` structure that contains the following parameters:
+To call `verifyDidAuthRequest` you can optionally use a `DidAuthVerifyOpts` structure to specify the verification information:
 
 - **verificationType**: Whether you want to perform a verification internally or via VIDcredentials API. In this case, we perform it internally.
 - **registry**: Smart Contract to resolve the DID.
 - **rpcUrl**: Url to the verification method.
+- **didUrlResolver**: Url to resolve a DID to a DID Document.
 
 > Note: `registry` and `rpcUrl` depends on did method to use.
 
@@ -232,11 +238,12 @@ const uriDecoded = decodeURIComponent(urlEncoded);
 const data = parse(uriDecoded);
 const authRequestToken = data.request as string;
 
-// verify request internally
+// verify request internally (Optional parameters)
 const optsVerifyRequest: DidAuthVerifyOpts = {
   verificationType: {
     registry: DID_REGISTRY_SC_ADDRESS,
     rpcUrl: DID_PROVIDER_RPC_URL,
+    didUrlResolver: `https://api.vidchain.net/v1/identifiers`,
   },
 };
 
@@ -383,10 +390,12 @@ Last step is that on your App, you parse the received Authentication Response UR
 
 To call `verifyDidAuthResponse` you need to create a `DidAuthVerifyOpts` that contains the following parameters:
 
-- **verificationType**: Whether you want to perform a verification internally or via VIDcredentials API. In this case, we perform it using VIDcredentials API.
-- **verifyUri**: URL to perform the external Authenticatoin Response Token validation. In this case, we call the VIDcredentials API.
-- **authZToken**: Access Token (if required) to call the verifyUri. In this case, we will use the Access Token created on the first step.
 - **nonce**: Nonce value from the initial Authentication Request Token, to check that we are validating the same request flow.
+- **redirectUri**: the value of the `redirect_uri` sent in the Authentication Request.
+- **verificationType**: _(Optional)_ Whether you want to perform a verification internally or via VIDcredentials API. In this case, we perform it using VIDcredentials API.
+- **verifyUri**: _(Optional)_ URL to perform the external Authenticatoin Response Token validation. In this case, we call the VIDcredentials API.
+- **authZToken**: _(Optional)_ Access Token (if required) to call the verifyUri. In this case, we will use the Access Token created on the first step.
+- **didUrlResolver**: Url to resolve a DID to a DID Document.
 
 Example:
 
@@ -400,11 +409,14 @@ const authResponseToken = responseData.id_token as string;
 const { payload } = JWT.decode(authResponseToken, { complete: true });
 
 const optsVerify: DidAuthVerifyOpts = {
+  nonce: (payload as DidAuthTypes.DidAuthResponsePayload).nonce,
+  redirectUri: "odysseyapp://example/did-auth",
+  // Optional parameters
   verificationType: {
     verifyUri: `https://api.vidchain.net/api/v1/signature-validations`,
     authZToken,
+    didUrlResolver: `https://api.vidchain.net/v1/identifiers`,
   },
-  nonce: (payload as DidAuthTypes.DidAuthResponsePayload).nonce,
 };
 const validationResponse = await verifyDidAuthResponse(
   authResponseToken,
@@ -484,10 +496,325 @@ In this moment, `"signatureValidation": true` means that you validated the Authe
 
 App 2 App Authentication Flow achieved!! :beers: :joy:
 
+## Mobile Web 2 App Authentication Flow with VIDcredentials API
+
+This flow explains when a new Entity, which has a web accessible via a mobile web browser, and wants to connect to a VIDwallet App user, and perform an mobile web to app authentication with an exchange of DIDs and request a Verifiable Credential to a user, it can use this flow to make it possible.
+
+A User with a mobile device, connects to the Entity's website and perform the authentication using VIDwallet app. Meaning using ONE single context: a mobile device.
+
+> Note: We are assumiing that the Entity web has also a backend to send the Authenticatio Response. However, this library accepts the option that an entity has only a frontend site, and will be similar as the app2app authentication.
+
+### Prepare Authentication Request Data (mobile2app)
+
+To initate the flow you need to set the Authentication Request Data.
+
+The main key points to respect app2app authentication:
+
+- **redirectUri**: This is your Entity backend url to receive the Authentication Response as POST method. Example: `https://entity.example/did-auth`
+- **requestObjectBy**: Whether you want to generate the Authentication Request embedded in the url or via reference. For this flow, we recommend to be set as reference to increase the security. This implies that your Entity backend should have another endpoint to GET the Request object.
+- **referenceUri**: Entity backend Url to get the Request object. Example: `https://entity.example/siop/jwts`.
+- **responseMode**: Specifies the way you want to receive the Authentication Response. In this case, it will be `form_post`, to be sent to the Entity backend.
+- **responseContext**: Specifies whether the response should be returned to the redirect URI in the intiator context, or whether the response can be returned in a new/empty context. In this case, it will also be in the same context (a mobile device). The default `responseContext` is `rp`, indicating that the response should be submitted in the existing initiator context.
+
+#### Example of a Authentication Request Structure (mobile2app)
+
+```json
+{
+  "oidpUri": "vidchain://did-auth",
+  "redirectUri": "https://entity.example/did-auth",
+  "requestObjectBy": {
+    "type": "REFERENCE",
+    "referenceUri": "https://entity.example/siop/jwts"
+  },
+  "signatureType": {
+    "signatureUri": "https://api.vidchain.net/api/v1/signatures",
+    "did": "did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670",
+    "authZToken": "eyJhbGciOiJFUzI1NksiLCJ0eXAiOiJKV1QiLCJraWQiOiJ2aWRjaGFpbi1hcGkifQ.eyJzdWIiOiJPRFlTU0VZIEFQUCBURVNUIiwiZGlkIjoiZGlkOnZpZDoweDg0QjYwQWRiNzBmNTVjNWNkOGVhMzk3MUFhQzI3MmMzYTBiZEI2NzAiLCJub25jZSI6IjY1MmFhN2Q0LWVhYTctNDEyZi04YjFlLTZhMzJhOWYzODQxNiIsImlhdCI6MTYwNTM2MDI1OSwiZXhwIjoxNjA1MzYxMTU5LCJhdWQiOiJ2aWRjaGFpbi1hcGkifQ.ooEH46tETgCRxFe_UMlPrnkJja2lyxuoF_MdlPgQKDqkeLjOESd_Qev6hKiV-ksdpH3E99Oq_OMdsgmnw-57WA",
+    "kid": "did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670#keys-1"
+  },
+  "registrationType": {
+    "type": "REFERENCE",
+    "referenceUri": "https://api.vidchain.net/api/v1/identifiers/did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670;transform-keys=jwks"
+  },
+  "responseMode": "form_post",
+  "responseContext": "rp",
+  "state": "1f50031ed2e57ed52cf5fc81",
+  "claims": {
+    "vc": {
+      "VerifiableIdCredential": {
+        "essential": true
+      }
+    }
+  }
+}
+```
+
+### Create an Authentication Request URI (mobile2app)
+
+With the previous Authentication Request Structure you can initate the flow to create an Authentication Request URI, redirect the URI to the VIDwallet, and expect that the VIDwallet retrieves the Authentication Request Token via your proposed GET backend call.
+
+The uri request received structure has three components:
+
+- **urlEncoded**: the URI to print as QR
+- **encoding**: the encoding used that will be `application/x-www-form-urlencoded`
+- **jwt**: the Request Token to be retrieved on the GET backend call
+
+Example:
+Assuming we use the previous authentication request structure on `requestOpts` variable.
+
+```js
+const uriRequest = await siopDidAuth.createUriRequest(requestOpts);
+
+console.log(decodeURIComponent(uriRequest.urlEncoded));
+// vidchain://did-auth?openid://?response_type=id_token&client_id=https://entity.example/did-auth&scope=openid did_authn&state=f58d5b822897fbc0876e2edc&nonce=X3loJGWmjPOdvUxp0zGoZlqRZ8JzyMjSbfdy_-nYAns&requestUri=https://entity.example/siop/jwts
+console.log(uriRequest.encoding);
+// application/x-www-form-urlencoded
+console.log(uriRequest.jwt);
+// eyJhbGciOiJFUzI1NksiLCJ0eXAiOiJKV1QiLCJraWQiOiJkaWQ6dmlkOjB4NWRBOWJCMWZkNTA0NmE2ODYwRDA2N2QyY2Q3OTg5YTk4YTE2MTE1QiNrZXlzLTEifQ.eyJpYXQiOjE2MDYzNzE0OTAsImV4cCI6MTYwNjM3MTc5MCwiaXNzIjoiZGlkOnZpZDoweDVkQTliQjFmZDUwNDZhNjg2MEQwNjdkMmNkNzk4OWE5OGExNjExNUIiLCJzY29wZSI6Im9wZW5pZCBkaWRfYXV0aG4iLCJyZWdpc3RyYXRpb24iOnsiandrc191cmkiOiJodHRwczovL2Rldi52aWRjaGFpbi5uZXQvYXBpL3YxL2lkZW50aWZpZXJzL2RpZDp2aWQ6MHg1ZEE5YkIxZmQ1MDQ2YTY4NjBEMDY3ZDJjZDc5ODlhOThhMTYxMTVCO3RyYW5zZm9ybS1rZXlzPWp3a3MiLCJpZF90b2tlbl9zaWduZWRfcmVzcG9uc2VfYWxnIjoiRVMyNTZLIn0sImNsaWVudF9pZCI6Imh0dHBzOi8vZW50aXR5LmV4YW1wbGUvZGlkLWF1dGgiLCJub25jZSI6IlgzbG9KR1dtalBPZHZVeHAwekdvWmxxUlo4Snp5TWpTYmZkeV8tbllBbnMiLCJzdGF0ZSI6ImY1OGQ1YjgyMjg5N2ZiYzA4NzZlMmVkYyIsInJlc3BvbnNlX3R5cGUiOiJpZF90b2tlbiIsInJlc3BvbnNlX21vZGUiOiJmb3JtX3Bvc3QiLCJyZXNwb25zZV9jb250ZXh0IjoicnAiLCJjbGFpbXMiOnsidmMiOnsiVmVyaWZpYWJsZUlkQ3JlZGVudGlhbCI6eyJlc3NlbnRpYWwiOnRydWV9fX19.a9vZyG1oOUsUzb3SKcYTa1dG--PiyptrDRH19oIElF9yp6pzdB2QcoT8ni6SCJFBZC1AP8qvnX4uQNRAGhtGEQ
+```
+
+### VIDwallet App verifies the Request Token received via deeplink Url (mobile2app)
+
+VIDwallet App receives the deeplink, decodes it, gets the `requestUri` to call the entity backend endpoint to obtain the Authentication Request Token to validated it.
+
+The validation process for Authentication Request Token is the same as the app2app authentication.
+
+### VIDwallet prepares the Authentication Response Structure (mobile2app)
+
+In this case the Authentication Response has to be prepared to be sent as POST:
+
+- **responseMode**: Specifies the way you want to receive the Authentication Response. In this case, it will be `form_post`, as requested by the Entity Request.
+
+Example:
+
+```json
+{
+  "redirectUri": "https://entity.example/did-auth",
+  "signatureType": {
+    "hexPrivateKey": "58ab64245715ee6c67f51abe86de3d07cc0a6555b638becae7dab21d6bbe83b2",
+    "did": "did:vid:0x8D851667cC475114085F24A145134F2AA8223b00",
+    "kid": "did:vid:0x8D851667cC475114085F24A145134F2AA8223b00#keys-1"
+  },
+  "nonce": "agxZnO7jbSDvKhRK2BIgx0he-w3TU035pigj6sRXk7s",
+  "state": "ac675fe2981496fad688b3ac",
+  "responseMode": "form_post",
+  "registrationType": {
+    "type": "VALUE"
+  },
+  "did": "did:vid:0x8D851667cC475114085F24A145134F2AA8223b00",
+  "vp": {
+    "@context": ["https://www.w3.org/2018/credentials/v1"],
+    "type": "VerifiablePresentation",
+    "verifiableCredential": [
+      {
+        "@context": [
+          "https://www.w3.org/2018/credentials/v1",
+          "https://api.vidchain.net/credentials/verifiableId/v1"
+        ],
+        "id": "https://api.vidchain.net/api/v1/schemas/2391",
+        "type": ["VerifiableCredential", "VerifiableIdCredential"],
+        "issuer": "did:vid:0x5208431C6EC2ec4097aeA7182bB92d018766498c",
+        "credentialSubject": {
+          "id": "did:vid:0x8707CCa835C961334D3F6450C6a61a0AD6592460",
+          "firstName": "Eva",
+          "lastName": "Monroe",
+          "gender": "Female",
+          "dateOfBirth": "12/11/1970",
+          "placeOfBirth": "Madrid",
+          "currentAddress": "Arago 179 4a",
+          "city": "Barcelona",
+          "state": "Cataluña",
+          "zip": "08011"
+        },
+        "issuanceDate": "2019-11-17T14:00:00Z",
+        "proof": {
+          "type": "EcdsaSecp256k1Signature2019",
+          "created": "2019-11-17T14:00:00Z",
+          "proofPurpose": "assertionMethod",
+          "verificationMethod": "did:vid:0x5208431C6EC2ec4097aeA7182bB92d018766498c#keys-1",
+          "jws": "eyJhbGciOiJFUzI1NkstUiIsInR5cCI6IkpXVCIsImtpZCI6ImRpZDp2aWQ6MHgzYWQzZkY4RTVhQjhENjkzQzI4QmREOUI0N2VkRDFmNzQ0NUY4YzNGI2tleS0xIn0.eyJpYXQiOjE1OTE3OTk1MDQsInZjIjp7IkBjb250ZXh0IjpbImh0dHBzOi8vd3d3LnczLm9yZy8yMDE4L2NyZWRlbnRpYWxzL3YxIiwiaHR0cHM6Ly9hcGkudmlkY2hhaW4ubmV0L2NyZWRlbnRpYWxzL3ZlcmlmaWFibGUtaWQvdjEiXSwiaWQiOiJodHRwczovL2FwaS52aWRjaGFpbi5uZXQvYXBpL3YxL3NjaGVtYXMvMjM5MSIsInR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJWZXJpZmlhYmxlSWRDcmVkZW50aWFsIl0sImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImlkIjoiZGlkOnZpZDoweDQyYjg5OEUyN0M1NmU3ZDVBMmQ0RTY0NmRCMmQ0MThCRDVDMTcwYzQiLCJmaXJzdE5hbWUiOiJFdmEiLCJsYXN0TmFtZSI6Ik1vbnJvZSIsImdlbmRlciI6IkZlbWFsZSIsImRhdGVPZkJpcnRoIjoiMTIvMTEvMTk3MCIsInBsYWNlT2ZCaXJ0aCI6Ik1hZHJpZCIsImN1cnJlbnRBZGRyZXNzIjoiQXJhZ28gMTc5IDRhIiwiY2l0eSI6IkJhcmNlbG9uYSIsInN0YXRlIjoiQ2F0YWxvbmlhIiwiemlwIjoiMDgwMTEifSwiaXNzdWVyIjoiZGlkOnZpZDoweDNhZDNmRjhFNWFCOEQ2OTNDMjhCZEQ5QjQ3ZWREMWY3NDQ1RjhjM0YifSwiaXNzIjoiZGlkOnZpZDoweDNhZDNmRjhFNWFCOEQ2OTNDMjhCZEQ5QjQ3ZWREMWY3NDQ1RjhjM0YifQ.B7e4Zp9jGLDXTRG8ID1j0_EVwoQlI_XDzSagKWmDR-INjMVSFG1142asC1r5RedNuu3SR8VIcE9yrbDw9cRuEQA"
+        }
+      }
+    ],
+    "proof": {
+      "type": "EcdsaSecp256k1Signature2019",
+      "created": "2019-06-22T14:11:44Z",
+      "proofPurpose": "assertionMethod",
+      "verificationMethod": "did:vid:0x16048B83FAdaCdCB20198ABc45562Df1A3e289aF#keys-1",
+      "jws": "eyJhbGciOiJFUzI1NksifQ.eyJzdWIiOiJFQlNJIDIwMTkifQ.oggE3ft3kJYPGGa9eBibpbjgeJXw4fLbVMouVoM2NfcDxsl_UUUIarsS1VpBoYEs7s9cBlc4uC0EbnJCHfVJIw"
+    }
+  }
+}
+```
+
+### VIDwallet creates an Authentication Response URI (mobile2app) and sends it as POST
+
+With previous Authentication Response Structure data, we can call the library to create an Authentication Response URI encoded, and ready to be sent to `https://entity.example/did-auth` as POST method to the Entity backend.
+
+Example:
+
+```js
+const uriResponse = await siopDidAuth.createUriResponse(responseOpts);
+```
+
+### On Your Entity Backend, validate the Authentication Response and retrieve the user DID and requested Verifiable Credentials
+
+Last step is that on your backend, you parse the received Authentication Response URI, obtain the Response Token and validate it, to finally obtain the desired Verifiable Credentials from the user.
+
+The POST data is sent in the body encoded as `application/x-www-form-urlencoded`, which contains the `id_token` and the `state` to be verified, it can be decoded as shown:
+
+```js
+const bodyDecoded = decodeURIComponent(bodyEncoded);
+console.log(bodyDecoded);
+// id_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NksiLCJraWQiOiJkaWQ6dmlkOjB4N2M4RUY1NmNGNDhiYTk3OTJiZTMzMTdFODVlRTc4NmNiMTVDM2U1QiNrZXlzLTEifQ.eyJpYXQiOjE2MDYzNjg5NjAsImV4cCI6MTYwNjM2OTI2MCwiaXNzIjoiaHR0cHM6Ly9zZWxmLWlzc3VlZC5tZSIsInN1YiI6Im03VnloaDJUQV81c2lxN1hQN0tmQnlDaGJ4YzlldUFLWmdaVVhndHpjeUkiLCJub25jZSI6InhraGV1MW9WUGlJTW04X3F1SHR5SXM5c2hDU1RrakFvS1lBUjc3N1VULVEiLCJhdWQiOiJodHRwczovL2VudGl0eS5leGFtcGxlL2RpZC1hdXRoIiwic3ViX2p3ayI6eyJraWQiOiJkaWQ6dmlkOjB4N2M4RUY1NmNGNDhiYTk3OTJiZTMzMTdFODVlRTc4NmNiMTVDM2U1QiNrZXlzLTEiLCJrdHkiOiJFQyIsImNydiI6InNlY3AyNTZrMSIsIngiOiJlYzE0MzMwZDBjNGYyYmQ3MThmNjczNWM1ZWE2NDc4NDhhZjk5MmNlN2NiYmMyNThmMmIwNjFjNDY3ZGU2MTI4IiwieSI6ImNiODc2MDgyOTc4ZWQzOGFlNGFmMzUzNmNmNTIzNzRmNTM0NGQ4MjY0YzEyOTZmODgyZDRhNDY5NDAzZmRjNjQifSwiZGlkIjoiZGlkOnZpZDoweDdjOEVGNTZjRjQ4YmE5NzkyYmUzMzE3RTg1ZUU3ODZjYjE1QzNlNUIiLCJ2cCI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSJdLCJ0eXBlIjoiVmVyaWZpYWJsZVByZXNlbnRhdGlvbiIsInZlcmlmaWFibGVDcmVkZW50aWFsIjpbeyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vYXBpLnZpZGNoYWluLm5ldC9jcmVkZW50aWFscy92ZXJpZmlhYmxlSWQvdjEiXSwiaWQiOiJodHRwczovL2FwaS52aWRjaGFpbi5uZXQvYXBpL3YxL3NjaGVtYXMvMjM5MSIsInR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJWZXJpZmlhYmxlSWRDcmVkZW50aWFsIl0sImlzc3VlciI6ImRpZDp2aWQ6MHg1MjA4NDMxQzZFQzJlYzQwOTdhZUE3MTgyYkI5MmQwMTg3NjY0OThjIiwiY3JlZGVudGlhbFN1YmplY3QiOnsiaWQiOiJkaWQ6dmlkOjB4ODcwN0NDYTgzNUM5NjEzMzREM0Y2NDUwQzZhNjFhMEFENjU5MjQ2MCIsImZpcnN0TmFtZSI6IkV2YSIsImxhc3ROYW1lIjoiTW9ucm9lIiwiZ2VuZGVyIjoiRmVtYWxlIiwiZGF0ZU9mQmlydGgiOiIxMi8xMS8xOTcwIiwicGxhY2VPZkJpcnRoIjoiTWFkcmlkIiwiY3VycmVudEFkZHJlc3MiOiJBcmFnbyAxNzkgNGEiLCJjaXR5IjoiQmFyY2Vsb25hIiwic3RhdGUiOiJDYXRhbHXDsWEiLCJ6aXAiOiIwODAxMSJ9LCJpc3N1YW5jZURhdGUiOiIyMDE5LTExLTE3VDE0OjAwOjAwWiIsInByb29mIjp7InR5cGUiOiJFY2RzYVNlY3AyNTZrMVNpZ25hdHVyZTIwMTkiLCJjcmVhdGVkIjoiMjAxOS0xMS0xN1QxNDowMDowMFoiLCJwcm9vZlB1cnBvc2UiOiJhc3NlcnRpb25NZXRob2QiLCJ2ZXJpZmljYXRpb25NZXRob2QiOiJkaWQ6dmlkOjB4NTIwODQzMUM2RUMyZWM0MDk3YWVBNzE4MmJCOTJkMDE4NzY2NDk4YyNrZXlzLTEiLCJqd3MiOiJleUpoYkdjaU9pSkZVekkxTmtzdFVpSXNJblI1Y0NJNklrcFhWQ0lzSW10cFpDSTZJbVJwWkRwMmFXUTZNSGd6WVdRelprWTRSVFZoUWpoRU5qa3pRekk0UW1SRU9VSTBOMlZrUkRGbU56UTBOVVk0WXpOR0kydGxlUzB4SW4wLmV5SnBZWFFpT2pFMU9URTNPVGsxTURRc0luWmpJanA3SWtCamIyNTBaWGgwSWpwYkltaDBkSEJ6T2k4dmQzZDNMbmN6TG05eVp5OHlNREU0TDJOeVpXUmxiblJwWVd4ekwzWXhJaXdpYUhSMGNITTZMeTloY0drdWRtbGtZMmhoYVc0dWJtVjBMMk55WldSbGJuUnBZV3h6TDNabGNtbG1hV0ZpYkdVdGFXUXZkakVpWFN3aWFXUWlPaUpvZEhSd2N6b3ZMMkZ3YVM1MmFXUmphR0ZwYmk1dVpYUXZZWEJwTDNZeEwzTmphR1Z0WVhNdk1qTTVNU0lzSW5SNWNHVWlPbHNpVm1WeWFXWnBZV0pzWlVOeVpXUmxiblJwWVd3aUxDSldaWEpwWm1saFlteGxTV1JEY21Wa1pXNTBhV0ZzSWwwc0ltTnlaV1JsYm5ScFlXeFRkV0pxWldOMElqcDdJbWxrSWpvaVpHbGtPblpwWkRvd2VEUXlZamc1T0VVeU4wTTFObVUzWkRWQk1tUTBSVFkwTm1SQ01tUTBNVGhDUkRWRE1UY3dZelFpTENKbWFYSnpkRTVoYldVaU9pSkZkbUVpTENKc1lYTjBUbUZ0WlNJNklrMXZibkp2WlNJc0ltZGxibVJsY2lJNklrWmxiV0ZzWlNJc0ltUmhkR1ZQWmtKcGNuUm9Jam9pTVRJdk1URXZNVGszTUNJc0luQnNZV05sVDJaQ2FYSjBhQ0k2SWsxaFpISnBaQ0lzSW1OMWNuSmxiblJCWkdSeVpYTnpJam9pUVhKaFoyOGdNVGM1SURSaElpd2lZMmwwZVNJNklrSmhjbU5sYkc5dVlTSXNJbk4wWVhSbElqb2lRMkYwWVd4dmJtbGhJaXdpZW1sd0lqb2lNRGd3TVRFaWZTd2lhWE56ZFdWeUlqb2laR2xrT25acFpEb3dlRE5oWkRObVJqaEZOV0ZDT0VRMk9UTkRNamhDWkVRNVFqUTNaV1JFTVdZM05EUTFSamhqTTBZaWZTd2lhWE56SWpvaVpHbGtPblpwWkRvd2VETmhaRE5tUmpoRk5XRkNPRVEyT1RORE1qaENaRVE1UWpRM1pXUkVNV1kzTkRRMVJqaGpNMFlpZlEuQjdlNFpwOWpHTERYVFJHOElEMWowX0VWd29RbElfWER6U2FnS1dtRFItSU5qTVZTRkcxMTQyYXNDMXI1UmVkTnV1M1NSOFZJY0U5eXJiRHc5Y1J1RVFBIn19XSwicHJvb2YiOnsidHlwZSI6IkVjZHNhU2VjcDI1NmsxU2lnbmF0dXJlMjAxOSIsImNyZWF0ZWQiOiIyMDE5LTA2LTIyVDE0OjExOjQ0WiIsInByb29mUHVycG9zZSI6ImFzc2VydGlvbk1ldGhvZCIsInZlcmlmaWNhdGlvbk1ldGhvZCI6ImRpZDp2aWQ6MHgxNjA0OEI4M0ZBZGFDZENCMjAxOThBQmM0NTU2MkRmMUEzZTI4OWFGI2tleXMtMSIsImp3cyI6ImV5SmhiR2NpT2lKRlV6STFOa3NpZlEuZXlKemRXSWlPaUpGUWxOSklESXdNVGtpZlEub2dnRTNmdDNrSllQR0dhOWVCaWJwYmpnZUpYdzRmTGJWTW91Vm9NMk5mY0R4c2xfVVVVSWFyc1MxVnBCb1lFczdzOWNCbGM0dUMwRWJuSkNIZlZKSXcifX19.1FZDjmc1xwveJSRCm9-LAyu4MlfOZppRUW7Dm9H9fUnQLBy-Tj3FJ-VQ9EzA-42BgoTIlDjqTY5hHt6PdRm9fw&state=a39501b39beba5da26c7e5ce
+```
+
+You need then to verify the receivied `id_token` calling `verifyDidAuthResponse` with `DidAuthVerifyOpts` similarly as the app2app authentication.
+
+- **nonce**: Nonce value from the initial Authentication Request Token, to check that we are validating the same request flow.
+- **redirectUri**: the value of the `redirect_uri` sent in the Authentication Request.
+- **verificationType**: _(Optional)_ Whether you want to perform a verification internally or via VIDcredentials API. In this case, we perform it using VIDcredentials API.
+- **verifyUri**: _(Optional)_ URL to perform the external Authenticatoin Response Token validation. In this case, we call the VIDcredentials API.
+- **authZToken**: _(Optional)_ Access Token (if required) to call the verifyUri. In this case, we will use the Access Token created on the first step.
+- **didUrlResolver**: Url to resolve a DID to a DID Document.
+
+Example:
+
+Assuming that `bodyEncoded` is the received body to parse.
+
+```js
+const bodyDecoded = decodeURIComponent(bodyEncoded);
+const parsedData = parse(bodyDecoded);
+const authResponseToken = parsedData.id_token as string;
+const { payload } = JWT.decode(authResponseToken, { complete: true });
+
+const optsVerify: DidAuthVerifyOpts = {
+  nonce: (payload as DidAuthTypes.DidAuthResponsePayload).nonce,
+  redirectUri: "https://entity.example/did-auth",
+  // Optional parameters
+  verificationType: {
+    verifyUri: `https://api.vidchain.net/api/v1/signature-validations`,
+    authZToken,
+    didUrlResolver: `https://api.vidchain.net/v1/identifiers`,
+  },
+};
+const validationResponse = await verifyDidAuthResponse(
+  authResponseToken,
+  optsVerify
+);
+```
+
+In this moment, `"signatureValidation": true` means that you validated the Authentication Response Token and received a Verifiable Presentation that contains the requested Verifiable Credential, under `payload.vp`.
+
+## Desktop Web 2 App Authentication Flow with VIDcredentials API
+
+This flow explains when a new Entity, which has a web accessible via a web browser, and wants to connect to a VIDwallet App user, and perform an mobile web to app authentication with an exchange of DIDs and request a Verifiable Credential to a user, it can use this flow to make it possible.
+
+A User connects to the Entity's website with a desktop browser and perform the authentication using VIDwallet app. Meaning using TWO contexts: a desktop and a mobile device.
+
+> Note: We are assumiing that the Entity web has also a backend to send the Authenticatio Response. However, this library accepts the option that an entity has only a frontend site, and will be similar as the app2app authentication.
+
+### Prepare Authentication Request Data (desktop2app)
+
+To initate the flow you need to set the Authentication Request Data.
+
+The main key points to respect app2app authentication:
+
+- **redirectUri**: This is your Entity backend url to receive the Authentication Response as POST method. Example: `https://entity.example/did-auth`
+- **requestObjectBy**: Whether you want to generate the Authentication Request embedded in the url or via reference. For this flow, we recommend to be set as reference to increase the security. This implies that your Entity backend should have another endpoint to GET the Request object.
+- **referenceUri**: Entity backend Url to get the Request object. Example: `https://entity.example/siop/jwts`.
+- **responseMode**: Specifies the way you want to receive the Authentication Response. In this case, it will be `form_post`, to be sent to the Entity backend.
+- **responseContext**: Specifies whether the response should be returned to the redirect URI in the intiator context, or whether the response can be returned in a new/empty context. In this case, it will be in a different context (desktop and app), thus the value `responseContext` is `wallet`, indicating that the response should be submitted in a different context.
+
+#### Example of a Authentication Request Structure (desktop2app)
+
+```json
+{
+  "redirectUri": "https://entity.example/did-auth",
+  "requestObjectBy": {
+    "type": "REFERENCE",
+    "referenceUri": "https://entity.example/siop/jwts"
+  },
+  "signatureType": {
+    "signatureUri": "https://api.vidchain.net/api/v1/signatures",
+    "did": "did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670",
+    "authZToken": "eyJhbGciOiJFUzI1NksiLCJ0eXAiOiJKV1QiLCJraWQiOiJ2aWRjaGFpbi1hcGkifQ.eyJzdWIiOiJPRFlTU0VZIEFQUCBURVNUIiwiZGlkIjoiZGlkOnZpZDoweDg0QjYwQWRiNzBmNTVjNWNkOGVhMzk3MUFhQzI3MmMzYTBiZEI2NzAiLCJub25jZSI6IjY1MmFhN2Q0LWVhYTctNDEyZi04YjFlLTZhMzJhOWYzODQxNiIsImlhdCI6MTYwNTM2MDI1OSwiZXhwIjoxNjA1MzYxMTU5LCJhdWQiOiJ2aWRjaGFpbi1hcGkifQ.ooEH46tETgCRxFe_UMlPrnkJja2lyxuoF_MdlPgQKDqkeLjOESd_Qev6hKiV-ksdpH3E99Oq_OMdsgmnw-57WA",
+    "kid": "did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670#keys-1"
+  },
+  "registrationType": {
+    "type": "REFERENCE",
+    "referenceUri": "https://api.vidchain.net/api/v1/identifiers/did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670;transform-keys=jwks"
+  },
+  "responseMode": "form_post",
+  "responseContext": "wallet",
+  "state": "1f50031ed2e57ed52cf5fc81",
+  "claims": {
+    "vc": {
+      "VerifiableIdCredential": {
+        "essential": true
+      }
+    }
+  }
+}
+```
+
+### Create an Authentication Request URI (desktop2app)
+
+With the previous Authentication Request Structure you can initate the flow to create an Authentication Request URI and print a QR code on the frontend website to be scanned by the VIDwallet app, and get the Request token via a GET backend call.
+
+The uri request received structure has three components:
+
+- **urlEncoded**: the URI to print as QR
+- **encoding**: the encoding used that will be `application/x-www-form-urlencoded`
+- **jwt**: the Request Token to be retrieved on the GET backend call
+
+Example:
+Assuming we use the previous authentication request structure on `requestOpts` variable.
+
+```js
+const uriRequest = await siopDidAuth.createUriRequest(requestOpts);
+
+console.log(decodeURIComponent(uriRequest.urlEncoded));
+// openid://?response_type=id_token&client_id=https://entity.example/did-auth&scope=openid did_authn&state=626660dce64b2e51fa7b820f&nonce=Pvd_3zBVO92K3xEUFmY2TMMmPRy15_9NVmmZsws26bQ&requestUri=https://entity.example/siop/jwts
+console.log(uriRequest.encoding);
+// application/x-www-form-urlencoded
+console.log(uriRequest.jwt);
+// eyJhbGciOiJFUzI1NksiLCJ0eXAiOiJKV1QiLCJraWQiOiJkaWQ6dmlkOjB4NWRBOWJCMWZkNTA0NmE2ODYwRDA2N2QyY2Q3OTg5YTk4YTE2MTE1QiNrZXlzLTEifQ.eyJpYXQiOjE2MDYzNzE2MjQsImV4cCI6MTYwNjM3MTkyNCwiaXNzIjoiZGlkOnZpZDoweDVkQTliQjFmZDUwNDZhNjg2MEQwNjdkMmNkNzk4OWE5OGExNjExNUIiLCJzY29wZSI6Im9wZW5pZCBkaWRfYXV0aG4iLCJyZWdpc3RyYXRpb24iOnsiandrc191cmkiOiJodHRwczovL2Rldi52aWRjaGFpbi5uZXQvYXBpL3YxL2lkZW50aWZpZXJzL2RpZDp2aWQ6MHg1ZEE5YkIxZmQ1MDQ2YTY4NjBEMDY3ZDJjZDc5ODlhOThhMTYxMTVCO3RyYW5zZm9ybS1rZXlzPWp3a3MiLCJpZF90b2tlbl9zaWduZWRfcmVzcG9uc2VfYWxnIjoiRVMyNTZLIn0sImNsaWVudF9pZCI6Imh0dHBzOi8vZW50aXR5LmV4YW1wbGUvZGlkLWF1dGgiLCJub25jZSI6IlB2ZF8zekJWTzkySzN4RVVGbVkyVE1NbVBSeTE1XzlOVm1tWnN3czI2YlEiLCJzdGF0ZSI6IjYyNjY2MGRjZTY0YjJlNTFmYTdiODIwZiIsInJlc3BvbnNlX3R5cGUiOiJpZF90b2tlbiIsInJlc3BvbnNlX21vZGUiOiJmb3JtX3Bvc3QiLCJyZXNwb25zZV9jb250ZXh0Ijoid2FsbGV0IiwiY2xhaW1zIjp7InZjIjp7IlZlcmlmaWFibGVJZENyZWRlbnRpYWwiOnsiZXNzZW50aWFsIjp0cnVlfX19fQ.XlXcVeShGKDiLzlSPRuWv1YCMpX270VuOPcqfHi6S5fZd-z5zy4iHWXG3_HZZUX61fPAWE8fW_8U3re_a0vrIw
+```
+
+### VIDwallet App verifies the Request Token after scanning the QR Code (desktop2app)
+
+VIDwallet App scans the QR code that contains an encoded URI, decodes it, gets the `requestUri` to call the entity backend endpoint to obtain the Authentication Request Token to validated it.
+
+The validation process for Authentication Request Token is the same as the app2app authentication.
+
+### VIDwallet prepares the Authentication Response Structure (desktop2app)
+
+This step is similar to the mobile2app authentication process with `form_post` as `responseMode`.
+
+### VIDwallet creates an Authentication Response URI (desktop2app) and sends it as POST
+
+With previous Authentication Response data, we can call the library to create an Authentication Response URI encoded, and ready to be sent to `https://entity.example/did-auth` as POST method to the Entity backend.
+
+This step is similar to the mobile2app authentication process.
+
+### On Your Entity Backend, validate the Authentication Response and retrieve the user DID and requested Verifiable Credentials (desktop2app)
+
+Last step is that on your backend, you parse the received Authentication Response URI, obtain the Response Token and validate it, to finally obtain the desired Verifiable Credentials from the user.
+
+The POST data is sent in the body encoded as `application/x-www-form-urlencoded`, which contains the `id_token` and the `state` to be verified.
+
+This step is similar to the mobile2app authentication process.
+
+You need then to verify the receivied `id_token` calling `verifyDidAuthResponse` with `DidAuthVerifyOpts` similarly as the app2app authentication.
+
+After calling `verifyDidAuthResponse` and receiving `"signatureValidation": true`, you validated the Authentication Response Token and received a Verifiable Presentation that contains the requested Verifiable Credential, under `payload.vp`.
+
 ## Library Test
 
 To run `e2e` you need to set these two environment variables either in a `.env` or passing as a parameter to `npm run test:e2e`:
 
+- `DID_PROVIDER_RPC_URL` as the DID Registry Url
 - `DID_REGISTRY_SC_ADDRESS` as the current Smart Contract Address
 - `WALLET_API_URL` as the base url for VIDchain API. i.e.: `http://api.vidchain.net`
 
