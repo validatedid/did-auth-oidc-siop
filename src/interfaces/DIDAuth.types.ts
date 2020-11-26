@@ -140,7 +140,7 @@ export interface ExternalVerification {
 }
 
 export interface DidAuthVerifyOpts {
-  verificationType: InternalVerification | ExternalVerification;
+  verificationType?: InternalVerification | ExternalVerification;
   nonce?: string;
   redirectUri?: string;
 }

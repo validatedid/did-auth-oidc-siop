@@ -21,7 +21,7 @@ dotenv.config();
 
 describe("SIOP DID Auth end to end flow tests should", () => {
   it("create a desktop web request to an app flow", async () => {
-    expect.assertions(33);
+    expect.assertions(32);
     const WALLET_API_BASE_URL = process.env.WALLET_API_URL;
     const entity007 = await getLegalEntityAuthZToken("LEGAL ENTITY TEST 007");
     const authZToken = entity007.jwt;
@@ -30,10 +30,10 @@ describe("SIOP DID Auth end to end flow tests should", () => {
 
     // create request externally passing the request via refernce
     const requestOpts: DidAuthTypes.DidAuthRequestOpts = {
-      redirectUri: "https://entity.example/demo",
+      redirectUri: "https://entity.example/did-auth",
       requestObjectBy: {
         type: DidAuthTypes.ObjectPassedBy.REFERENCE,
-        referenceUri: "https://dev.vidchain.net/siop/jwts",
+        referenceUri: "https://entity.example/siop/jwts",
       },
       signatureType: {
         signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
@@ -55,7 +55,6 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     expect(uriRequest).toBeDefined();
     expect(uriRequest).toHaveProperty("urlEncoded");
     expect(uriRequest).toHaveProperty("encoding");
-    expect(uriRequest).toHaveProperty("urlEncoded");
     const uriDecoded = decodeURIComponent(uriRequest.urlEncoded);
     expect(uriDecoded).toContain(`openid://`);
     expect(uriDecoded).toContain(

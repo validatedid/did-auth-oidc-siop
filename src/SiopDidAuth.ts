@@ -237,19 +237,27 @@ const createUriResponse = async (
  */
 const verifyDidAuthRequest = async (
   jwt: string,
-  opts: DidAuthVerifyOpts
+  opts?: DidAuthVerifyOpts
 ): Promise<DidAuthValidationResponse> => {
-  if (!jwt || !opts || !opts.verificationType)
-    throw new Error(DidAuthErrors.VERIFY_BAD_PARAMETERS);
+  if (!jwt) throw new Error(DidAuthErrors.VERIFY_BAD_PARAMETERS);
   const { header, payload } = decodeJwt(jwt);
   // Resolve the DID Document from the RP's DID specified in the iss request parameter.
   const resolverUrl =
     opts.verificationType.didUrlResolver || VID_RESOLVE_DID_URL;
   const issuerDid = util.getIssuerDid(jwt);
-  const response = await axios.get(`${resolverUrl}/${issuerDid}`);
-  if (!response || !response.data)
-    throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
-  const didDoc = response.data as DIDDocument;
+  let didDoc: DIDDocument;
+  try {
+    const response = await axios.get(`${resolverUrl}/${issuerDid}`);
+    if (!response || !response.data)
+      throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
+    didDoc = response.data as DIDDocument;
+  } catch (error) {
+    throw new Error(
+      `${DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT} : ${
+        (error as Error).message
+      }`
+    );
+  }
 
   // If jwks_uri is present, ensure that the DID in the jwks_uri matches the DID in the iss claim.
   if (
@@ -283,13 +291,7 @@ const verifyDidAuthResponse = async (
   id_token: string,
   opts: DidAuthVerifyOpts
 ): Promise<DidAuthValidationResponse> => {
-  if (
-    !id_token ||
-    !opts ||
-    !opts.verificationType ||
-    !opts.nonce ||
-    !opts.redirectUri
-  )
+  if (!id_token || !opts || !opts.nonce || !opts.redirectUri)
     throw new Error(DidAuthErrors.VERIFY_BAD_PARAMETERS);
   // The Client MUST validate that the value of the iss (issuer) Claim is https://self-isued.me.
   const { header, payload } = decodeJwt(id_token);
@@ -312,12 +314,22 @@ const verifyDidAuthResponse = async (
   )
     ? ";transform-keys=jwks"
     : "";
-  const response = await axios.get(
-    `${resolverUrl}/${issuerDid}${tranformKeysUrl}`
-  );
-  if (!response || !response.data)
-    throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
-  const didDoc = response.data as DIDDocument;
+  let didDoc: DIDDocument;
+  try {
+    const response = await axios.get(
+      `${resolverUrl}/${issuerDid}${tranformKeysUrl}`
+    );
+    if (!response || !response.data)
+      throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
+    didDoc = response.data as DIDDocument;
+  } catch (error) {
+    throw new Error(
+      `${DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT} : ${
+        (error as Error).message
+      }`
+    );
+  }
+
   // Determine the verification method from the SIOP's DID Document that matches the kid
   // of the sub_jwk claim in the id_token.
   if (
