@@ -1,17 +1,24 @@
 import { JWT, JWK } from "jose";
-import { DIDDocument } from "did-resolver";
 import { v4 as uuidv4 } from "uuid";
-import { decodeJWT } from "did-jwt";
 import axios, { AxiosResponse } from "axios";
 import moment from "moment";
 import { ethers } from "ethers";
 
-import { DidAuthErrors, JWTClaims, DidAuthUtil } from "../src";
+import base58 from "bs58";
+import { DidAuthErrors, JWTClaims, DidAuthUtil, DidAuthTypes } from "../src";
 import { prefixWith0x } from "../src/util/Util";
 import {
   DidAuthKeyCurve,
   DidAuthKeyType,
 } from "../src/interfaces/DIDAuth.types";
+import { getPublicJWKFromPrivateHex, getThumbprint } from "../src/util/JWK";
+import { JWTHeader, JWTPayload } from "../src/interfaces/JWT";
+import { JWKECKey, VidJWKECKey } from "../src/interfaces/JWK";
+import {
+  DID_DOCUMENT_PUBKEY_B58,
+  DID_DOCUMENT_PUBKEY_JWK,
+} from "./data/mockedData";
+import { DIDDocument } from "../src/interfaces/oidcSsi";
 
 export interface TESTKEY {
   key: JWK.ECKey;
@@ -81,24 +88,70 @@ export interface LegalEntityTestAuthN {
   icon?: string; // base64 encoded image icon data
 }
 
+export interface UserTestAuthNToken extends JWTClaims {
+  iss: string; // DID of the User
+  aud: string; // RP Application Name. usually vidchain-wallet
+  publicKey: string; // MUST be user's public key from which the `iss` DID is derived.
+}
+
+export interface UserAuthZToken extends JWTClaims {
+  sub: string;
+  iat?: number; // The date at a time when the Access Token was issued.
+  exp?: number; // The date and time on or after which the token MUST NOT be accepted for processing. (expiry is 900s)
+  aud?: string; // Name of the application,  as registered in the Trusted Apps Registry, to which the Access Token is intended for.
+  did: string; // DID of the user as specified in the Access Token Request.
+}
+
 export const mockedKeyAndDid = (): {
   hexPrivateKey: string;
   did: string;
   jwk: JWK.ECKey;
+  hexPublicKey: string;
 } => {
   // generate a new keypair
   const jwk = JWK.generateSync("EC", "secp256k1", { use: "sig" });
   const hexPrivateKey = Buffer.from(jwk.d, "base64").toString("hex");
   const wallet: ethers.Wallet = new ethers.Wallet(prefixWith0x(hexPrivateKey));
   const did = `did:vid:${wallet.address}`;
-  return { hexPrivateKey, did, jwk };
+  const hexPublicKey = wallet.publicKey;
+  return { hexPrivateKey, did, jwk, hexPublicKey };
+};
+
+export const getUserTestAuthNToken = (): {
+  hexPrivateKey: string;
+  did: string;
+  jwk: JWK.ECKey;
+  hexPublicKey: string;
+  assertion: string;
+} => {
+  const { hexPrivateKey, did, jwk, hexPublicKey } = mockedKeyAndDid();
+  const payload: UserTestAuthNToken = {
+    iss: did,
+    aud: "vidchain-api",
+    iat: moment().unix(),
+    exp: moment().add(15, "seconds").unix(),
+    publicKey: hexPublicKey,
+  };
+  return {
+    hexPrivateKey,
+    did,
+    jwk,
+    hexPublicKey,
+    assertion: Buffer.from(JSON.stringify(payload)).toString("base64"),
+  };
 };
 
 const mockedEntityAuthNToken = (
   enterpiseName?: string
-): { jwt: string; jwk: JWK.ECKey; did: string } => {
+): {
+  jwt: string;
+  jwk: JWK.ECKey;
+  did: string;
+  hexPrivateKey: string;
+  hexPublicKey: string;
+} => {
   // generate a new keypair
-  const { did, jwk } = mockedKeyAndDid();
+  const { did, jwk, hexPrivateKey, hexPublicKey } = mockedKeyAndDid();
 
   const payload: LegalEntityTestAuthN = {
     iss: enterpiseName || "Test Legal Entity",
@@ -114,7 +167,7 @@ const mockedEntityAuthNToken = (
       typ: "JWT",
     },
   });
-  return { jwt, jwk, did };
+  return { jwt, jwk, did, hexPrivateKey, hexPublicKey };
 };
 
 const testEntityAuthNToken = (enterpiseName?: string): { jwt: string } => {
@@ -229,20 +282,59 @@ export async function getLegalEntityTestAuthZToken(
   };
 }
 
+export async function getUserEntityTestAuthZToken(): Promise<{
+  jwt: string;
+  did: string;
+  hexPrivateKey: string;
+  jwk: JWK.ECKey;
+  hexPublicKey: string;
+}> {
+  const {
+    hexPrivateKey,
+    did,
+    jwk,
+    hexPublicKey,
+    assertion,
+  } = getUserTestAuthNToken();
+  const payload = {
+    grantType: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+    assertion,
+    scope: "vidchain profile test user",
+  };
+  const WALLET_API_BASE_URL =
+    process.env.WALLET_API_URL || "http://localhost:9000";
+  // Create and sign JWT
+  const result = await doPostCall(
+    `${WALLET_API_BASE_URL}/api/v1/sessions`,
+    payload
+  );
+  const { accessToken } = result.data as AccessTokenResponseBody;
+
+  return {
+    jwt: accessToken,
+    did,
+    hexPrivateKey,
+    jwk,
+    hexPublicKey,
+  };
+}
+
 export function mockedGetEnterpriseAuthToken(
-  enterpiseName?: string
+  enterpriseName?: string
 ): {
   jwt: string;
   did: string;
   jwk: JWK.ECKey;
+  hexPrivateKey: string;
+  hexPublicKey: string;
 } {
-  const testAuth = mockedEntityAuthNToken(enterpiseName);
-  const { payload } = decodeJWT(testAuth.jwt);
+  const testAuth = mockedEntityAuthNToken(enterpriseName);
+  const payload = JWT.decode(testAuth.jwt) as JWTPayload;
 
   const inputPayload: IEnterpriseAuthZToken = {
     did: testAuth.did,
     aud: payload?.iss ? payload.iss : "Test Legal Entity",
-    nonce: (payload as IEnterpriseAuthZToken).nonce,
+    nonce: ((payload as unknown) as IEnterpriseAuthZToken).nonce,
   };
 
   const vidPayload = {
@@ -266,5 +358,102 @@ export function mockedGetEnterpriseAuthToken(
     jwt,
     did: testAuth.did,
     jwk: testAuth.jwk,
+    hexPrivateKey: testAuth.hexPrivateKey,
+    hexPublicKey: testAuth.hexPublicKey,
   };
 }
+
+export interface InputToken {
+  enterpiseName?: string;
+  nonce?: string;
+}
+
+export const mockedIdToken = (
+  inputToken: InputToken
+): {
+  jwt: string;
+  did: string;
+  jwk: JWK.ECKey;
+  idToken: string;
+  hexPublicKey: string;
+  header: JWTHeader;
+  payload: DidAuthTypes.DidAuthResponsePayload;
+} => {
+  const {
+    jwt,
+    did,
+    jwk,
+    hexPrivateKey,
+    hexPublicKey,
+  } = mockedGetEnterpriseAuthToken(inputToken.enterpiseName);
+  const state = DidAuthUtil.getState();
+  const didAuthResponsePayload: DidAuthTypes.DidAuthResponsePayload = {
+    iss: DidAuthTypes.DidAuthResponseIss.SELF_ISSUE,
+    sub: getThumbprint(hexPrivateKey),
+    nonce: inputToken.nonce || DidAuthUtil.getNonce(state),
+    aud: "https://app.example/demo",
+    sub_jwk: getPublicJWKFromPrivateHex(hexPrivateKey, `${did}#keys-1`),
+    did,
+  };
+
+  const header: JWTHeader = {
+    alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256K,
+    typ: "JWT",
+    kid: `${did}#keys-1`,
+  };
+
+  const idToken = JWT.sign(didAuthResponsePayload, jwk, {
+    header,
+    issuer: didAuthResponsePayload.iss,
+    kid: false,
+  });
+
+  return {
+    jwt,
+    did,
+    jwk,
+    idToken,
+    hexPublicKey,
+    header,
+    payload: didAuthResponsePayload,
+  };
+};
+
+export interface DidKey {
+  did: string;
+  publicKeyHex?: string;
+  jwk?: JWKECKey;
+}
+
+export const getParsedDidDocument = (didKey: DidKey): DIDDocument => {
+  if (didKey.publicKeyHex) {
+    const didDocB58 = DID_DOCUMENT_PUBKEY_B58;
+    didDocB58.id = didKey.did;
+    didDocB58.controller = didKey.did;
+    didDocB58.authentication[0].publicKey = `${didKey.did}#keys-1`;
+    didDocB58.verificationMethod[0].id = `${didKey.did}#keys-1`;
+    didDocB58.verificationMethod[0].controller = didKey.did;
+    didDocB58.verificationMethod[0].publicKeyBase58 = base58.encode(
+      Buffer.from(didKey.publicKeyHex.replace("0x", ""), "hex")
+    );
+    return didDocB58;
+  }
+  // then didKey jws public key
+  const didDocJwk = DID_DOCUMENT_PUBKEY_JWK;
+  didDocJwk.id = didKey.did;
+  didDocJwk.controller = didKey.did;
+  didDocJwk.authentication[0].publicKey = `${didKey.did}#keys-1`;
+  didDocJwk.verificationMethod[0].id = `${didKey.did}#keys-1`;
+  didDocJwk.verificationMethod[0].controller = didKey.did;
+  didDocJwk.verificationMethod[0].publicKeyJwk = didKey.jwk as VidJWKECKey;
+  return didDocJwk;
+};
+
+export const getPublicJWKFromDid = async (did: string): Promise<JWKECKey> => {
+  const API_BASE_URL = process.env.WALLET_API_URL || "https://api.vidchain.net";
+  const response = await axios.get(
+    `${API_BASE_URL}/api/v1/identifiers/${did};transform-keys=jwks`
+  );
+
+  return (response.data as DIDDocument).verificationMethod[0].publicKeyJwk;
+};

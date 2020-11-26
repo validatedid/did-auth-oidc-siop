@@ -8,7 +8,7 @@ const getPublicJWKFromPublicHex = (
   kid?: string
 ): JWK.JWKECKey => {
   const ec = new EC("secp256k1");
-  const key = ec.keyFromPublic(hexPublicKey);
+  const key = ec.keyFromPublic(hexPublicKey.replace("0x", ""), "hex");
   const pubPoint = key.getPublic();
   return {
     kid,
@@ -35,8 +35,7 @@ const getPublicJWKFromPrivateHex = (
   };
 };
 
-const getThumbprint = (hexPrivateKey: string): string => {
-  const jwk = getPublicJWKFromPrivateHex(hexPrivateKey);
+const getThumbprintFromJwk = (jwk: JWK.JWKECKey): string => {
   const fields = {
     crv: jwk.crv,
     kty: jwk.kty,
@@ -44,9 +43,17 @@ const getThumbprint = (hexPrivateKey: string): string => {
     y: jwk.y,
   };
   const buff = SHA("sha256").update(JSON.stringify(fields)).digest();
-  const thumbprint = base64urlEncodeBuffer(buff);
-
-  return thumbprint;
+  return base64urlEncodeBuffer(buff);
 };
 
-export { getThumbprint, getPublicJWKFromPrivateHex, getPublicJWKFromPublicHex };
+const getThumbprint = (hexPrivateKey: string): string => {
+  const jwk = getPublicJWKFromPrivateHex(hexPrivateKey);
+  return getThumbprintFromJwk(jwk);
+};
+
+export {
+  getThumbprint,
+  getPublicJWKFromPrivateHex,
+  getPublicJWKFromPublicHex,
+  getThumbprintFromJwk,
+};

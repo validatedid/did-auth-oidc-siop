@@ -30,10 +30,20 @@ export interface KeyParameters extends BasicParameters {
 }
 
 export type ECCurve = "P-256" | "secp256k1" | "P-384" | "P-521";
+export type VidECCurve = "secp256k1";
 
 export interface JWKECKey extends KeyParameters {
   kty: "EC";
   crv: ECCurve;
+  x: string;
+  y: string;
+  d?: string;
+  kid?: string;
+}
+
+export interface VidJWKECKey extends KeyParameters {
+  kty: "EC";
+  crv: VidECCurve;
   x: string;
   y: string;
   d?: string;

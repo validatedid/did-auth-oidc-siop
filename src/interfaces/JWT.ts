@@ -1,10 +1,14 @@
-import { Resolver } from "did-resolver";
+import { DIDDocument } from "./oidcSsi";
+
+export interface Resolvable {
+  resolve: (did: string) => Promise<DIDDocument | null>;
+}
 
 export interface JWTVerifyOptions {
   auth?: boolean;
   audience?: string;
   callbackUrl?: string;
-  resolver: Resolver;
+  resolver?: Resolvable | string;
 }
 
 export interface JWTHeader {
@@ -13,6 +17,7 @@ export interface JWTHeader {
   jwk?: string;
   jku?: string;
   kid?: string;
+  [x: string]: unknown;
 }
 
 export interface JWTClaims {
@@ -30,4 +35,22 @@ export interface EnterpriseAuthZToken extends JWTClaims {
   did: string;
   enterpriseName: string;
   nonce: string;
+}
+
+export interface JWTPayload {
+  iss?: string;
+  sub?: string;
+  aud?: string;
+  iat?: number;
+  nbf?: number;
+  type?: string;
+  exp?: number;
+  rexp?: number;
+  [x: string]: unknown;
+}
+export interface JWTDecoded {
+  header: JWTHeader;
+  payload: JWTPayload;
+  signature: string;
+  data: string;
 }

@@ -1,4 +1,4 @@
-import { JWTClaims } from "./JWT";
+import { JWTPayload } from "./JWT";
 import { JWKECKey } from "./JWK";
 import { OidcClaim, VerifiablePresentation } from "./oidcSsi";
 
@@ -86,7 +86,7 @@ export type RequestObjectBy = {
 export interface InternalSignature {
   hexPrivateKey: string; // hex private key Only secp256k1 format
   did: string;
-  kid?: string; // Optional: key identifier. default did#key-1
+  kid?: string; // Optional: key identifier. default did#keys-1
 }
 
 export interface ExternalSignature {
@@ -94,7 +94,7 @@ export interface ExternalSignature {
   did: string;
   authZToken?: string; // Optional: bearer token to use to the call
   hexPublicKey?: string; // Optional: hex encoded public key to compute JWK key, if not possible from DID Document
-  kid?: string; // Optional: key identifier. default did#key-1
+  kid?: string; // Optional: key identifier. default did#keys-1
 }
 
 export interface RegistrationType extends RequestObjectBy {
@@ -128,21 +128,24 @@ export interface DidAuthResponseOpts {
 }
 
 export interface InternalVerification {
-  registry: string;
-  rpcUrl: string;
+  registry?: string;
+  rpcUrl?: string;
+  didUrlResolver?: string;
 }
 
 export interface ExternalVerification {
   verifyUri: string; // url to call to verify the id_token signature
   authZToken?: string; // Optional: bearer token to use to the call
+  didUrlResolver?: string;
 }
 
 export interface DidAuthVerifyOpts {
-  verificationType: InternalVerification | ExternalVerification;
+  verificationType?: InternalVerification | ExternalVerification;
   nonce?: string;
+  redirectUri?: string;
 }
 
-export interface DidAuthRequestPayload extends JWTClaims {
+export interface DidAuthRequestPayload extends JWTPayload {
   iss: string;
   scope: DidAuthScope;
   registration: RegistrationJwksUri | RegistrationJwks;
@@ -155,7 +158,7 @@ export interface DidAuthRequestPayload extends JWTClaims {
   claims?: OidcClaim;
 }
 
-export interface DidAuthResponsePayload extends JWTClaims {
+export interface DidAuthResponsePayload extends JWTPayload {
   iss: DidAuthResponseIss.SELF_ISSUE;
   sub: string;
   aud: string;

@@ -1,12 +1,14 @@
-import { createJWT, SimpleSigner, decodeJWT, verifyJWT } from "did-jwt";
-import { Resolver } from "did-resolver";
-import VidDidResolver from "@validatedid/vid-did-resolver";
-import { AxiosResponse } from "axios";
-import { DidAuthUtil } from ".";
+import axios, { AxiosResponse } from "axios";
+import {
+  vidVerifyJwt,
+  createJwt,
+  SimpleSigner,
+  JWTHeader,
+} from "@validatedid/did-jwt";
+import { util, JWK } from "./util";
 import DidAuthErrors from "./interfaces/Errors";
 import { getNonce, doPostCallWithToken, getState } from "./util/Util";
-import { JWTHeader, JWTVerifyOptions } from "./interfaces/JWT";
-import { JWK } from "./util";
+import { JWTVerifyOptions } from "./interfaces/JWT";
 import {
   DidAuthKeyAlgorithm,
   DidAuthRequestOpts,
@@ -30,6 +32,8 @@ import {
   DidAuthVerifyOpts,
 } from "./interfaces/DIDAuth.types";
 import { getPublicJWKFromPrivateHex } from "./util/JWK";
+import { DIDDocument } from "./interfaces/oidcSsi";
+import { JWKECKey } from "./interfaces/JWK";
 
 const isInternalSignature = (
   object: InternalSignature | ExternalSignature
@@ -49,16 +53,10 @@ const isInternalVerification = (
   return "registry" in object && "rpcUrl" in object;
 };
 
-const isExternalVerification = (
-  object: InternalVerification | ExternalVerification
-): object is ExternalVerification => {
-  return "verifyUri" in object;
-};
-
-const createRegistration = (
+const createRegistration = async (
   registrationType: RegistrationType,
   signatureType: InternalSignature | ExternalSignature
-): RegistrationJwksUri | RegistrationJwks => {
+): Promise<RegistrationJwksUri | RegistrationJwks> => {
   if (!registrationType || !registrationType.type)
     throw new Error(DidAuthErrors.REGISTRATION_OBJECT_TYPE_NOT_SET);
 
@@ -74,25 +72,51 @@ const createRegistration = (
       };
       return registration;
     case ObjectPassedBy.VALUE:
-      if (!isInternalSignature(signatureType))
-        throw new Error(DidAuthErrors.BAD_SIGNATURE_PARAMS);
-      registration = {
-        jwks: getPublicJWKFromPrivateHex(
-          signatureType.hexPrivateKey,
-          signatureType.kid || `${signatureType.did}#key-1`
-        ),
-      };
-      return registration;
+      if (isInternalSignature(signatureType)) {
+        registration = {
+          jwks: getPublicJWKFromPrivateHex(
+            signatureType.hexPrivateKey,
+            signatureType.kid || `${signatureType.did}#keys-1`
+          ),
+        };
+        return registration;
+      }
+      if (isExternalSignature(signatureType)) {
+        // referenceUri will always be set on an external signature
+        try {
+          const getResponse = await axios.get(registrationType.referenceUri);
+          if (!getResponse || !getResponse.data)
+            throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
+          const didDoc = getResponse.data as DIDDocument;
+          if (
+            !didDoc.verificationMethod ||
+            !didDoc.verificationMethod[0] ||
+            !didDoc.verificationMethod[0].publicKeyJwk
+          )
+            throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
+          registration = {
+            jwks: didDoc.verificationMethod[0].publicKeyJwk,
+          };
+          return registration;
+        } catch (error) {
+          throw new Error(
+            `${
+              DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT
+            } Error: ${JSON.stringify(error, null, 2)}`
+          );
+        }
+      }
+      throw new Error(DidAuthErrors.SIGNATURE_OBJECT_TYPE_NOT_SET);
     default:
       throw new Error(DidAuthErrors.REGISTRATION_OBJECT_TYPE_NOT_SET);
   }
 };
 
-const createDidAuthRequestPayload = (
+const createDidAuthRequestPayload = async (
   opts: DidAuthRequestOpts
-): DidAuthRequestPayload => {
+): Promise<DidAuthRequestPayload> => {
   const state = opts.state || getState();
-  const registration = createRegistration(
+  const registration = await createRegistration(
     opts.registrationType,
     opts.signatureType
   );
@@ -118,15 +142,15 @@ const signDidAuthInternal = async (
 ): Promise<string> => {
   // assign specific JWT header
   const header: JWTHeader = {
-    alg: DidAuthKeyAlgorithm.ES256KR,
     typ: "JWT",
-    kid: kid || `${issuer}#key-1`,
+    alg: DidAuthKeyAlgorithm.ES256K,
+    kid: kid || `${issuer}#keys-1`,
   };
-  const response = await createJWT(
+  const response = await createJwt(
     payload,
     {
       issuer,
-      alg: DidAuthKeyAlgorithm.ES256KR,
+      alg: DidAuthKeyAlgorithm.ES256K,
       signer: SimpleSigner(hexPrivateKey.replace("0x", "")), // Removing 0x from private key as input of SimpleSigner
       expiresIn: expirationTime,
     },
@@ -138,14 +162,21 @@ const signDidAuthInternal = async (
 const signDidAuthExternal = async (
   payload: DidAuthRequestPayload | DidAuthResponsePayload,
   signatureUri: string,
-  authZToken: string
+  authZToken: string,
+  kid?: string
 ): Promise<string> => {
   const data = {
-    issuer: payload.iss,
+    issuer: payload.iss.includes("did:") ? payload.iss : payload.did,
     payload,
     type: "EcdsaSecp256k1Signature2019", // fixed type
     expiresIn: expirationTime,
+    alg: DidAuthKeyAlgorithm.ES256K,
+    selfIssued: payload.iss.includes(DidAuthResponseIss.SELF_ISSUE)
+      ? payload.iss
+      : undefined,
+    kid,
   };
+
   const response = await doPostCallWithToken(signatureUri, data, authZToken);
   if (
     !response ||
@@ -158,9 +189,9 @@ const signDidAuthExternal = async (
   return (response.data as SignatureResponse).jws;
 };
 
-const createDidAuthResponsePayload = (
+const createDidAuthResponsePayload = async (
   opts: DidAuthResponseOpts
-): DidAuthResponsePayload => {
+): Promise<DidAuthResponsePayload> => {
   if (
     !opts ||
     !opts.redirectUri ||
@@ -169,17 +200,57 @@ const createDidAuthResponsePayload = (
     !opts.did
   )
     throw new Error(DidAuthErrors.BAD_PARAMS);
-  if (!isInternalSignature(opts.signatureType))
-    throw new Error(DidAuthErrors.BAD_SIGNATURE_PARAMS);
+  if (
+    !isInternalSignature(opts.signatureType) &&
+    !isExternalSignature(opts.signatureType)
+  )
+    throw new Error(DidAuthErrors.SIGNATURE_OBJECT_TYPE_NOT_SET);
+
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  let sub_jwk: JWKECKey;
+  let sub: string;
+
+  if (isInternalSignature(opts.signatureType)) {
+    sub = JWK.getThumbprint(opts.signatureType.hexPrivateKey);
+    sub_jwk = JWK.getPublicJWKFromPrivateHex(
+      opts.signatureType.hexPrivateKey,
+      opts.signatureType.kid || `${opts.signatureType.did}#keys-1`
+    );
+  }
+  if (isExternalSignature(opts.signatureType)) {
+    if (!opts.registrationType || !opts.registrationType.referenceUri)
+      throw new Error(DidAuthErrors.NO_REFERENCE_URI);
+    try {
+      const getResponse = await axios.get(opts.registrationType.referenceUri);
+      if (!getResponse || !getResponse.data)
+        throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
+      const didDoc = getResponse.data as DIDDocument;
+      if (
+        !didDoc.verificationMethod &&
+        !didDoc.verificationMethod[0] &&
+        !didDoc.verificationMethod[0].publicKeyJwk
+      )
+        throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
+
+      sub_jwk = didDoc.verificationMethod[0].publicKeyJwk;
+      sub = JWK.getThumbprintFromJwk(sub_jwk);
+    } catch (error) {
+      throw new Error(
+        `${DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT} Error: ${JSON.stringify(
+          error,
+          null,
+          2
+        )}`
+      );
+    }
+  }
+
   return {
     iss: DidAuthResponseIss.SELF_ISSUE,
-    sub: JWK.getThumbprint(opts.signatureType.hexPrivateKey),
+    sub,
     nonce: opts.nonce,
     aud: opts.redirectUri,
-    sub_jwk: JWK.getPublicJWKFromPrivateHex(
-      opts.signatureType.hexPrivateKey,
-      opts.signatureType.kid || `${opts.signatureType.did}#key-1`
-    ),
+    sub_jwk,
     did: opts.did,
     vp: opts.vp,
   };
@@ -192,53 +263,46 @@ const verifyDidAuth = async (
   if (!jwt || !opts || !opts.verificationType)
     throw new Error(DidAuthErrors.VERIFY_BAD_PARAMETERS);
   if (isInternalVerification(opts.verificationType)) {
-    const { rpcUrl } = opts.verificationType;
-    const { registry } = opts.verificationType;
-    // as audience is set in payload as a DID, it is required to be set as options
+    // if audience it is a DID, it needs to be set as options audience
+    // if not, it needs to be set as a callback url
+    const audience = util.getAudience(jwt);
     const options: JWTVerifyOptions = {
-      audience: DidAuthUtil.getAudience(jwt),
-      resolver: new Resolver(
-        VidDidResolver.getResolver({
-          rpcUrl,
-          registry,
-        })
-      ),
+      audience: audience?.match(/^did:/g) ? audience : undefined,
+      resolver: await util.getUrlResolver(jwt, opts.verificationType),
+      callbackUrl:
+        audience !== undefined && !audience.match(/^did:/g)
+          ? audience
+          : undefined,
     };
-    // !!! TODO: adapt this verifyJWT to be able to admit issuer and aud as an http
-    const verifiedJWT = await verifyJWT(jwt, options);
+
+    const verifiedJWT = await vidVerifyJwt(jwt, options);
     if (!verifiedJWT || !verifiedJWT.payload)
       throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
     const payload = verifiedJWT.payload as DidAuthRequestPayload;
     return { signatureValidation: true, payload };
   }
-  if (isExternalVerification(opts.verificationType)) {
-    const data = {
-      jws: jwt,
-    };
-    try {
-      const response: AxiosResponse = await doPostCallWithToken(
-        opts.verificationType.verifyUri,
-        data,
-        opts.verificationType.authZToken
-      );
+  // external verification
+  const data = {
+    jws: jwt,
+  };
+  try {
+    const response: AxiosResponse = await doPostCallWithToken(
+      opts.verificationType.verifyUri,
+      data,
+      opts.verificationType.authZToken
+    );
 
-      if (!response || !response.status || response.status !== 204)
-        throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
-    } catch (error) {
-      throw Error(
-        DidAuthErrors.ERROR_VERIFYING_SIGNATURE + (error as Error).message
-      );
-    }
-
-    const { payload } = decodeJWT(jwt);
-    if (payload.nonce !== opts.nonce)
-      throw Error(DidAuthErrors.ERROR_VALIDATING_NONCE);
-
-    return {
-      signatureValidation: true,
-    };
+    if (!response || !response.status || response.status !== 204)
+      throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
+  } catch (error) {
+    throw Error(
+      DidAuthErrors.ERROR_VERIFYING_SIGNATURE + (error as Error).message
+    );
   }
-  throw Error(DidAuthErrors.VERIFICATION_METHOD_NOT_SUPPORTED);
+
+  return {
+    signatureValidation: true,
+  };
 };
 
 export {
@@ -249,6 +313,5 @@ export {
   signDidAuthExternal,
   createDidAuthResponsePayload,
   isInternalVerification,
-  isExternalVerification,
   verifyDidAuth,
 };

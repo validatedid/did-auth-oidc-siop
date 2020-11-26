@@ -29,34 +29,35 @@
     "compile:dev": "tsc -w",
     "coverage": "jest --coverage",
     "lint-staged": "lint-staged",
-    "lint": "eslint 'src/**/*.{js,ts,tsx}' 'tests/**/*.{js,ts,tsx}' --quiet",
-    "full-lint": "tsc --noEmit && eslint 'src/**/*.{js,ts,tsx}' --quiet --fix && prettier --write 'src/**/*.{js,ts,tsx}'",
+    "lint": "eslint 'src/**/*.{js,ts,tsx}' 'tests/**/*.{js,ts,tsx}'",
+    "full-lint": "tsc --noEmit && eslint 'src/**/*.{js,ts,tsx}' --fix && prettier --write 'src/**/*.{js,ts,tsx}'",
     "format": "prettier --write 'src/**/*.{js,ts,tsx}' 'tests/**/*.{js,ts,tsx}'",
     "release": "standard-version",
     "test": "jest --runInBand --verbose false --detectOpenHandles --forceExit",
     "test:watch": "jest --watch",
     "test:unit": "jest --runInBand --testPathIgnorePatterns=e2e --verbose false --detectOpenHandles --forceExit",
-    "test:e2e": "jest --runInBand --testPathPattern=unit --verbose false --detectOpenHandles --forceExit",
+    "test:e2e": "jest --runInBand --testPathIgnorePatterns=unit --verbose false --detectOpenHandles --forceExit",
     "clearCache": "jest --clearCache"
   },
   "devDependencies": {
     "@commitlint/cli": "^11.0.0",
     "@commitlint/config-conventional": "^11.0.0",
     "@tsconfig/node10": "^1.0.7",
+    "@types/bs58": "^4.0.1",
     "@types/elliptic": "^6.4.12",
     "@types/jest": "^26.0.15",
-    "@types/node": "^10.17.44",
+    "@types/node": "^14.14.9",
     "@types/sha.js": "^2.4.0",
     "@types/uuid": "^8.3.0",
-    "@typescript-eslint/eslint-plugin": "^4.6.1",
-    "@typescript-eslint/parser": "^4.6.1",
+    "@typescript-eslint/eslint-plugin": "^4.8.1",
+    "@typescript-eslint/parser": "^4.8.1",
     "audit-ci": "^3.1.1",
     "dotenv": "^8.2.0",
-    "eslint": "^7.12.1",
+    "eslint": "^7.13.0",
     "eslint-config-airbnb-typescript": "^12.0.0",
     "eslint-config-prettier": "^6.15.0",
     "eslint-plugin-import": "^2.22.1",
-    "eslint-plugin-jest": "^24.1.0",
+    "eslint-plugin-jest": "^24.1.3",
     "eslint-plugin-prettier": "^3.1.4",
     "husky": "^4.3.0",
     "jest": "^26.6.2",
@@ -64,25 +65,28 @@
     "jose": "^2.0.3",
     "lint-staged": "^10.5.1",
     "moment": "^2.29.1",
-    "prettier": "^2.1.2",
+    "prettier": "^2.2.0",
     "standard-version": "^9.0.0",
-    "ts-jest": "^26.4.3",
+    "ts-jest": "^26.4.4",
     "ts-node": "^9.0.0",
-    "typescript": "^4.0.5"
+    "typescript": "^4.1.2"
   },
   "dependencies": {
+    "@validatedid/did-jwt": "^1.0.0",
     "@validatedid/vid-did-resolver": "0.0.1",
     "axios": "^0.21.0",
-    "did-jwt": "^4.6.2",
+    "base64url": "^3.0.1",
+    "bs58": "^4.0.1",
     "did-resolver": "^2.1.1",
     "elliptic": "^6.5.3",
-    "ethers": "^5.0.19",
+    "ethers": "^5.0.21",
     "sha.js": "^2.4.11",
     "uuid": "^8.3.1"
   },
   "husky": {
     "hooks": {
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
+      "pre-commit": "lint-staged"
     }
   }
 }
