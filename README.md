@@ -9,7 +9,7 @@ Current version supports only `ES256k` (and `ES256K-R`) algorithm (the EC secp25
 ## Table of Contents
 
 1. [Installation](#Installation)
-2. [Onboarding a New Entity](#Onboaring-a-New-Entity)
+2. [Onboarding a New Entity](#onboarding-a-new-entity)
 3. [App 2 App Authentication Flow with VIDcredentials API](#App-2-App-Authentication-Flow-with-VIDcredentials-API)
    1. [Prepare Authentication Request Data](#prepare-authentication-request-data)
    2. [Create an Authentication Request URI](#create-an-authentication-request-uri)
