@@ -16,7 +16,14 @@ describe("SiopDidAuth tests should", () => {
     const WALLET_API_BASE_URL =
       process.env.WALLET_API_URL || "http://localhost:9000";
     const nonce = "zizu-nonce";
-    const { jwt, idToken, did, hexPublicKey, header, payload } = mockedIdToken({
+    const {
+      jwt,
+      idToken,
+      did,
+      hexPublicKey,
+      header,
+      payload,
+    } = await mockedIdToken({
       nonce,
     });
 
@@ -50,7 +57,7 @@ describe("SiopDidAuth tests should", () => {
     const WALLET_API_BASE_URL =
       process.env.WALLET_API_URL || "http://localhost:9000";
     const nonce = "zizu-nonce";
-    const { jwt, idToken } = mockedIdToken({ nonce });
+    const { jwt, idToken } = await mockedIdToken({ nonce });
 
     const optsVerify = {
       verificationType: {
@@ -68,7 +75,7 @@ describe("SiopDidAuth tests should", () => {
   it("throw VERIFY_BAD_PARAMETERS when no opts is passed", async () => {
     expect.assertions(1);
     const nonce = "zizu-nonce";
-    const { idToken } = mockedIdToken({ nonce });
+    const { idToken } = await mockedIdToken({ nonce });
 
     await expect(verifyDidAuthResponse(idToken, {} as never)).rejects.toThrow(
       DidAuthErrors.VERIFY_BAD_PARAMETERS

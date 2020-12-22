@@ -1,9 +1,13 @@
-import { JWT, JWK } from "jose";
+import crypto from "crypto";
+import { JWK } from "jose/types";
+import fromKeyLike from "jose/jwk/from_key_like";
+import parseJwk from "jose/jwk/parse";
+import SignJWT from "jose/jwt/sign";
 import { v4 as uuidv4 } from "uuid";
 import axios, { AxiosResponse } from "axios";
 import moment from "moment";
 import { ethers } from "ethers";
-
+import jwt_decode from "jwt-decode";
 import base58 from "bs58";
 import { DidAuthErrors, JWTClaims, DidAuthUtil, DidAuthTypes } from "../src";
 import { prefixWith0x } from "../src/util/Util";
@@ -12,8 +16,7 @@ import {
   DidAuthKeyType,
 } from "../src/interfaces/DIDAuth.types";
 import { getPublicJWKFromPrivateHex, getThumbprint } from "../src/util/JWK";
-import { JWTHeader, JWTPayload } from "../src/interfaces/JWT";
-import { JWKECKey, VidJWKECKey } from "../src/interfaces/JWK";
+import { EnterpriseAuthZToken, JWTHeader } from "../src/interfaces/JWT";
 import {
   DID_DOCUMENT_PUBKEY_B58,
   DID_DOCUMENT_PUBKEY_JWK,
@@ -21,7 +24,7 @@ import {
 import { DIDDocument } from "../src/interfaces/oidcSsi";
 
 export interface TESTKEY {
-  key: JWK.ECKey;
+  key: JWK;
   did: string;
   didDoc?: DIDDocument;
 }
@@ -37,23 +40,18 @@ interface AccessTokenResponseBody {
   issuedAt: number;
 }
 
-export function generateTestKey(kty: string): TESTKEY {
-  let key: JWK.ECKey;
+export async function generateTestKey(kty: string): Promise<TESTKEY> {
+  if (kty !== DidAuthKeyType.EC)
+    throw new Error(DidAuthErrors.NO_ALG_SUPPORTED);
+  const key = crypto.generateKeyPairSync("ec", {
+    namedCurve: DidAuthKeyCurve.SECP256k1,
+  });
+  const privateJwk = await fromKeyLike(key.privateKey);
 
-  switch (kty) {
-    case DidAuthKeyType.EC:
-      key = JWK.generateSync(DidAuthKeyType.EC, DidAuthKeyCurve.SECP256k1, {
-        use: "sig",
-      });
-      break;
-    default:
-      throw new Error(DidAuthErrors.NO_ALG_SUPPORTED);
-  }
-
-  const did = DidAuthUtil.getDIDFromKey(key);
+  const did = DidAuthUtil.getDIDFromKey(privateJwk);
 
   return {
-    key,
+    key: privateJwk,
     did,
   };
 }
@@ -102,29 +100,37 @@ export interface UserAuthZToken extends JWTClaims {
   did: string; // DID of the user as specified in the Access Token Request.
 }
 
-export const mockedKeyAndDid = (): {
+export const mockedKeyAndDid = async (): Promise<{
   hexPrivateKey: string;
   did: string;
-  jwk: JWK.ECKey;
+  jwk: JWK;
   hexPublicKey: string;
-} => {
+}> => {
   // generate a new keypair
-  const jwk = JWK.generateSync("EC", "secp256k1", { use: "sig" });
-  const hexPrivateKey = Buffer.from(jwk.d, "base64").toString("hex");
+  const key = crypto.generateKeyPairSync("ec", {
+    namedCurve: DidAuthKeyCurve.SECP256k1,
+  });
+  const privateJwk = await fromKeyLike(key.privateKey);
+  const hexPrivateKey = Buffer.from(privateJwk.d, "base64").toString("hex");
   const wallet: ethers.Wallet = new ethers.Wallet(prefixWith0x(hexPrivateKey));
   const did = `did:vid:${wallet.address}`;
   const hexPublicKey = wallet.publicKey;
-  return { hexPrivateKey, did, jwk, hexPublicKey };
+  return {
+    hexPrivateKey,
+    did,
+    jwk: privateJwk,
+    hexPublicKey,
+  };
 };
 
-export const getUserTestAuthNToken = (): {
+export const getUserTestAuthNToken = async (): Promise<{
   hexPrivateKey: string;
   did: string;
-  jwk: JWK.ECKey;
+  jwk: JWK;
   hexPublicKey: string;
   assertion: string;
-} => {
-  const { hexPrivateKey, did, jwk, hexPublicKey } = mockedKeyAndDid();
+}> => {
+  const { hexPrivateKey, did, jwk, hexPublicKey } = await mockedKeyAndDid();
   const payload: UserTestAuthNToken = {
     iss: did,
     aud: "vidchain-api",
@@ -141,17 +147,17 @@ export const getUserTestAuthNToken = (): {
   };
 };
 
-const mockedEntityAuthNToken = (
+const mockedEntityAuthNToken = async (
   enterpiseName?: string
-): {
+): Promise<{
   jwt: string;
-  jwk: JWK.ECKey;
+  jwk: JWK;
   did: string;
   hexPrivateKey: string;
   hexPublicKey: string;
-} => {
+}> => {
   // generate a new keypair
-  const { did, jwk, hexPrivateKey, hexPublicKey } = mockedKeyAndDid();
+  const { did, jwk, hexPrivateKey, hexPublicKey } = await mockedKeyAndDid();
 
   const payload: LegalEntityTestAuthN = {
     iss: enterpiseName || "Test Legal Entity",
@@ -161,12 +167,16 @@ const mockedEntityAuthNToken = (
     nonce: uuidv4(),
   };
 
-  const jwt = JWT.sign(payload, jwk, {
-    header: {
+  const privateKey = await parseJwk(
+    jwk,
+    DidAuthTypes.DidAuthKeyAlgorithm.ES256K
+  );
+  const jwt = await new SignJWT(payload)
+    .setProtectedHeader({
       alg: "ES256K",
       typ: "JWT",
-    },
-  });
+    })
+    .sign(privateKey);
   return { jwt, jwk, did, hexPrivateKey, hexPublicKey };
 };
 
@@ -184,9 +194,9 @@ const testEntityAuthNToken = (enterpiseName?: string): { jwt: string } => {
 };
 
 export function getEnterpriseDID(token: string): string {
-  const { payload } = JWT.decode(token, { complete: true });
+  const payload = jwt_decode(token);
 
-  return (payload as IEnterpriseAuthZToken).did;
+  return (payload as EnterpriseAuthZToken).did;
 }
 
 async function doPostCall(url: string, data: unknown): Promise<AxiosResponse> {
@@ -286,7 +296,7 @@ export async function getUserEntityTestAuthZToken(): Promise<{
   jwt: string;
   did: string;
   hexPrivateKey: string;
-  jwk: JWK.ECKey;
+  jwk: JWK;
   hexPublicKey: string;
 }> {
   const {
@@ -295,7 +305,7 @@ export async function getUserEntityTestAuthZToken(): Promise<{
     jwk,
     hexPublicKey,
     assertion,
-  } = getUserTestAuthNToken();
+  } = await getUserTestAuthNToken();
   const payload = {
     grantType: "urn:ietf:params:oauth:grant-type:jwt-bearer",
     assertion,
@@ -319,40 +329,47 @@ export async function getUserEntityTestAuthZToken(): Promise<{
   };
 }
 
-export function mockedGetEnterpriseAuthToken(
+export async function mockedGetEnterpriseAuthToken(
   enterpriseName?: string
-): {
+): Promise<{
   jwt: string;
   did: string;
-  jwk: JWK.ECKey;
+  jwk: JWK;
   hexPrivateKey: string;
   hexPublicKey: string;
-} {
-  const testAuth = mockedEntityAuthNToken(enterpriseName);
-  const payload = JWT.decode(testAuth.jwt) as JWTPayload;
+}> {
+  const testAuth = await mockedEntityAuthNToken(enterpriseName);
+  const payload = jwt_decode(testAuth.jwt);
 
   const inputPayload: IEnterpriseAuthZToken = {
     did: testAuth.did,
-    aud: payload?.iss ? payload.iss : "Test Legal Entity",
-    nonce: ((payload as unknown) as IEnterpriseAuthZToken).nonce,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    aud: (payload as JWTClaims)?.iss
+      ? (payload as JWTClaims).iss
+      : "Test Legal Entity",
+    nonce: (payload as IEnterpriseAuthZToken).nonce,
   };
 
   const vidPayload = {
     ...inputPayload,
     ...{
-      sub: payload.iss, // Should be the id of the app that is requesting the token
+      sub: (payload as JWTClaims).iss, // Should be the id of the app that is requesting the token
       iat: moment().unix(),
       exp: moment().add(15, "minutes").unix(),
       aud: "vidchain-api",
     },
   };
 
-  const jwt = JWT.sign(vidPayload, testAuth.jwk, {
-    header: {
+  const privateKey = await parseJwk(
+    testAuth.jwk,
+    DidAuthTypes.DidAuthKeyAlgorithm.ES256K
+  );
+  const jwt = await new SignJWT(vidPayload)
+    .setProtectedHeader({
       alg: "ES256K",
       typ: "JWT",
-    },
-  });
+    })
+    .sign(privateKey);
 
   return {
     jwt,
@@ -368,24 +385,24 @@ export interface InputToken {
   nonce?: string;
 }
 
-export const mockedIdToken = (
+export const mockedIdToken = async (
   inputToken: InputToken
-): {
+): Promise<{
   jwt: string;
   did: string;
-  jwk: JWK.ECKey;
+  jwk: JWK;
   idToken: string;
   hexPublicKey: string;
   header: JWTHeader;
   payload: DidAuthTypes.DidAuthResponsePayload;
-} => {
+}> => {
   const {
     jwt,
     did,
     jwk,
     hexPrivateKey,
     hexPublicKey,
-  } = mockedGetEnterpriseAuthToken(inputToken.enterpiseName);
+  } = await mockedGetEnterpriseAuthToken(inputToken.enterpiseName);
   const state = DidAuthUtil.getState();
   const didAuthResponsePayload: DidAuthTypes.DidAuthResponsePayload = {
     iss: DidAuthTypes.DidAuthResponseIss.SELF_ISSUE,
@@ -402,11 +419,17 @@ export const mockedIdToken = (
     kid: `${did}#keys-1`,
   };
 
-  const idToken = JWT.sign(didAuthResponsePayload, jwk, {
-    header,
-    issuer: didAuthResponsePayload.iss,
-    kid: false,
-  });
+  const privateKey = await parseJwk(
+    jwk,
+    DidAuthTypes.DidAuthKeyAlgorithm.ES256K
+  );
+  const idToken = await new SignJWT(didAuthResponsePayload)
+    .setProtectedHeader({
+      alg: "ES256K",
+      typ: "JWT",
+    })
+    .setIssuer(didAuthResponsePayload.iss)
+    .sign(privateKey);
 
   return {
     jwt,
@@ -422,7 +445,7 @@ export const mockedIdToken = (
 export interface DidKey {
   did: string;
   publicKeyHex?: string;
-  jwk?: JWKECKey;
+  jwk?: JWK;
 }
 
 export const getParsedDidDocument = (didKey: DidKey): DIDDocument => {
@@ -445,11 +468,11 @@ export const getParsedDidDocument = (didKey: DidKey): DIDDocument => {
   didDocJwk.authentication[0].publicKey = `${didKey.did}#keys-1`;
   didDocJwk.verificationMethod[0].id = `${didKey.did}#keys-1`;
   didDocJwk.verificationMethod[0].controller = didKey.did;
-  didDocJwk.verificationMethod[0].publicKeyJwk = didKey.jwk as VidJWKECKey;
+  didDocJwk.verificationMethod[0].publicKeyJwk = didKey.jwk;
   return didDocJwk;
 };
 
-export const getPublicJWKFromDid = async (did: string): Promise<JWKECKey> => {
+export const getPublicJWKFromDid = async (did: string): Promise<JWK> => {
   const API_BASE_URL = process.env.WALLET_API_URL || "https://api.vidchain.net";
   const response = await axios.get(
     `${API_BASE_URL}/api/v1/identifiers/${did};transform-keys=jwks`

@@ -1,4 +1,4 @@
 import * as util from "./Util";
-import * as JWK from "./JWK";
+import * as utilJwk from "./JWK";
 
-export { util, JWK };
+export { util, utilJwk };

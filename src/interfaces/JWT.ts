@@ -1,3 +1,4 @@
+import { Resolver } from "did-resolver";
 import { DIDDocument } from "./oidcSsi";
 
 export interface Resolvable {
@@ -8,7 +9,7 @@ export interface JWTVerifyOptions {
   auth?: boolean;
   audience?: string;
   callbackUrl?: string;
-  resolver?: Resolvable | string;
+  resolver?: Resolvable | Resolver | string;
 }
 
 export interface JWTHeader {

@@ -1,12 +1,10 @@
 import { ec as EC } from "elliptic";
+import { JWK } from "jose/types";
 import SHA from "sha.js";
-import { JWK, types } from "../interfaces";
+import { types } from "../interfaces";
 import { base64urlEncodeBuffer } from "./Util";
 
-const getPublicJWKFromPublicHex = (
-  hexPublicKey: string,
-  kid?: string
-): JWK.JWKECKey => {
+const getPublicJWKFromPublicHex = (hexPublicKey: string, kid?: string): JWK => {
   const ec = new EC("secp256k1");
   const key = ec.keyFromPublic(hexPublicKey.replace("0x", ""), "hex");
   const pubPoint = key.getPublic();
@@ -22,7 +20,7 @@ const getPublicJWKFromPublicHex = (
 const getPublicJWKFromPrivateHex = (
   hexPrivateKey: string,
   kid?: string
-): JWK.JWKECKey => {
+): JWK => {
   const ec = new EC("secp256k1");
   const privKey = ec.keyFromPrivate(hexPrivateKey);
   const pubPoint = privKey.getPublic();
@@ -35,7 +33,7 @@ const getPublicJWKFromPrivateHex = (
   };
 };
 
-const getThumbprintFromJwk = (jwk: JWK.JWKECKey): string => {
+const getThumbprintFromJwk = (jwk: JWK): string => {
   const fields = {
     crv: jwk.crv,
     kty: jwk.kty,

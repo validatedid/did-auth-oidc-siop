@@ -1,8 +1,6 @@
-import { JWK } from "jose";
-import {
-  DidAuthKeyCurve,
-  DidAuthKeyType,
-} from "../../src/interfaces/DIDAuth.types";
+import crypto from "crypto";
+import fromKeyLike from "jose/jwk/from_key_like";
+import { DidAuthKeyCurve } from "../../src/interfaces/DIDAuth.types";
 import {
   getNonce,
   getState,
@@ -44,12 +42,14 @@ describe("unit tests should", () => {
     expect(nonce).toBeDefined();
   });
 
-  it("compute a DID from an jwk key", () => {
+  it("compute a DID from an jwk key", async () => {
     expect.assertions(2);
-    const key = JWK.generateSync(DidAuthKeyType.EC, DidAuthKeyCurve.SECP256k1, {
-      use: "sig",
+    const key = crypto.generateKeyPairSync("ec", {
+      namedCurve: DidAuthKeyCurve.SECP256k1,
     });
-    const did = getDIDFromKey(key);
+    const privateJwk = await fromKeyLike(key.privateKey);
+
+    const did = getDIDFromKey(privateJwk);
     expect(did).toBeDefined();
     expect(did).toContain(`did:vid:`);
   });

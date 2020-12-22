@@ -1,11 +1,12 @@
 import axios, { AxiosResponse } from "axios";
+import { JWK } from "jose/types";
 import {
   vidVerifyJwt,
   createJwt,
   SimpleSigner,
   JWTHeader,
 } from "@validatedid/did-jwt";
-import { util, JWK } from "./util";
+import { util, utilJwk } from "./util";
 import DidAuthErrors from "./interfaces/Errors";
 import { getNonce, doPostCallWithToken, getState } from "./util/Util";
 import { JWTVerifyOptions } from "./interfaces/JWT";
@@ -33,25 +34,18 @@ import {
 } from "./interfaces/DIDAuth.types";
 import { getPublicJWKFromPrivateHex } from "./util/JWK";
 import { DIDDocument } from "./interfaces/oidcSsi";
-import { JWKECKey } from "./interfaces/JWK";
 
 const isInternalSignature = (
   object: InternalSignature | ExternalSignature
-): object is InternalSignature => {
-  return "hexPrivateKey" in object && "did" in object;
-};
+): object is InternalSignature => "hexPrivateKey" in object && "did" in object;
 
 const isExternalSignature = (
   object: InternalSignature | ExternalSignature
-): object is ExternalSignature => {
-  return "signatureUri" in object && "did" in object;
-};
+): object is ExternalSignature => "signatureUri" in object && "did" in object;
 
 const isInternalVerification = (
   object: InternalVerification | ExternalVerification
-): object is InternalVerification => {
-  return "registry" in object && "rpcUrl" in object;
-};
+): object is InternalVerification => "registry" in object && "rpcUrl" in object;
 
 const createRegistration = async (
   registrationType: RegistrationType,
@@ -207,12 +201,12 @@ const createDidAuthResponsePayload = async (
     throw new Error(DidAuthErrors.SIGNATURE_OBJECT_TYPE_NOT_SET);
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  let sub_jwk: JWKECKey;
+  let sub_jwk: JWK;
   let sub: string;
 
   if (isInternalSignature(opts.signatureType)) {
-    sub = JWK.getThumbprint(opts.signatureType.hexPrivateKey);
-    sub_jwk = JWK.getPublicJWKFromPrivateHex(
+    sub = utilJwk.getThumbprint(opts.signatureType.hexPrivateKey);
+    sub_jwk = utilJwk.getPublicJWKFromPrivateHex(
       opts.signatureType.hexPrivateKey,
       opts.signatureType.kid || `${opts.signatureType.did}#keys-1`
     );
@@ -233,7 +227,7 @@ const createDidAuthResponsePayload = async (
         throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
 
       sub_jwk = didDoc.verificationMethod[0].publicKeyJwk;
-      sub = JWK.getThumbprintFromJwk(sub_jwk);
+      sub = utilJwk.getThumbprintFromJwk(sub_jwk);
     } catch (error) {
       throw new Error(
         `${DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT} Error: ${JSON.stringify(

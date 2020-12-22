@@ -1,7 +1,7 @@
 import DidAuthErrors from "./interfaces/Errors";
 import * as OidcSsi from "./interfaces/oidcSsi";
 import * as DidAuthTypes from "./interfaces/DIDAuth.types";
-import { util, JWK } from "./util";
+import { util, utilJwk } from "./util";
 
 export {
   createUriRequest,
@@ -19,5 +19,5 @@ export {
   OidcSsi,
   DidAuthTypes,
   util as DidAuthUtil,
-  JWK as DidAuthJwk,
+  utilJwk as DidAuthJwk,
 };

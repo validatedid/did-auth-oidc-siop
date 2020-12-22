@@ -1,6 +1,6 @@
 import { parse } from "querystring";
 import * as dotenv from "dotenv";
-import { JWT } from "jose";
+import { decodeJwt } from "@validatedid/did-jwt";
 import * as siopDidAuth from "../../src";
 import {
   DidAuthTypes,
@@ -21,6 +21,8 @@ import * as mockedData from "../data/mockedData";
 
 // importing .env variables
 dotenv.config();
+
+jest.setTimeout(30000);
 
 describe("SIOP DID Auth end to end flow tests should", () => {
   it("create a request externally, verify it internally, create a response internally and verify it externally", async () => {
@@ -92,7 +94,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     const uriResponse = await siopDidAuth.createUriResponse(responseOpts);
     expect(uriResponse).toBeDefined();
     expect(uriResponse).toHaveProperty("bodyEncoded");
-    const urlDecoded = decodeURIComponent(uriResponse.bodyEncoded);
+    const urlDecoded = decodeURI(uriResponse.bodyEncoded);
     const data = parse(urlDecoded);
     expect(data.id_token).toBeDefined();
 
@@ -149,7 +151,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     const uriRequest = await siopDidAuth.createUriRequest(requestOpts);
     expect(uriRequest).toBeDefined();
     expect(uriRequest).toHaveProperty("urlEncoded");
-    const uriDecoded = decodeURIComponent(uriRequest.urlEncoded);
+    const uriDecoded = decodeURI(uriRequest.urlEncoded);
     expect(uriDecoded).toContain(`openid://`);
     expect(uriDecoded).toContain(
       `?response_type=${DidAuthTypes.DidAuthResponseType.ID_TOKEN}`
@@ -197,12 +199,12 @@ describe("SIOP DID Auth end to end flow tests should", () => {
 
     const uriResponse = await siopDidAuth.createUriResponse(responseOpts);
     expect(uriResponse).toBeDefined();
-    const uriResponseDecoded = decodeURIComponent(uriResponse.urlEncoded);
+    const uriResponseDecoded = decodeURI(uriResponse.urlEncoded);
     const splitUrl = uriResponseDecoded.split("#");
     const responseData = parse(splitUrl[1]);
     expect(responseData.id_token).toBeDefined();
     const authResponseToken = responseData.id_token as string;
-    const { payload } = JWT.decode(authResponseToken, { complete: true });
+    const { payload } = decodeJwt(authResponseToken);
 
     const optsVerify: DidAuthVerifyOpts = {
       verificationType: {

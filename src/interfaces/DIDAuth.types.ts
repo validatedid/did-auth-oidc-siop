@@ -1,5 +1,5 @@
+import { JWK } from "jose/types";
 import { JWTPayload } from "./JWT";
-import { JWKECKey } from "./JWK";
 import { OidcClaim, VerifiablePresentation } from "./oidcSsi";
 
 export enum DidAuthKeyType {
@@ -68,7 +68,7 @@ export interface RegistrationJwksUri {
 }
 
 export interface RegistrationJwks {
-  jwks: JWKECKey;
+  jwks: JWK;
 }
 
 export const expirationTime = 5 * 60; // token expires in 5 minutes (in seconds)
@@ -165,7 +165,7 @@ export interface DidAuthResponsePayload extends JWTPayload {
   exp?: number;
   iat?: number;
   nonce: string;
-  sub_jwk: JWKECKey;
+  sub_jwk: JWK;
   did: string;
   vp?: VerifiablePresentation;
 }

@@ -1,13 +1,14 @@
 import SHA from "sha.js";
 import base58 from "bs58";
 import { ec as EC } from "elliptic";
+import { JWK } from "jose/types";
 import base64url from "base64url";
 import VidDidResolver from "@validatedid/vid-did-resolver";
 import { decodeJwt, EcdsaSignature } from "@validatedid/did-jwt";
 import { Resolver } from "did-resolver";
 import axios, { AxiosResponse } from "axios";
 import { ethers, utils } from "ethers";
-import { JWK, DidAuthErrors } from "../interfaces";
+import { DidAuthErrors } from "../interfaces";
 import {
   DidAuthRequestPayload,
   DidAuthResponseIss,
@@ -18,19 +19,15 @@ import {
 import { Resolvable } from "../interfaces/JWT";
 import { DIDDocument, VerificationMethod } from "../interfaces/oidcSsi";
 
-export const prefixWith0x = (key: string): string => {
-  return key.startsWith("0x") ? key : `0x${key}`;
-};
+export const prefixWith0x = (key: string): string =>
+  key.startsWith("0x") ? key : `0x${key}`;
 
-const fromBase64 = (base64: string) => {
-  return base64.replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
-};
+const fromBase64 = (base64: string) =>
+  base64.replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
 
 const base64urlEncodeBuffer = (buf: {
   toString: (arg0: "base64") => string;
-}): string => {
-  return fromBase64(buf.toString("base64"));
-};
+}): string => fromBase64(buf.toString("base64"));
 
 function getNonce(input: string): string {
   const buff = SHA("sha256").update(input).digest();
@@ -46,19 +43,19 @@ function toHex(data: string): string {
   return Buffer.from(data, "base64").toString("hex");
 }
 
-function getEthWallet(key: JWK.Key): ethers.Wallet {
+function getEthWallet(key: JWK): ethers.Wallet {
   return new ethers.Wallet(prefixWith0x(toHex(key.d)));
 }
 
-function getHexPrivateKey(key: JWK.Key): string {
+function getHexPrivateKey(key: JWK): string {
   return getEthWallet(key).privateKey;
 }
 
-function getEthAddress(key: JWK.ECKey): string {
+function getEthAddress(key: JWK): string {
   return getEthWallet(key).address;
 }
 
-function getDIDFromKey(key: JWK.ECKey): string {
+function getDIDFromKey(key: JWK): string {
   return `did:vid:${getEthAddress(key)}`;
 }
 
@@ -102,7 +99,7 @@ const getIssuerDid = (jwt: string): string => {
 const getUrlResolver = async (
   jwt: string,
   internalVerification: InternalVerification
-): Promise<Resolvable | string> => {
+): Promise<Resolvable | Resolver | string> => {
   try {
     if (!internalVerification.didUrlResolver)
       throw new Error(DidAuthErrors.BAD_INTERNAL_VERIFICATION_PARAMS);
