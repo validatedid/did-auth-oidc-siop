@@ -18,19 +18,15 @@ import {
 import { Resolvable } from "../interfaces/JWT";
 import { DIDDocument, VerificationMethod } from "../interfaces/oidcSsi";
 
-export const prefixWith0x = (key: string): string => {
-  return key.startsWith("0x") ? key : `0x${key}`;
-};
+export const prefixWith0x = (key: string): string =>
+  key.startsWith("0x") ? key : `0x${key}`;
 
-const fromBase64 = (base64: string) => {
-  return base64.replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
-};
+const fromBase64 = (base64: string) =>
+  base64.replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
 
 const base64urlEncodeBuffer = (buf: {
   toString: (arg0: "base64") => string;
-}): string => {
-  return fromBase64(buf.toString("base64"));
-};
+}): string => fromBase64(buf.toString("base64"));
 
 function getNonce(input: string): string {
   const buff = SHA("sha256").update(input).digest();
@@ -102,7 +98,7 @@ const getIssuerDid = (jwt: string): string => {
 const getUrlResolver = async (
   jwt: string,
   internalVerification: InternalVerification
-): Promise<Resolvable | string> => {
+): Promise<Resolvable | Resolver | string> => {
   try {
     if (!internalVerification.didUrlResolver)
       throw new Error(DidAuthErrors.BAD_INTERNAL_VERIFICATION_PARAMS);
