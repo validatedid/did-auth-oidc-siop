@@ -56,7 +56,7 @@ describe("vidDidAuth", () => {
       expect.assertions(12);
       const WALLET_API_BASE_URL =
         process.env.WALLET_API_URL || "http://localhost:9000";
-      const entityAA = mockedGetEnterpriseAuthToken("COMPANY AA INC");
+      const entityAA = await mockedGetEnterpriseAuthToken("COMPANY AA INC");
       const tokenEntityAA = entityAA.jwt;
       const didAA = entityAA.did;
 
@@ -141,7 +141,7 @@ describe("vidDidAuth", () => {
       expect.assertions(1);
       const WALLET_API_BASE_URL =
         process.env.WALLET_API_URL || "http://localhost:9000";
-      const entityAA = mockedGetEnterpriseAuthToken("COMPANY AA INC");
+      const entityAA = await mockedGetEnterpriseAuthToken("COMPANY AA INC");
       const tokenEntityAA = entityAA.jwt;
       const didAA = entityAA.did;
       const opts: DidAuthTypes.DidAuthRequestOpts = {
@@ -187,7 +187,7 @@ describe("vidDidAuth", () => {
       expect.assertions(7);
       const WALLET_API_BASE_URL =
         process.env.WALLET_API_URL || "http://localhost:9000";
-      const entityAA = mockedGetEnterpriseAuthToken("COMPANY AA INC");
+      const entityAA = await mockedGetEnterpriseAuthToken("COMPANY AA INC");
       const tokenEntityAA = entityAA.jwt;
       const didAA = entityAA.did;
 
@@ -278,7 +278,7 @@ describe("vidDidAuth", () => {
       expect.assertions(7);
       const WALLET_API_BASE_URL =
         process.env.WALLET_API_URL || "http://localhost:9000";
-      const entityAA = mockedGetEnterpriseAuthToken("COMPANY AA INC");
+      const entityAA = await mockedGetEnterpriseAuthToken("COMPANY AA INC");
       const tokenEntityAA = entityAA.jwt;
       const didAA = entityAA.did;
 
@@ -375,7 +375,7 @@ describe("vidDidAuth", () => {
       const RPC_ADDRESS = process.env.DID_REGISTRY_SC_ADDRESS || "0x00000000";
       const WALLET_API_BASE_URL =
         process.env.WALLET_API_URL || "http://localhost:9000";
-      const entityAA = mockedGetEnterpriseAuthToken("COMPANY AA INC");
+      const entityAA = await mockedGetEnterpriseAuthToken("COMPANY AA INC");
       const tokenEntityAA = entityAA.jwt;
       const didAA = entityAA.did;
 
@@ -683,7 +683,7 @@ describe("vidDidAuth", () => {
 
     it("create a registration by value when no kid is passed", async () => {
       expect.assertions(1);
-      const { hexPrivateKey, did } = mockedKeyAndDid();
+      const { hexPrivateKey, did } = await mockedKeyAndDid();
 
       const opts: DidAuthTypes.DidAuthRequestOpts = {
         redirectUri: "http://localhost:8080/demo/spanish-university",
@@ -721,7 +721,7 @@ describe("vidDidAuth", () => {
 
     it('should create a JWT DID Auth Response token with "ES256K-R" algo and random keys generated', async () => {
       expect.assertions(4);
-      const { hexPrivateKey, did } = mockedKeyAndDid();
+      const { hexPrivateKey, did } = await mockedKeyAndDid();
       const state = DidAuthUtil.getState();
       const nonce = DidAuthUtil.getNonce(state);
       const opts: DidAuthTypes.DidAuthResponseOpts = {
@@ -770,7 +770,7 @@ describe("vidDidAuth", () => {
 
     it("should create a JWT DID Auth Response token with Verifiable Presentation", async () => {
       expect.assertions(2);
-      const { hexPrivateKey, did } = mockedKeyAndDid();
+      const { hexPrivateKey, did } = await mockedKeyAndDid();
       const state = DidAuthUtil.getState();
       const nonce = DidAuthUtil.getNonce(state);
       const opts: DidAuthTypes.DidAuthResponseOpts = {
@@ -819,9 +819,9 @@ describe("vidDidAuth", () => {
       expect.assertions(3);
       const WALLET_API_BASE_URL =
         process.env.WALLET_API_URL || "http://localhost:9000";
-      const entityAA = mockedGetEnterpriseAuthToken("COMPANY AA INC");
+      const entityAA = await mockedGetEnterpriseAuthToken("COMPANY AA INC");
       const tokenEntityAA = entityAA.jwt;
-      const { hexPrivateKey, did, hexPublicKey } = mockedKeyAndDid();
+      const { hexPrivateKey, did, hexPublicKey } = await mockedKeyAndDid();
       const state = DidAuthUtil.getState();
       const nonce = DidAuthUtil.getNonce(state);
       const opts: DidAuthTypes.DidAuthResponseOpts = {
@@ -869,11 +869,11 @@ describe("vidDidAuth", () => {
       expect.assertions(1);
       const WALLET_API_BASE_URL =
         process.env.WALLET_API_URL || "http://localhost:9000";
-      const entityAA = mockedGetEnterpriseAuthToken("COMPANY AA INC");
+      const entityAA = await mockedGetEnterpriseAuthToken("COMPANY AA INC");
       const tokenEntityAA = entityAA.jwt;
       const state = DidAuthUtil.getState();
       const requestDIDAuthNonce = DidAuthUtil.getNonce(state);
-      const { hexPrivateKey, did, hexPublicKey } = mockedKeyAndDid();
+      const { hexPrivateKey, did, hexPublicKey } = await mockedKeyAndDid();
       const opts: DidAuthTypes.DidAuthResponseOpts = {
         redirectUri: "https://app.example/demo",
         signatureType: {
@@ -914,12 +914,12 @@ describe("vidDidAuth", () => {
       expect.assertions(1);
       const WALLET_API_BASE_URL =
         process.env.WALLET_API_URL || "http://localhost:9000";
-      const entityAA = mockedGetEnterpriseAuthToken("COMPANY AA INC");
+      const entityAA = await mockedGetEnterpriseAuthToken("COMPANY AA INC");
       const tokenEntityAA = entityAA.jwt;
       const state = DidAuthUtil.getState();
       const nonce = DidAuthUtil.getNonce(state);
       const requestDIDAuthNonce = DidAuthUtil.getNonce(state);
-      const { hexPrivateKey, did, hexPublicKey } = mockedKeyAndDid();
+      const { hexPrivateKey, did, hexPublicKey } = await mockedKeyAndDid();
       const opts: DidAuthTypes.DidAuthResponseOpts = {
         redirectUri: "https://app.example/demo",
         signatureType: {
@@ -960,12 +960,12 @@ describe("vidDidAuth", () => {
       expect.assertions(1);
       const WALLET_API_BASE_URL =
         process.env.WALLET_API_URL || "http://localhost:9000";
-      const entityAA = mockedGetEnterpriseAuthToken("COMPANY AA INC");
+      const entityAA = await mockedGetEnterpriseAuthToken("COMPANY AA INC");
       const tokenEntityAA = entityAA.jwt;
       const state = DidAuthUtil.getState();
       const nonce = DidAuthUtil.getNonce(state);
       const requestDIDAuthNonce = DidAuthUtil.getNonce(state);
-      const { hexPrivateKey, did, hexPublicKey } = mockedKeyAndDid();
+      const { hexPrivateKey, did, hexPublicKey } = await mockedKeyAndDid();
       const opts: DidAuthTypes.DidAuthResponseOpts = {
         redirectUri: "https://app.example/demo",
         signatureType: {
@@ -1063,7 +1063,7 @@ describe("vidDidAuth", () => {
   describe("signDidAuthInternal tests should", () => {
     it("sign when no kid is passed", async () => {
       expect.assertions(1);
-      const { hexPrivateKey, did } = mockedKeyAndDid();
+      const { hexPrivateKey, did } = await mockedKeyAndDid();
       const state = DidAuthUtil.getState();
       const requestPayload: DidAuthTypes.DidAuthRequestPayload = {
         iss: did,
@@ -1087,9 +1087,9 @@ describe("vidDidAuth", () => {
   });
 
   describe("createDidAuthResponsePayload tests should", () => {
-    it("create a response payload with no kid provided", () => {
+    it("create a response payload with no kid provided", async () => {
       expect.assertions(1);
-      const { hexPrivateKey, did } = mockedKeyAndDid();
+      const { hexPrivateKey, did } = await mockedKeyAndDid();
       const state = DidAuthUtil.getState();
       const opts: DidAuthTypes.DidAuthResponseOpts = {
         redirectUri: "https://entity.example/demo",

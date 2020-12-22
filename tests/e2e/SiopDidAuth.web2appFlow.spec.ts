@@ -1,6 +1,5 @@
 import { parse } from "querystring";
 import * as dotenv from "dotenv";
-import { JWT } from "jose";
 import { decodeJwt } from "@validatedid/did-jwt";
 import * as siopDidAuth from "../../src";
 import {
@@ -155,7 +154,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     expect(parsedData.state).toBeDefined();
     expect(parsedData.state).toStrictEqual(state);
     const authResponseToken = parsedData.id_token as string;
-    const { payload } = JWT.decode(authResponseToken, { complete: true });
+    const { payload } = decodeJwt(authResponseToken);
 
     // VERIFY DID AUTH RESPONSE
     const optsVerify: DidAuthVerifyOpts = {
@@ -301,7 +300,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     expect(responseData.state).toBeDefined();
     expect(responseData.state).toStrictEqual(state);
     const authResponseToken = responseData.id_token as string;
-    const { payload } = JWT.decode(authResponseToken, { complete: true });
+    const { payload } = decodeJwt(authResponseToken);
 
     // VERIFY DID AUTH RESPONSE
     const optsVerify: DidAuthVerifyOpts = {

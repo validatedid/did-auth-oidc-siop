@@ -1,13 +1,14 @@
 import SHA from "sha.js";
 import base58 from "bs58";
 import { ec as EC } from "elliptic";
+import { JWK } from "jose/types";
 import base64url from "base64url";
 import VidDidResolver from "@validatedid/vid-did-resolver";
 import { decodeJwt, EcdsaSignature } from "@validatedid/did-jwt";
 import { Resolver } from "did-resolver";
 import axios, { AxiosResponse } from "axios";
 import { ethers, utils } from "ethers";
-import { JWK, DidAuthErrors } from "../interfaces";
+import { DidAuthErrors } from "../interfaces";
 import {
   DidAuthRequestPayload,
   DidAuthResponseIss,
@@ -42,19 +43,19 @@ function toHex(data: string): string {
   return Buffer.from(data, "base64").toString("hex");
 }
 
-function getEthWallet(key: JWK.Key): ethers.Wallet {
+function getEthWallet(key: JWK): ethers.Wallet {
   return new ethers.Wallet(prefixWith0x(toHex(key.d)));
 }
 
-function getHexPrivateKey(key: JWK.Key): string {
+function getHexPrivateKey(key: JWK): string {
   return getEthWallet(key).privateKey;
 }
 
-function getEthAddress(key: JWK.ECKey): string {
+function getEthAddress(key: JWK): string {
   return getEthWallet(key).address;
 }
 
-function getDIDFromKey(key: JWK.ECKey): string {
+function getDIDFromKey(key: JWK): string {
   return `did:vid:${getEthAddress(key)}`;
 }
 

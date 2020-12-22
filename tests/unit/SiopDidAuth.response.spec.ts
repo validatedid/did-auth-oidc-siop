@@ -39,7 +39,7 @@ describe("SiopDidAuth creat Uri Response tests should", () => {
 
   it("throw an error BAD_PARAMS when no opts.state is passed", async () => {
     expect.assertions(1);
-    const { hexPrivateKey, did } = mockedKeyAndDid();
+    const { hexPrivateKey, did } = await mockedKeyAndDid();
     const opts = {
       redirectUri: "https://entity.example/demo",
       signatureType: {
@@ -55,7 +55,7 @@ describe("SiopDidAuth creat Uri Response tests should", () => {
 
   it("throw an error BAD_PARAMS when no opts.nonce is passed", async () => {
     expect.assertions(1);
-    const { hexPrivateKey, did } = mockedKeyAndDid();
+    const { hexPrivateKey, did } = await mockedKeyAndDid();
     const state = DidAuthUtil.getState();
     const opts = {
       redirectUri: "https://entity.example/demo",
@@ -72,7 +72,7 @@ describe("SiopDidAuth creat Uri Response tests should", () => {
   });
   it("throw an error BAD_PARAMS when no opts.registrationType is passed", async () => {
     expect.assertions(1);
-    const { hexPrivateKey, did } = mockedKeyAndDid();
+    const { hexPrivateKey, did } = await mockedKeyAndDid();
     const state = DidAuthUtil.getState();
     const opts = {
       redirectUri: "https://entity.example/demo",
@@ -91,7 +91,7 @@ describe("SiopDidAuth creat Uri Response tests should", () => {
 
   it("return a uriResponse when no response_mode is passed", async () => {
     expect.assertions(9);
-    const { hexPrivateKey, did } = mockedKeyAndDid();
+    const { hexPrivateKey, did } = await mockedKeyAndDid();
     const state = DidAuthUtil.getState();
     const opts: DidAuthTypes.DidAuthResponseOpts = {
       redirectUri: "https://entity.example/demo",
@@ -128,7 +128,7 @@ describe("SiopDidAuth creat Uri Response tests should", () => {
   });
   it("return a uriResponse with fragment when response_mode=fragment is passed", async () => {
     expect.assertions(3);
-    const { hexPrivateKey, did } = mockedKeyAndDid();
+    const { hexPrivateKey, did } = await mockedKeyAndDid();
     const state = DidAuthUtil.getState();
     const opts: DidAuthTypes.DidAuthResponseOpts = {
       redirectUri: "https://entity.example/demo",
@@ -155,7 +155,7 @@ describe("SiopDidAuth creat Uri Response tests should", () => {
   });
   it("return a uriResponse with query when response_mode=query is passed", async () => {
     expect.assertions(3);
-    const { hexPrivateKey, did } = mockedKeyAndDid();
+    const { hexPrivateKey, did } = await mockedKeyAndDid();
     const state = DidAuthUtil.getState();
     const opts: DidAuthTypes.DidAuthResponseOpts = {
       redirectUri: "https://entity.example/demo",
@@ -182,7 +182,7 @@ describe("SiopDidAuth creat Uri Response tests should", () => {
   });
   it("return a uriResponse with form_post when response_mode=form_post is passed", async () => {
     expect.assertions(4);
-    const { hexPrivateKey, did } = mockedKeyAndDid();
+    const { hexPrivateKey, did } = await mockedKeyAndDid();
     const state = DidAuthUtil.getState();
     const opts: DidAuthTypes.DidAuthResponseOpts = {
       redirectUri: "https://entity.example/demo",

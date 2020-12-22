@@ -1,12 +1,12 @@
-import { JWT } from "jose";
 import axios from "axios";
 import * as dotenv from "dotenv";
+import parseJwk from "jose/jwk/parse";
+import SignJWT from "jose/jwt/sign";
 import { vidVerifyJwt, decodeJwt } from "@validatedid/did-jwt";
 import {
   DidAuthErrors,
   DidAuthTypes,
   DidAuthUtil,
-  JWTHeader,
   verifyDidAuthRequest,
 } from "../../src";
 import { verifyDidAuth } from "../../src/AuxDidAuth";
@@ -25,8 +25,8 @@ describe("vid DID Auth Request Validation", () => {
     const RPC_PROVIDER =
       "https://ropsten.infura.io/v3/f03e98e0dc2b855be647c39abe984fcf";
     const RPC_ADDRESS = process.env.DID_REGISTRY_SC_ADDRESS || "0x00000000";
-    const entityAA = mockedGetEnterpriseAuthToken("COMPANY AA INC");
-    const header: JWTHeader = {
+    const entityAA = await mockedGetEnterpriseAuthToken("COMPANY AA INC");
+    const header = {
       alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256K,
       typ: "JWT",
       kid: `${entityAA.did}#keys-1`,
@@ -44,9 +44,14 @@ describe("vid DID Auth Request Validation", () => {
         id_token_signed_response_alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256K,
       },
     };
-    const jwt = JWT.sign(payload, entityAA.jwk, {
-      header,
-    });
+    const privateKey = await parseJwk(
+      entityAA.jwk,
+      DidAuthTypes.DidAuthKeyAlgorithm.ES256K
+    );
+    const jwt = await new SignJWT(payload)
+      .setProtectedHeader(header)
+      .sign(privateKey);
+
     jest.spyOn(axios, "get").mockResolvedValue({
       data: getParsedDidDocument({
         did: entityAA.did,

@@ -1,5 +1,5 @@
 {
-  "extends": "@tsconfig/node10/tsconfig.json",
+  "extends": "@tsconfig/node12/tsconfig.json",
   "compilerOptions": {
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
@@ -9,7 +9,6 @@
     "sourceMap": true,
     "incremental": true,
     "strict": false,
-    "moduleResolution": "node",
     "outDir": "dist"
   },
   "include": ["src"],
