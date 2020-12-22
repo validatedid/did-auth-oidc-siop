@@ -120,7 +120,7 @@ describe("vidDidAuth", () => {
       expect(uriRequest).toHaveProperty("urlEncoded");
       expect(uriRequest).toHaveProperty("encoding");
       expect(uriRequest).toHaveProperty("urlEncoded");
-      const uriDecoded = decodeURIComponent(uriRequest.urlEncoded);
+      const uriDecoded = decodeURI(uriRequest.urlEncoded);
       expect(uriDecoded).toContain(`openid://`);
       expect(uriDecoded).toContain(
         `?response_type=${DidAuthTypes.DidAuthResponseType.ID_TOKEN}`

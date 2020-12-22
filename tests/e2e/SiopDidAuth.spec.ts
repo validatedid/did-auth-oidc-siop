@@ -48,7 +48,7 @@ describe("VidDidAuth tests should", () => {
       expect(uriRequest).toHaveProperty("urlEncoded");
       expect(uriRequest).toHaveProperty("encoding");
       expect(uriRequest).toHaveProperty("urlEncoded");
-      const uriDecoded = decodeURIComponent(uriRequest.urlEncoded);
+      const uriDecoded = decodeURI(uriRequest.urlEncoded);
       expect(uriDecoded).toContain(`openid://`);
       expect(uriDecoded).toContain(
         `?response_type=${DidAuthTypes.DidAuthResponseType.ID_TOKEN}`
@@ -86,7 +86,7 @@ describe("VidDidAuth tests should", () => {
       expect(uriRequest).toHaveProperty("urlEncoded");
       expect(uriRequest).toHaveProperty("encoding");
       expect(uriRequest).toHaveProperty("urlEncoded");
-      const uriDecoded = decodeURIComponent(uriRequest.urlEncoded);
+      const uriDecoded = decodeURI(uriRequest.urlEncoded);
       expect(uriDecoded).toContain(`openid://`);
       expect(uriDecoded).toContain(
         `?response_type=${DidAuthTypes.DidAuthResponseType.ID_TOKEN}`
@@ -243,7 +243,7 @@ describe("VidDidAuth tests should", () => {
       expect(uriResponse.response_mode).toStrictEqual(
         DidAuthTypes.DidAuthResponseMode.FRAGMENT
       );
-      const urlDecoded = decodeURIComponent(uriResponse.urlEncoded);
+      const urlDecoded = decodeURI(uriResponse.urlEncoded);
       expect(urlDecoded).toContain(`https://app.example/demo`);
       const splitUrl = urlDecoded.split("#");
       const data = parse(splitUrl[1]);
@@ -283,7 +283,7 @@ describe("VidDidAuth tests should", () => {
       expect(uriResponse.response_mode).toStrictEqual(
         DidAuthTypes.DidAuthResponseMode.QUERY
       );
-      const urlDecoded = decodeURIComponent(uriResponse.urlEncoded);
+      const urlDecoded = decodeURI(uriResponse.urlEncoded);
       expect(urlDecoded).toContain(`https://app.example/demo`);
       const splitUrl = urlDecoded.split("?");
       const data = parse(splitUrl[1]);
@@ -324,10 +324,10 @@ describe("VidDidAuth tests should", () => {
       expect(uriResponse.response_mode).toStrictEqual(
         DidAuthTypes.DidAuthResponseMode.FORM_POST
       );
-      expect(decodeURIComponent(uriResponse.urlEncoded)).toContain(
+      expect(decodeURI(uriResponse.urlEncoded)).toContain(
         `https://app.example/demo`
       );
-      const urlDecoded = decodeURIComponent(uriResponse.bodyEncoded);
+      const urlDecoded = decodeURI(uriResponse.bodyEncoded);
       const data = parse(urlDecoded);
       expect(data.id_token).toBeDefined();
       expect(data.state).toBeDefined();

@@ -171,7 +171,7 @@ const createUriRequest = async (
   if (opts.requestObjectBy.type === ObjectPassedBy.REFERENCE) {
     responseUri += `&requestUri=${opts.requestObjectBy.referenceUri}`;
     return {
-      urlEncoded: encodeURIComponent(responseUri),
+      urlEncoded: encodeURI(responseUri),
       encoding: UrlEncodingFormat.FORM_URL_ENCODED,
       jwt,
     };
@@ -179,7 +179,7 @@ const createUriRequest = async (
   // returns an URI with Request JWT embedded
   responseUri += `&request=${jwt}`;
   return {
-    urlEncoded: encodeURIComponent(responseUri),
+    urlEncoded: encodeURI(responseUri),
     encoding: UrlEncodingFormat.FORM_URL_ENCODED,
   };
 };
@@ -212,20 +212,16 @@ const createUriResponse = async (
 
   switch (opts.responseMode) {
     case DidAuthResponseMode.FORM_POST:
-      uriResponse.urlEncoded = encodeURIComponent(opts.redirectUri);
-      uriResponse.bodyEncoded = encodeURIComponent(params);
+      uriResponse.urlEncoded = encodeURI(opts.redirectUri);
+      uriResponse.bodyEncoded = encodeURI(params);
       return uriResponse;
     case DidAuthResponseMode.QUERY:
-      uriResponse.urlEncoded = encodeURIComponent(
-        `${opts.redirectUri}?${params}`
-      );
+      uriResponse.urlEncoded = encodeURI(`${opts.redirectUri}?${params}`);
       return uriResponse;
     // FRAGMENT is the default
     default:
       uriResponse.response_mode = DidAuthResponseMode.FRAGMENT;
-      uriResponse.urlEncoded = encodeURIComponent(
-        `${opts.redirectUri}#${params}`
-      );
+      uriResponse.urlEncoded = encodeURI(`${opts.redirectUri}#${params}`);
       return uriResponse;
   }
 };

@@ -94,7 +94,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     const uriResponse = await siopDidAuth.createUriResponse(responseOpts);
     expect(uriResponse).toBeDefined();
     expect(uriResponse).toHaveProperty("bodyEncoded");
-    const urlDecoded = decodeURIComponent(uriResponse.bodyEncoded);
+    const urlDecoded = decodeURI(uriResponse.bodyEncoded);
     const data = parse(urlDecoded);
     expect(data.id_token).toBeDefined();
 
@@ -151,7 +151,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     const uriRequest = await siopDidAuth.createUriRequest(requestOpts);
     expect(uriRequest).toBeDefined();
     expect(uriRequest).toHaveProperty("urlEncoded");
-    const uriDecoded = decodeURIComponent(uriRequest.urlEncoded);
+    const uriDecoded = decodeURI(uriRequest.urlEncoded);
     expect(uriDecoded).toContain(`openid://`);
     expect(uriDecoded).toContain(
       `?response_type=${DidAuthTypes.DidAuthResponseType.ID_TOKEN}`
@@ -199,7 +199,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
 
     const uriResponse = await siopDidAuth.createUriResponse(responseOpts);
     expect(uriResponse).toBeDefined();
-    const uriResponseDecoded = decodeURIComponent(uriResponse.urlEncoded);
+    const uriResponseDecoded = decodeURI(uriResponse.urlEncoded);
     const splitUrl = uriResponseDecoded.split("#");
     const responseData = parse(splitUrl[1]);
     expect(responseData.id_token).toBeDefined();

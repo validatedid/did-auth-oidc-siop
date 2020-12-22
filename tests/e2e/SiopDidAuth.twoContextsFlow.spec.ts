@@ -55,7 +55,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     expect(uriRequest).toBeDefined();
     expect(uriRequest).toHaveProperty("urlEncoded");
     expect(uriRequest).toHaveProperty("encoding");
-    const uriDecoded = decodeURIComponent(uriRequest.urlEncoded);
+    const uriDecoded = decodeURI(uriRequest.urlEncoded);
     expect(uriDecoded).toContain(`openid://`);
     expect(uriDecoded).toContain(
       `?response_type=${DidAuthTypes.DidAuthResponseType.ID_TOKEN}`
@@ -144,10 +144,10 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     expect(uriResponse.response_mode).toStrictEqual(
       DidAuthTypes.DidAuthResponseMode.FORM_POST
     );
-    expect(decodeURIComponent(uriResponse.urlEncoded)).toContain(
+    expect(decodeURI(uriResponse.urlEncoded)).toContain(
       responseOpts.redirectUri
     );
-    const urlDecoded = decodeURIComponent(uriResponse.bodyEncoded);
+    const urlDecoded = decodeURI(uriResponse.bodyEncoded);
     const parsedData = parse(urlDecoded);
     expect(parsedData.id_token).toBeDefined();
     expect(parsedData.state).toBeDefined();

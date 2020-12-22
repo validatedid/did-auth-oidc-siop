@@ -119,7 +119,7 @@ describe("SiopDidAuth creat Uri Response tests should", () => {
     expect(uriResponse.response_mode).toStrictEqual(
       DidAuthTypes.DidAuthResponseMode.FRAGMENT
     );
-    const uriResponseDecoded = decodeURIComponent(uriResponse.urlEncoded);
+    const uriResponseDecoded = decodeURI(uriResponse.urlEncoded);
     const splitUrl = uriResponseDecoded.split("#");
     const responseData = parse(splitUrl[1]);
     expect(responseData.id_token).toBeDefined();
