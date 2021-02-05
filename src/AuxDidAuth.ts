@@ -4,8 +4,10 @@ import {
   vidVerifyJwt,
   createJwt,
   SimpleSigner,
-  JWTHeader,
+  NaclSigner,
 } from "@validatedid/did-jwt";
+import base58 from "bs58";
+import { keyUtils } from "@transmute/did-key-ed25519";
 import { util, utilJwk } from "./util";
 import DidAuthErrors from "./interfaces/Errors";
 import { getNonce, doPostCallWithToken, getState } from "./util/Util";
@@ -134,21 +136,29 @@ const signDidAuthInternal = async (
   hexPrivateKey: string,
   kid?: string
 ): Promise<string> => {
-  // assign specific JWT header
-  const header: JWTHeader = {
-    typ: "JWT",
-    alg: DidAuthKeyAlgorithm.ES256K,
-    kid: kid || `${issuer}#keys-1`,
-  };
+  let didkey = false;
+  if (issuer.includes("did:key")) didkey = true;
   const response = await createJwt(
     payload,
     {
       issuer,
-      alg: DidAuthKeyAlgorithm.ES256K,
-      signer: SimpleSigner(hexPrivateKey.replace("0x", "")), // Removing 0x from private key as input of SimpleSigner
+      alg: didkey ? DidAuthKeyAlgorithm.EDDSA : DidAuthKeyAlgorithm.ES256K,
+      signer: didkey
+        ? NaclSigner(
+            Buffer.from(
+              base58.decode(
+                keyUtils.privateKeyBase58FromPrivateKeyHex(hexPrivateKey)
+              )
+            ).toString("base64")
+          )
+        : SimpleSigner(hexPrivateKey.replace("0x", "")), // Removing 0x from private key as input of SimpleSigner
       expiresIn: expirationTime,
     },
-    header
+    {
+      typ: "JWT",
+      alg: didkey ? DidAuthKeyAlgorithm.EDDSA : DidAuthKeyAlgorithm.ES256K,
+      kid: kid || `${issuer}#keys-1`,
+    }
   );
   return response;
 };

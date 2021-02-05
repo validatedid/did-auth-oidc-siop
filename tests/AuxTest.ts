@@ -9,6 +9,7 @@ import moment from "moment";
 import { ethers } from "ethers";
 import jwt_decode from "jwt-decode";
 import base58 from "bs58";
+import { Ed25519KeyPair, keyUtils } from "@transmute/did-key-ed25519";
 import { DidAuthErrors, JWTClaims, DidAuthUtil, DidAuthTypes } from "../src";
 import { prefixWith0x } from "../src/util/Util";
 import {
@@ -119,6 +120,40 @@ export const mockedKeyAndDid = async (): Promise<{
     hexPrivateKey,
     did,
     jwk: privateJwk,
+    hexPublicKey,
+  };
+};
+
+interface KeyPair {
+  id: string;
+  type: string;
+  controller: string;
+  publicKeyBase58: string;
+  privateKeyBase58: string;
+}
+
+export const mockedKeyAndDidKey = async (
+  seed?: string
+): Promise<{
+  hexPrivateKey: string;
+  did: string;
+  hexPublicKey: string;
+}> => {
+  const key = await Ed25519KeyPair.generate({
+    secureRandom: () => {
+      return seed ? Buffer.from(seed, "hex") : crypto.randomBytes(32);
+    },
+  });
+  const keyPair = key.toKeyPair(true) as KeyPair;
+  const hexPublicKey = keyUtils.publicKeyHexFromPublicKeyBase58(
+    keyPair.publicKeyBase58
+  ) as string;
+  const hexPrivateKey = keyUtils.privateKeyHexFromPrivateKeyBase58(
+    keyPair.privateKeyBase58
+  ) as string;
+  return {
+    hexPrivateKey,
+    did: key.controller,
     hexPublicKey,
   };
 };

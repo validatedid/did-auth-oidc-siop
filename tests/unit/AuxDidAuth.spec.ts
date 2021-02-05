@@ -6,6 +6,7 @@ import {
   getParsedDidDocument,
   mockedGetEnterpriseAuthToken,
   mockedKeyAndDid,
+  mockedKeyAndDidKey,
 } from "../AuxTest";
 import {
   createUriRequest,
@@ -1071,6 +1072,29 @@ describe("vidDidAuth", () => {
         registration: {
           jwks_uri: `https://dev.vidchain.net/api/v1/identifiers/${did};transform-keys=jwks`,
           id_token_signed_response_alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256K,
+        },
+        client_id: "http://app.example/demo",
+        state,
+        nonce: DidAuthUtil.getNonce(state),
+        response_type: DidAuthTypes.DidAuthResponseType.ID_TOKEN,
+      };
+      const response = await signDidAuthInternal(
+        requestPayload,
+        did,
+        hexPrivateKey
+      );
+      expect(response).toBeDefined();
+    });
+    it("sign when using did:key", async () => {
+      expect.assertions(1);
+      const { hexPrivateKey, did } = await mockedKeyAndDidKey();
+      const state = DidAuthUtil.getState();
+      const requestPayload: DidAuthTypes.DidAuthRequestPayload = {
+        iss: did,
+        scope: DidAuthTypes.DidAuthScope.OPENID_DIDAUTHN,
+        registration: {
+          jwks_uri: `https://dev.vidchain.net/api/v1/identifiers/${did};transform-keys=jwks`,
+          id_token_signed_response_alg: DidAuthTypes.DidAuthKeyAlgorithm.EDDSA,
         },
         client_id: "http://app.example/demo",
         state,
