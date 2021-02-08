@@ -572,3 +572,86 @@ describe("VidDidAuth tests should", () => {
     });
   });
 });
+
+describe("VidDidAuth using did:key tests should", () => {
+  describe("create Uri Requests tests with", () => {
+    it("a JWT request by value", async () => {
+      expect.assertions(10);
+      const opts: DidAuthTypes.DidAuthRequestOpts = {
+        redirectUri: "http://app.example/demo",
+        requestObjectBy: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        signatureType: {
+          hexPrivateKey:
+            "d474ffdb3ea75fbb3f07673e67e52002a3b7eb42767f709f4100acf493c7fc8743017577997b72e7a8b4bce8c32c8e78fd75c1441e95d6aaa888056d1200beb3",
+          did: "did:key:z6MkixpejjET5qJK4ebN5m3UcdUPmYV4DPSCs1ALH8x2UCfc",
+          kid:
+            "did:key:z6MkixpejjET5qJK4ebN5m3UcdUPmYV4DPSCs1ALH8x2UCfc#keys-1",
+        },
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+      };
+
+      const uriRequest = await siopDidAuth.createUriRequest(opts);
+      expect(uriRequest).toBeDefined();
+      expect(uriRequest).toHaveProperty("urlEncoded");
+      expect(uriRequest).toHaveProperty("encoding");
+      expect(uriRequest).toHaveProperty("urlEncoded");
+      const uriDecoded = decodeURI(uriRequest.urlEncoded);
+      expect(uriDecoded).toContain(`openid://`);
+      expect(uriDecoded).toContain(
+        `?response_type=${DidAuthTypes.DidAuthResponseType.ID_TOKEN}`
+      );
+      expect(uriDecoded).toContain(`&client_id=${opts.redirectUri}`);
+      expect(uriDecoded).toContain(
+        `&scope=${DidAuthTypes.DidAuthScope.OPENID_DIDAUTHN}`
+      );
+      expect(uriDecoded).toContain(`&request=`);
+      const data = parse(uriDecoded);
+      expect(data.request).toBeDefined();
+    });
+
+    it("a JWT request by reference", async () => {
+      expect.assertions(12);
+      const opts: DidAuthTypes.DidAuthRequestOpts = {
+        redirectUri: "http://app.example/demo",
+        requestObjectBy: {
+          type: DidAuthTypes.ObjectPassedBy.REFERENCE,
+          referenceUri: "https://dev.vidchain.net/siop/jwts",
+        },
+        signatureType: {
+          hexPrivateKey:
+            "d474ffdb3ea75fbb3f07673e67e52002a3b7eb42767f709f4100acf493c7fc8743017577997b72e7a8b4bce8c32c8e78fd75c1441e95d6aaa888056d1200beb3",
+          did: "did:key:z6MkixpejjET5qJK4ebN5m3UcdUPmYV4DPSCs1ALH8x2UCfc",
+          kid:
+            "did:key:z6MkixpejjET5qJK4ebN5m3UcdUPmYV4DPSCs1ALH8x2UCfc#keys-1",
+        },
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+      };
+
+      const uriRequest = await siopDidAuth.createUriRequest(opts);
+      expect(uriRequest).toBeDefined();
+      expect(uriRequest).toHaveProperty("urlEncoded");
+      expect(uriRequest).toHaveProperty("encoding");
+      expect(uriRequest).toHaveProperty("urlEncoded");
+      const uriDecoded = decodeURI(uriRequest.urlEncoded);
+      expect(uriDecoded).toContain(`openid://`);
+      expect(uriDecoded).toContain(
+        `?response_type=${DidAuthTypes.DidAuthResponseType.ID_TOKEN}`
+      );
+      expect(uriDecoded).toContain(`&client_id=${opts.redirectUri}`);
+      expect(uriDecoded).toContain(
+        `&scope=${DidAuthTypes.DidAuthScope.OPENID_DIDAUTHN}`
+      );
+      expect(uriDecoded).toContain(`&requestUri=`);
+      const data = parse(uriDecoded);
+      expect(data.requestUri).toStrictEqual(opts.requestObjectBy.referenceUri);
+      expect(uriRequest).toHaveProperty("jwt");
+      expect(uriRequest.jwt).toBeDefined();
+    });
+  });
+});
