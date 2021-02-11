@@ -215,10 +215,11 @@ const createDidAuthResponsePayload = async (
   let sub: string;
 
   if (isInternalSignature(opts.signatureType)) {
-    sub = utilJwk.getThumbprint(opts.signatureType.hexPrivateKey);
+    sub = utilJwk.getThumbprint(opts.signatureType.hexPrivateKey, opts.did);
     sub_jwk = utilJwk.getPublicJWKFromPrivateHex(
       opts.signatureType.hexPrivateKey,
-      opts.signatureType.kid || `${opts.signatureType.did}#keys-1`
+      opts.signatureType.kid || `${opts.signatureType.did}#keys-1`,
+      opts.did
     );
   }
   if (isExternalSignature(opts.signatureType)) {
@@ -290,13 +291,14 @@ const verifyDidAuth = async (
     jws: jwt,
   };
   try {
-    const response: AxiosResponse = await doPostCallWithToken(
+    /* const response: AxiosResponse = await doPostCallWithToken(
       opts.verificationType.verifyUri,
       data,
       opts.verificationType.authZToken
-    );
+    ); */
+    const response = await axios.get(opts.verificationType.verifyUri);
 
-    if (!response || !response.status || response.status !== 204)
+    if (!response || !response.status || response.status !== 200)
       throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
   } catch (error) {
     throw Error(

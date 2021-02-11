@@ -124,7 +124,7 @@ const createDidAuthResponse = async (
 
   const didAuthResponsePayload: DidAuthResponsePayload = await createDidAuthResponsePayload(
     opts
-  );
+  ); // TODO
 
   if (isInternalSignature(opts.signatureType)) {
     return signDidAuthInternal(
@@ -140,7 +140,7 @@ const createDidAuthResponse = async (
     opts.signatureType.signatureUri,
     opts.signatureType.authZToken,
     opts.signatureType.kid
-  );
+  ); // TODO
 };
 
 /**
@@ -271,9 +271,11 @@ const verifyDidAuthRequest = async (
     throw new Error(DidAuthErrors.VERIFICATION_METHOD_NOT_MATCHES);
 
   // Verify the SIOP Request according to the verification method above.
-
-  if (!util.verifySignatureFromVerificationMethod(jwt, verificationMethod))
-    throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
+  const verification = await util.verifySignatureFromVerificationMethod(
+    jwt,
+    verificationMethod
+  );
+  if (!verification) throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
   // Additionally performs a complete token validation via vidVerifyJwt
   return verifyDidAuth(jwt, opts);
 };
@@ -366,8 +368,11 @@ const verifyDidAuthResponse = async (
   // using the key in the sub_jwk Claim; the key is a bare key in JWK format (not an X.509 certificate value).
   // SIOP: Verify the id_token according to the verification method above.
   // Verifying that the id_token was signed by the key specified in the sub_jwk claim.
-  if (!util.verifySignatureFromVerificationMethod(id_token, verificationMethod))
-    throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
+  const verification = await util.verifySignatureFromVerificationMethod(
+    id_token,
+    verificationMethod
+  );
+  if (!verification) throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
   // Additionally performs a complete token validation via vidVerifyJwt
   const validationResponse = await verifyDidAuth(id_token, opts);
 

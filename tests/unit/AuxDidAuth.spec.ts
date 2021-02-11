@@ -2,6 +2,7 @@ import * as dotenv from "dotenv";
 import axios from "axios";
 import * as didJwt from "@validatedid/did-jwt";
 import { parse } from "querystring";
+import { keyUtils } from "@transmute/did-key-ed25519";
 import {
   getParsedDidDocument,
   mockedGetEnterpriseAuthToken,
@@ -18,6 +19,7 @@ import {
   DidAuthErrors,
   DidAuthTypes,
   DidAuthUtil,
+  DidAuthJwk,
 } from "../../src";
 import * as mockedData from "../data/mockedData";
 import {
@@ -464,6 +466,85 @@ describe("vidDidAuth", () => {
       expectedPayload.registration = {
         jwks_uri: `https://dev.vidchain.net/api/v1/identifiers/${entityAA.did};transform-keys=jwks`,
         id_token_signed_response_alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
+      };
+
+      expect(validationResponse.payload.iat).toBeDefined();
+      expect(validationResponse.payload).toMatchObject(expectedPayload);
+      expect(validationResponse.payload.exp).toStrictEqual(
+        validationResponse.payload.iat + 5 * 60
+      ); // 5 minutes of expiration time
+      jest.clearAllMocks();
+    });
+
+    it("should return a valid payload on DID Auth request validation when using did:key", async () => {
+      expect.assertions(7);
+      const { hexPrivateKey, did, hexPublicKey } = await mockedKeyAndDidKey();
+      const opts: DidAuthTypes.DidAuthRequestOpts = {
+        redirectUri: "http://app.example/demo",
+        requestObjectBy: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        signatureType: {
+          hexPrivateKey,
+          did,
+          kid: `#${did.substring(8)}`,
+        },
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+      };
+      jest.spyOn(axios, "get").mockResolvedValue({
+        data: {
+          "@context": ["https://www.w3.org/ns/did/v1", { "@base": did }],
+          id: did,
+          verificationMethod: [
+            {
+              id: `#${did.substring(8)}`,
+              type: "Ed25519VerificationKey2018",
+              controller: did,
+              publicKeyBase58: keyUtils.publicKeyBase58FromPublicKeyHex(
+                hexPublicKey
+              ) as string,
+            },
+            {
+              id: "#z6LSjg5maTATQUt5JE6bbdZ13RbwccUf868p1PXRfvkqtJoa",
+              type: "X25519KeyAgreementKey2019",
+              controller: did,
+              publicKeyBase58: "8zuc49MbK2ALCqiq4z33iqPTmTwYRUxf8QokBU7KAw2p",
+            },
+          ],
+          authentication: [`#${did.substring(8)}`],
+          assertionMethod: [`#${did.substring(8)}`],
+          capabilityInvocation: [`#${did.substring(8)}`],
+          capabilityDelegation: [`#${did.substring(8)}`],
+          keyAgreement: ["#z6LSjg5maTATQUt5JE6bbdZ13RbwccUf868p1PXRfvkqtJoa"],
+        },
+      });
+      const { jwt } = await createDidAuthRequest(opts);
+      expect(jwt).toBeDefined(); // OK
+      const optsVerify: DidAuthTypes.DidAuthVerifyOpts = {
+        verificationType: {
+          registry: process.env.DID_REGISTRY_SC_ADDRESS,
+          rpcUrl: process.env.DID_PROVIDER_RPC_URL,
+          didUrlResolver: "https://dev.vidchain.net/api/v1/identifiers",
+        },
+      };
+      const validationResponse = await verifyDidAuthRequest(jwt, optsVerify);
+      expect(validationResponse).toBeDefined();
+      expect(validationResponse.signatureValidation).toBe(true);
+      expect(validationResponse.payload).toBeDefined();
+      const expectedPayload = mockedData.DIDAUTH_REQUEST_PAYLOAD;
+      expectedPayload.iss = did;
+      expectedPayload.nonce = expect.any(String) as string;
+      expectedPayload.state = expect.any(String) as string;
+      expectedPayload.client_id = opts.redirectUri;
+      expectedPayload.iat = expect.any(Number) as number;
+      expectedPayload.exp = expect.any(Number) as number;
+      expectedPayload.registration = {
+        jwks: DidAuthJwk.getPublicJWKFromPrivateHex(
+          hexPrivateKey,
+          `#${did.substring(8)}`
+        ),
       };
 
       expect(validationResponse.payload.iat).toBeDefined();
@@ -1061,6 +1142,7 @@ describe("vidDidAuth", () => {
       );
     });
   });
+
   describe("signDidAuthInternal tests should", () => {
     it("sign when no kid is passed", async () => {
       expect.assertions(1);

@@ -4,12 +4,13 @@ import { ec as EC } from "elliptic";
 import { JWK } from "jose/types";
 import base64url from "base64url";
 import VidDidResolver from "@validatedid/vid-did-resolver";
-import { decodeJwt, EcdsaSignature } from "@validatedid/did-jwt";
+import { decodeJwt, EcdsaSignature, vidVerifyJwt } from "@validatedid/did-jwt";
 import { Resolver } from "did-resolver";
 import axios, { AxiosResponse } from "axios";
 import { ethers, utils } from "ethers";
 import { DidAuthErrors } from "../interfaces";
 import {
+  DidAuthKeyAlgorithm,
   DidAuthRequestPayload,
   DidAuthResponseIss,
   DidAuthResponsePayload,
@@ -18,6 +19,7 @@ import {
 } from "../interfaces/DIDAuth.types";
 import { Resolvable } from "../interfaces/JWT";
 import { DIDDocument, VerificationMethod } from "../interfaces/oidcSsi";
+import config from "../config";
 
 export const prefixWith0x = (key: string): string =>
   key.startsWith("0x") ? key : `0x${key}`;
@@ -64,13 +66,13 @@ async function doPostCallWithToken(
   data: unknown,
   token: string
 ): Promise<AxiosResponse> {
-  const config = {
+  const conf = {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   };
   try {
-    const response = await axios.post(url, data, config);
+    const response = await axios.post(url, data, conf);
     return response;
   } catch (error) {
     throw new Error(
@@ -151,9 +153,11 @@ const getVerificationMethod = (
   const { verificationMethod } = didDoc;
   // kid can be "kid": "H7j7N4Phx2U1JQZ2SBjczz2omRjnMgT8c2gjDBv2Bf0="
   // or "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0#keys-1
-  // and id always contains did:vid:xxx#kid
+  // and id always contains did:xxx:yyy#kid
   return verificationMethod.find((elem) =>
-    kid.includes("did:") ? elem.id === kid : elem.id.split("#")[1] === kid
+    kid.includes("did:") || kid.startsWith("#")
+      ? elem.id === kid
+      : elem.id.split("#")[1] === kid
   );
 };
 
@@ -182,8 +186,7 @@ function toSignatureObject(signature: string): EcdsaSignature {
 
   return sigObj;
 }
-
-const verifySignatureFromVerificationMethod = (
+const verifyES256K = (
   jwt: string,
   verificationMethod: VerificationMethod
 ): boolean => {
@@ -193,11 +196,33 @@ const verifySignatureFromVerificationMethod = (
     const { data, signature } = decodeJwt(jwt);
     const hash = SHA("sha256").update(data).digest();
     const sigObj = toSignatureObject(signature);
-
     return secp256k1.keyFromPublic(publicKey, "hex").verify(hash, sigObj);
   } catch (err) {
     return false;
   }
+};
+
+const verifyEDDSA = async (jwt: string): Promise<boolean> => {
+  try {
+    const options = {
+      resolver: config,
+    };
+    const result = await vidVerifyJwt(jwt, options);
+    if (!result || !result.payload)
+      throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
+    return true;
+  } catch (err) {
+    return false;
+  }
+};
+
+const verifySignatureFromVerificationMethod = async (
+  jwt: string,
+  verificationMethod: VerificationMethod
+): Promise<boolean> => {
+  const { header } = decodeJwt(jwt);
+  if (header.alg === DidAuthKeyAlgorithm.EDDSA) return verifyEDDSA(jwt);
+  return verifyES256K(jwt, verificationMethod);
 };
 
 export {

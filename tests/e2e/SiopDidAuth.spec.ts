@@ -13,6 +13,7 @@ import {
   getLegalEntityTestAuthZToken,
   getPublicJWKFromDid,
   getUserEntityTestAuthZToken,
+  getUserEntityTestAuthZTokenDidKey,
 } from "../AuxTest";
 import * as mockedData from "../data/mockedData";
 import {
@@ -652,6 +653,91 @@ describe("VidDidAuth using did:key tests should", () => {
       expect(data.requestUri).toStrictEqual(opts.requestObjectBy.referenceUri);
       expect(uriRequest).toHaveProperty("jwt");
       expect(uriRequest.jwt).toBeDefined();
+    });
+  });
+  describe("verifyDidAuthRequest tests should", () => {
+    it("verify externally DidAuth Request JWT", async () => {
+      expect.assertions(3);
+      const { hexPrivateKey, did } = await getUserEntityTestAuthZTokenDidKey();
+
+      const opts: DidAuthTypes.DidAuthRequestOpts = {
+        redirectUri: "http://app.example/demo",
+        requestObjectBy: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        signatureType: {
+          hexPrivateKey,
+          did,
+          kid: `#${did.substring(8)}`,
+        },
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+      };
+
+      const { jwt } = await siopDidAuth.createDidAuthRequest(opts);
+      expect(jwt).toBeDefined();
+      const optsVerify: DidAuthTypes.DidAuthVerifyOpts = {
+        verificationType: {
+          verifyUri: `https://dev.vidchain.net/api/v1/identifiers/${did}`,
+        },
+      };
+      const validationResponse = await verifyDidAuthRequest(jwt, optsVerify);
+      expect(validationResponse).toBeDefined();
+      expect(validationResponse.signatureValidation).toBe(true);
+    });
+
+    it("verify internally DidAuth Request JWT", async () => {
+      expect.assertions(7);
+      const { hexPrivateKey, did } = await getUserEntityTestAuthZTokenDidKey();
+
+      const opts: DidAuthTypes.DidAuthRequestOpts = {
+        redirectUri: "http://app.example/demo",
+        requestObjectBy: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        signatureType: {
+          hexPrivateKey,
+          did,
+          kid: `#${did.substring(8)}`,
+        },
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+      };
+
+      const { jwt } = await siopDidAuth.createDidAuthRequest(opts);
+      expect(jwt).toBeDefined();
+      const optsVerify: DidAuthVerifyOpts = {
+        verificationType: {
+          registry: process.env.DID_REGISTRY_SC_ADDRESS,
+          rpcUrl: process.env.DID_PROVIDER_RPC_URL,
+          didUrlResolver: `https://dev.vidchain.net/api/v1/identifiers`,
+        },
+      };
+      const validationResponse = await verifyDidAuthRequest(jwt, optsVerify);
+      expect(validationResponse).toBeDefined();
+      expect(validationResponse.signatureValidation).toBe(true);
+      expect(validationResponse.payload).toBeDefined();
+      const expectedPayload = mockedData.DIDAUTH_REQUEST_PAYLOAD;
+      expectedPayload.iss = did;
+      expectedPayload.nonce = expect.any(String) as string;
+      expectedPayload.state = expect.any(String) as string;
+      expectedPayload.client_id = opts.redirectUri;
+      expectedPayload.iat = expect.any(Number) as number;
+      expectedPayload.exp = expect.any(Number) as number;
+      expectedPayload.registration = {
+        jwks: DidAuthJwk.getPublicJWKFromPrivateHex(
+          hexPrivateKey,
+          `#${did.substring(8)}`
+        ),
+      };
+
+      expect(validationResponse.payload.iat).toBeDefined();
+      expect(validationResponse.payload).toMatchObject(expectedPayload);
+      expect(validationResponse.payload.exp).toStrictEqual(
+        validationResponse.payload.iat + 5 * 60
+      ); // 5 minutes of expiration time
     });
   });
 });

@@ -182,6 +182,28 @@ export const getUserTestAuthNToken = async (): Promise<{
   };
 };
 
+export const getUserTestAuthNTokenDidKey = async (): Promise<{
+  hexPrivateKey: string;
+  did: string;
+  hexPublicKey: string;
+  assertion: string;
+}> => {
+  const { hexPrivateKey, did, hexPublicKey } = await mockedKeyAndDidKey();
+  const payload: UserTestAuthNToken = {
+    iss: did,
+    aud: "vidchain-api",
+    iat: moment().unix(),
+    exp: moment().add(15, "seconds").unix(),
+    publicKey: hexPublicKey,
+  };
+  return {
+    hexPrivateKey,
+    did,
+    hexPublicKey,
+    assertion: Buffer.from(JSON.stringify(payload)).toString("base64"),
+  };
+};
+
 const mockedEntityAuthNToken = async (
   enterpiseName?: string
 ): Promise<{
@@ -248,7 +270,7 @@ const getEntityAuthNToken = async (
   enterpiseName?: string
 ): Promise<{ jwt: string }> => {
   const WALLET_API_BASE_URL =
-    process.env.WALLET_API_URL || "http://localhost:9000";
+    process.env.WALLET_API_URL || "http://localhost:8080";
   // get entity API Key
   const result = await doPostCall(
     `${WALLET_API_BASE_URL}/api/v1/authentication-keys`,
@@ -286,7 +308,7 @@ export const getLegalEntityAuthZToken = async (
     scope: "vidchain profile entity",
   };
   const WALLET_API_BASE_URL =
-    process.env.WALLET_API_URL || "http://localhost:9000";
+    process.env.WALLET_API_URL || "http://localhost:8080";
   // Create and sign JWT
   const result = await doPostCall(
     `${WALLET_API_BASE_URL}/api/v1/sessions`,
@@ -313,7 +335,7 @@ export async function getLegalEntityTestAuthZToken(
     scope: "vidchain profile test entity",
   };
   const WALLET_API_BASE_URL =
-    process.env.WALLET_API_URL || "http://localhost:9000";
+    process.env.WALLET_API_URL || "http://localhost:8080";
   // Create and sign JWT
   const result = await doPostCall(
     `${WALLET_API_BASE_URL}/api/v1/sessions`,
@@ -347,7 +369,7 @@ export async function getUserEntityTestAuthZToken(): Promise<{
     scope: "vidchain profile test user",
   };
   const WALLET_API_BASE_URL =
-    process.env.WALLET_API_URL || "http://localhost:9000";
+    process.env.WALLET_API_URL || "http://localhost:8080";
   // Create and sign JWT
   const result = await doPostCall(
     `${WALLET_API_BASE_URL}/api/v1/sessions`,
@@ -360,6 +382,40 @@ export async function getUserEntityTestAuthZToken(): Promise<{
     did,
     hexPrivateKey,
     jwk,
+    hexPublicKey,
+  };
+}
+
+export async function getUserEntityTestAuthZTokenDidKey(): Promise<{
+  jwt: string;
+  did: string;
+  hexPrivateKey: string;
+  hexPublicKey: string;
+}> {
+  const {
+    hexPrivateKey,
+    did,
+    hexPublicKey,
+    assertion,
+  } = await getUserTestAuthNTokenDidKey();
+  const payload = {
+    grantType: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+    assertion,
+    scope: "vidchain profile test user",
+  };
+  const WALLET_API_BASE_URL =
+    process.env.WALLET_API_URL || "https://dev.vidchain.net";
+  // Create and sign JWT
+  const result = await doPostCall(
+    `${WALLET_API_BASE_URL}/api/v1/sessions`,
+    payload
+  );
+  const { accessToken } = result.data as AccessTokenResponseBody;
+
+  return {
+    jwt: accessToken,
+    did,
+    hexPrivateKey,
     hexPublicKey,
   };
 }
@@ -441,7 +497,7 @@ export const mockedIdToken = async (
   const state = DidAuthUtil.getState();
   const didAuthResponsePayload: DidAuthTypes.DidAuthResponsePayload = {
     iss: DidAuthTypes.DidAuthResponseIss.SELF_ISSUE,
-    sub: getThumbprint(hexPrivateKey),
+    sub: getThumbprint(hexPrivateKey, did),
     nonce: inputToken.nonce || DidAuthUtil.getNonce(state),
     aud: "https://app.example/demo",
     sub_jwk: getPublicJWKFromPrivateHex(hexPrivateKey, `${did}#keys-1`),
