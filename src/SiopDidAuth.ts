@@ -28,7 +28,7 @@ import {
   createDidAuthResponsePayload,
   verifyDidAuth,
 } from "./AuxDidAuth";
-import VID_RESOLVE_DID_URL from "./config";
+import { VID_RESOLVE_DID_URL } from "./config";
 import { util } from "./util";
 import { DIDDocument } from "./interfaces/oidcSsi";
 import { JWTHeader } from "./interfaces/JWT";
@@ -124,7 +124,7 @@ const createDidAuthResponse = async (
 
   const didAuthResponsePayload: DidAuthResponsePayload = await createDidAuthResponsePayload(
     opts
-  ); // TODO
+  );
 
   if (isInternalSignature(opts.signatureType)) {
     return signDidAuthInternal(
@@ -140,7 +140,7 @@ const createDidAuthResponse = async (
     opts.signatureType.signatureUri,
     opts.signatureType.authZToken,
     opts.signatureType.kid
-  ); // TODO
+  );
 };
 
 /**

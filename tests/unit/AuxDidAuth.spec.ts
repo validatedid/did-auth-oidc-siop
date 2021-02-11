@@ -897,6 +897,53 @@ describe("vidDidAuth", () => {
       jest.clearAllMocks();
     });
 
+    it("should create a JWT DID Auth Response token with Verifiable Presentation when using did:key", async () => {
+      expect.assertions(2);
+      const { hexPrivateKey, did } = await mockedKeyAndDidKey();
+      const state = DidAuthUtil.getState();
+      const nonce = DidAuthUtil.getNonce(state);
+      const opts: DidAuthTypes.DidAuthResponseOpts = {
+        redirectUri: "https://app.example/demo",
+        signatureType: {
+          hexPrivateKey,
+          did,
+          kid: `#${did.substring(8)}`,
+        },
+        nonce,
+        state,
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        did,
+        vp: mockedData.verifiableIdPresentation,
+      };
+
+      const didAuthJwt = await createDidAuthResponse(opts);
+      const { header, payload } = didJwt.decodeJwt(didAuthJwt);
+
+      const expectedHeader = { ...mockedData.DIDAUTH_HEADER };
+      expectedHeader.kid = `#${did.substring(8)}`;
+      const expectedPayload = mockedData.DIDAUTH_RESPONSE_PAYLOAD_VP;
+      expectedPayload.iss = expect.stringMatching(
+        DidAuthTypes.DidAuthResponseIss.SELF_ISSUE
+      ) as DidAuthTypes.DidAuthResponseIss.SELF_ISSUE;
+      expectedPayload.aud = opts.redirectUri;
+      expectedPayload.did = did;
+      expectedPayload.nonce = expect.any(String) as string;
+      expectedPayload.iat = expect.any(Number) as number;
+      expectedPayload.exp = expect.any(Number) as number;
+      expectedPayload.sub_jwk.kid = expect.stringContaining(
+        `#${did.substring(8)}`
+      ) as string;
+      expectedPayload.sub_jwk.x = expect.any(String) as string;
+      expectedPayload.sub_jwk.y = expect.any(String) as string;
+      expectedPayload.sub = expect.any(String) as string;
+
+      expect(header).toMatchObject(expectedHeader);
+      expect(payload).toMatchObject(expectedPayload);
+      jest.clearAllMocks();
+    });
+
     it("should return valid payload on DID Auth Response validation", async () => {
       expect.assertions(3);
       const WALLET_API_BASE_URL =

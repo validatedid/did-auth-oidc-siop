@@ -740,4 +740,127 @@ describe("VidDidAuth using did:key tests should", () => {
       ); // 5 minutes of expiration time
     });
   });
+  describe("create Uri Response tests with", () => {
+    it("an id_token and state using the default response_mode=fragment with only required params", async () => {
+      expect.assertions(10);
+      const { hexPrivateKey, did } = await getUserEntityTestAuthZTokenDidKey();
+      const state = DidAuthUtil.getState();
+      const nonce = DidAuthUtil.getNonce(state);
+      const opts: DidAuthTypes.DidAuthResponseOpts = {
+        redirectUri: "https://app.example/demo",
+        signatureType: {
+          hexPrivateKey,
+          did,
+          kid: `#${did.substring(8)}`,
+        },
+        nonce,
+        state,
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        did,
+      };
+
+      const uriResponse = await siopDidAuth.createUriResponse(opts);
+      expect(uriResponse).toBeDefined();
+      expect(uriResponse).toHaveProperty("urlEncoded");
+      expect(uriResponse).toHaveProperty("encoding");
+      expect(uriResponse).toHaveProperty("response_mode");
+      expect(uriResponse.encoding).toStrictEqual(
+        DidAuthTypes.UrlEncodingFormat.FORM_URL_ENCODED
+      );
+      expect(uriResponse.response_mode).toStrictEqual(
+        DidAuthTypes.DidAuthResponseMode.FRAGMENT
+      );
+      const urlDecoded = decodeURI(uriResponse.urlEncoded);
+      expect(urlDecoded).toContain(`https://app.example/demo`);
+      const splitUrl = urlDecoded.split("#");
+      const data = parse(splitUrl[1]);
+      expect(data.id_token).toBeDefined();
+      expect(data.state).toBeDefined();
+      expect(data.state).toStrictEqual(state);
+    });
+    it("an id_token and state using response_mode=query with only required params", async () => {
+      expect.assertions(10);
+      const { hexPrivateKey, did } = await getUserEntityTestAuthZTokenDidKey();
+      const state = DidAuthUtil.getState();
+      const nonce = DidAuthUtil.getNonce(state);
+      const opts: DidAuthTypes.DidAuthResponseOpts = {
+        redirectUri: "https://app.example/demo",
+        signatureType: {
+          hexPrivateKey,
+          did,
+          kid: `#${did.substring(8)}`,
+        },
+        nonce,
+        state,
+        responseMode: DidAuthResponseMode.QUERY,
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        did,
+      };
+
+      const uriResponse = await siopDidAuth.createUriResponse(opts);
+      expect(uriResponse).toBeDefined();
+      expect(uriResponse).toHaveProperty("urlEncoded");
+      expect(uriResponse).toHaveProperty("encoding");
+      expect(uriResponse).toHaveProperty("response_mode");
+      expect(uriResponse.encoding).toStrictEqual(
+        DidAuthTypes.UrlEncodingFormat.FORM_URL_ENCODED
+      );
+      expect(uriResponse.response_mode).toStrictEqual(
+        DidAuthTypes.DidAuthResponseMode.QUERY
+      );
+      const urlDecoded = decodeURI(uriResponse.urlEncoded);
+      expect(urlDecoded).toContain(`https://app.example/demo`);
+      const splitUrl = urlDecoded.split("?");
+      const data = parse(splitUrl[1]);
+      expect(data.id_token).toBeDefined();
+      expect(data.state).toBeDefined();
+      expect(data.state).toStrictEqual(state);
+    });
+    it("an id_token and state using response_mode=form_post with only required params", async () => {
+      expect.assertions(11);
+      const { hexPrivateKey, did } = await getUserEntityTestAuthZTokenDidKey();
+      const state = DidAuthUtil.getState();
+      const nonce = DidAuthUtil.getNonce(state);
+      const opts: DidAuthTypes.DidAuthResponseOpts = {
+        redirectUri: "https://app.example/demo",
+        signatureType: {
+          hexPrivateKey,
+          did,
+          kid: `#${did.substring(8)}`,
+        },
+        nonce,
+        state,
+        responseMode: DidAuthResponseMode.FORM_POST,
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        did,
+      };
+
+      const uriResponse = await siopDidAuth.createUriResponse(opts);
+      expect(uriResponse).toBeDefined();
+      expect(uriResponse).toHaveProperty("urlEncoded");
+      expect(uriResponse).toHaveProperty("encoding");
+      expect(uriResponse).toHaveProperty("response_mode");
+      expect(uriResponse).toHaveProperty("bodyEncoded");
+      expect(uriResponse.encoding).toStrictEqual(
+        DidAuthTypes.UrlEncodingFormat.FORM_URL_ENCODED
+      );
+      expect(uriResponse.response_mode).toStrictEqual(
+        DidAuthTypes.DidAuthResponseMode.FORM_POST
+      );
+      expect(decodeURI(uriResponse.urlEncoded)).toContain(
+        `https://app.example/demo`
+      );
+      const urlDecoded = decodeURI(uriResponse.bodyEncoded);
+      const data = parse(urlDecoded);
+      expect(data.id_token).toBeDefined();
+      expect(data.state).toBeDefined();
+      expect(data.state).toStrictEqual(state);
+    });
+  });
 });

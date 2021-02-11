@@ -19,7 +19,7 @@ import {
 } from "../interfaces/DIDAuth.types";
 import { Resolvable } from "../interfaces/JWT";
 import { DIDDocument, VerificationMethod } from "../interfaces/oidcSsi";
-import config from "../config";
+import { VID_RESOLVE_DID_URL } from "../config";
 
 export const prefixWith0x = (key: string): string =>
   key.startsWith("0x") ? key : `0x${key}`;
@@ -205,7 +205,7 @@ const verifyES256K = (
 const verifyEDDSA = async (jwt: string): Promise<boolean> => {
   try {
     const options = {
-      resolver: config,
+      resolver: VID_RESOLVE_DID_URL,
     };
     const result = await vidVerifyJwt(jwt, options);
     if (!result || !result.payload)

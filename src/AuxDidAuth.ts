@@ -36,6 +36,7 @@ import {
 } from "./interfaces/DIDAuth.types";
 import { getPublicJWKFromPrivateHex } from "./util/JWK";
 import { DIDDocument } from "./interfaces/oidcSsi";
+import { DEFAULT_PROOF_TYPE, PROOF_TYPE_EDDSA } from "./config";
 
 const isInternalSignature = (
   object: InternalSignature | ExternalSignature
@@ -169,12 +170,14 @@ const signDidAuthExternal = async (
   authZToken: string,
   kid?: string
 ): Promise<string> => {
+  let didkey = false;
+  if (payload.did && (payload.did as string).includes("did:key")) didkey = true;
   const data = {
     issuer: payload.iss.includes("did:") ? payload.iss : payload.did,
     payload,
-    type: "EcdsaSecp256k1Signature2019", // fixed type
+    type: didkey ? PROOF_TYPE_EDDSA : DEFAULT_PROOF_TYPE,
     expiresIn: expirationTime,
-    alg: DidAuthKeyAlgorithm.ES256K,
+    alg: didkey ? DidAuthKeyAlgorithm.EDDSA : DidAuthKeyAlgorithm.ES256K,
     selfIssued: payload.iss.includes(DidAuthResponseIss.SELF_ISSUE)
       ? payload.iss
       : undefined,
