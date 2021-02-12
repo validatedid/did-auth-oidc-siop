@@ -306,9 +306,7 @@ const verifyDidAuth = async (
       data,
       opts.verificationType.authZToken
     );
-    // const response = await axios.get(opts.verificationType.verifyUri);
-
-    if (!response || !response.status || response.status !== 200)
+    if (!response || !response.status || response.status !== 204)
       throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
   } catch (error) {
     throw Error(

@@ -338,7 +338,6 @@ describe("VidDidAuth tests should", () => {
   describe("verifyDidAuthRequest tests should", () => {
     it("verify internally a DidAuth Request JWT", async () => {
       expect.assertions(7);
-      const WALLET_API_BASE_URL = process.env.WALLET_API_URL;
       const { hexPrivateKey, did } = await getUserEntityTestAuthZToken();
 
       const opts: DidAuthTypes.DidAuthRequestOpts = {
@@ -363,7 +362,7 @@ describe("VidDidAuth tests should", () => {
         verificationType: {
           registry: process.env.DID_REGISTRY_SC_ADDRESS,
           rpcUrl: process.env.DID_PROVIDER_RPC_URL,
-          didUrlResolver: `${WALLET_API_BASE_URL}/api/v1/identifiers`,
+          didUrlResolver: `https://dev.vidchain.net/api/v1/identifiers`,
         },
       };
       const validationResponse = await verifyDidAuthRequest(jwt, optsVerify);
@@ -394,7 +393,6 @@ describe("VidDidAuth tests should", () => {
 
     it("verify internally a DidAuth Response JWT", async () => {
       expect.assertions(7);
-      const WALLET_API_BASE_URL = process.env.WALLET_API_URL;
       const { hexPrivateKey, did } = await getUserEntityTestAuthZToken();
       const state = DidAuthUtil.getState();
       const nonce = DidAuthUtil.getNonce(state);
@@ -421,7 +419,7 @@ describe("VidDidAuth tests should", () => {
         verificationType: {
           registry: process.env.DID_REGISTRY_SC_ADDRESS,
           rpcUrl: process.env.DID_PROVIDER_RPC_URL,
-          didUrlResolver: `${WALLET_API_BASE_URL}/api/v1/identifiers`,
+          didUrlResolver: `https://dev.vidchain.net/api/v1/identifiers`,
         },
         nonce,
         redirectUri: opts.redirectUri,
@@ -452,7 +450,6 @@ describe("VidDidAuth tests should", () => {
 
     it("verify externally a DidAuth Response JWT generated internally", async () => {
       expect.assertions(7);
-      const WALLET_API_BASE_URL = process.env.WALLET_API_URL;
       const entityAA = await getLegalEntityTestAuthZToken("COMPANY E2E INC");
       const authZToken = entityAA.jwt;
       const {
@@ -482,9 +479,9 @@ describe("VidDidAuth tests should", () => {
       expect(jwt).toBeDefined();
       const optsVerify: DidAuthVerifyOpts = {
         verificationType: {
-          verifyUri: `${WALLET_API_BASE_URL}/api/v1/signature-validations`,
+          verifyUri: `https://dev.vidchain.net/api/v1/signature-validations`,
           authZToken,
-          didUrlResolver: `${WALLET_API_BASE_URL}/api/v1/identifiers`,
+          didUrlResolver: `https://dev.vidchain.net/api/v1/identifiers`,
         },
         nonce,
         redirectUri: opts.redirectUri,
@@ -515,7 +512,6 @@ describe("VidDidAuth tests should", () => {
 
     it("verify externally a DidAuth Response JWT generated externally with a test entity", async () => {
       expect.assertions(7);
-      const WALLET_API_BASE_URL = process.env.WALLET_API_URL;
       const entityAA = await getLegalEntityTestAuthZToken("COMPANY E2E INC");
       const authZToken = entityAA.jwt;
       const { did } = entityAA;
@@ -524,7 +520,7 @@ describe("VidDidAuth tests should", () => {
       const opts: DidAuthTypes.DidAuthResponseOpts = {
         redirectUri: "https://app.example/demo",
         signatureType: {
-          signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
+          signatureUri: `https://dev.vidchain.net/api/v1/signatures`,
           did,
           authZToken,
           kid: `${did}#keys-1`,
@@ -534,7 +530,7 @@ describe("VidDidAuth tests should", () => {
         responseMode: DidAuthResponseMode.FORM_POST,
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.VALUE,
-          referenceUri: `${WALLET_API_BASE_URL}/api/v1/identifiers/${did};transform-keys=jwks`,
+          referenceUri: `https://dev.vidchain.net/api/v1/identifiers/${did};transform-keys=jwks`,
         },
         did,
       };
@@ -544,9 +540,9 @@ describe("VidDidAuth tests should", () => {
 
       const optsVerify: DidAuthVerifyOpts = {
         verificationType: {
-          verifyUri: `${WALLET_API_BASE_URL}/api/v1/signature-validations`,
+          verifyUri: `https://dev.vidchain.net/api/v1/signature-validations`,
           authZToken,
-          didUrlResolver: `${WALLET_API_BASE_URL}/api/v1/identifiers`,
+          didUrlResolver: `https://dev.vidchain.net/api/v1/identifiers`,
         },
         nonce,
         redirectUri: opts.redirectUri,
@@ -658,8 +654,11 @@ describe("VidDidAuth using did:key tests should", () => {
   describe("verifyDidAuthRequest tests should", () => {
     it("verify externally DidAuth Request JWT", async () => {
       expect.assertions(3);
+      const entityAA = await getLegalEntityTestAuthZToken("COMPANY E2E INC");
+      const authZToken = entityAA.jwt;
       const { hexPrivateKey, did } = await getUserEntityTestAuthZTokenDidKey();
-
+      const state = DidAuthUtil.getState();
+      const nonce = DidAuthUtil.getNonce(state);
       const opts: DidAuthTypes.DidAuthRequestOpts = {
         redirectUri: "http://app.example/demo",
         requestObjectBy: {
@@ -677,10 +676,14 @@ describe("VidDidAuth using did:key tests should", () => {
 
       const { jwt } = await siopDidAuth.createDidAuthRequest(opts);
       expect(jwt).toBeDefined();
-      const optsVerify: DidAuthTypes.DidAuthVerifyOpts = {
+      const optsVerify: DidAuthVerifyOpts = {
         verificationType: {
-          verifyUri: `https://dev.vidchain.net/api/v1/identifiers`,
+          verifyUri: `https://dev.vidchain.net/api/v1/signature-validations`,
+          authZToken,
+          didUrlResolver: `https://dev.vidchain.net/api/v1/identifiers`,
         },
+        nonce,
+        redirectUri: opts.redirectUri,
       };
       const validationResponse = await verifyDidAuthRequest(jwt, optsVerify);
       expect(validationResponse).toBeDefined();
@@ -923,11 +926,9 @@ describe("VidDidAuth using did:key tests should", () => {
 
     it("verify externally a DidAuth Response JWT generated internally", async () => {
       expect.assertions(7);
-      const {
-        hexPrivateKey,
-        did,
-        hexPublicKey,
-      } = await getUserEntityTestAuthZTokenDidKey();
+      const entityAA = await getLegalEntityTestAuthZToken("COMPANY E2E INC");
+      const authZToken = entityAA.jwt;
+      const { hexPrivateKey, did } = await getUserEntityTestAuthZTokenDidKey();
       const state = DidAuthUtil.getState();
       const nonce = DidAuthUtil.getNonce(state);
       const opts: DidAuthTypes.DidAuthResponseOpts = {
@@ -950,7 +951,9 @@ describe("VidDidAuth using did:key tests should", () => {
       expect(jwt).toBeDefined();
       const optsVerify: DidAuthVerifyOpts = {
         verificationType: {
-          verifyUri: `https://dev.vidchain.net/api/v1/identifiers`,
+          verifyUri: `https://dev.vidchain.net/api/v1/signature-validations`,
+          authZToken,
+          didUrlResolver: `https://dev.vidchain.net/api/v1/identifiers`,
         },
         nonce,
         redirectUri: opts.redirectUri,
@@ -967,8 +970,10 @@ describe("VidDidAuth using did:key tests should", () => {
       expectedPayload.iat = expect.any(Number) as number;
       expectedPayload.exp = expect.any(Number) as number;
       expectedPayload.sub = expect.any(String) as string;
-      expectedPayload.sub_jwk = getPublicJWKFromPublicHex(hexPublicKey);
-
+      expectedPayload.sub_jwk = DidAuthJwk.getPublicJWKFromPrivateHexDidKey(
+        hexPrivateKey,
+        `#${did.substring(8)}`
+      );
       expect(validationResponse.payload.iat).toBeDefined();
       expect(validationResponse.payload).toMatchObject(expectedPayload);
       expect(validationResponse.payload.exp).toStrictEqual(
@@ -978,7 +983,6 @@ describe("VidDidAuth using did:key tests should", () => {
 
     it("verify externally a DidAuth Response JWT generated externally with a test entity", async () => {
       expect.assertions(7);
-      const WALLET_API_BASE_URL = process.env.WALLET_API_URL;
       const entityAA = await getLegalEntityTestAuthZToken("COMPANY E2E INC");
       const authZToken = entityAA.jwt;
       const { did } = entityAA;
@@ -987,17 +991,17 @@ describe("VidDidAuth using did:key tests should", () => {
       const opts: DidAuthTypes.DidAuthResponseOpts = {
         redirectUri: "https://app.example/demo",
         signatureType: {
-          signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
+          signatureUri: `https://dev.vidchain.net/api/v1/signatures`,
           did,
           authZToken,
-          kid: `${did}#keys-1`,
+          kid: `#${did.substring(8)}`,
         },
         nonce,
         state,
         responseMode: DidAuthResponseMode.FORM_POST,
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.VALUE,
-          referenceUri: `${WALLET_API_BASE_URL}/api/v1/identifiers/${did};transform-keys=jwks`,
+          referenceUri: `https://dev.vidchain.net/api/v1/identifiers/${did};transform-keys=jwks`,
         },
         did,
       };
@@ -1007,9 +1011,9 @@ describe("VidDidAuth using did:key tests should", () => {
 
       const optsVerify: DidAuthVerifyOpts = {
         verificationType: {
-          verifyUri: `${WALLET_API_BASE_URL}/api/v1/signature-validations`,
+          verifyUri: `https://dev.vidchain.net/api/v1/signature-validations`,
           authZToken,
-          didUrlResolver: `${WALLET_API_BASE_URL}/api/v1/identifiers`,
+          didUrlResolver: `https://dev.vidchain.net/api/v1/identifiers`,
         },
         nonce,
         redirectUri: opts.redirectUri,

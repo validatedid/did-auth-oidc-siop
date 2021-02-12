@@ -923,6 +923,7 @@ describe("vidDidAuth", () => {
 
       const expectedHeader = { ...mockedData.DIDAUTH_HEADER };
       expectedHeader.kid = `#${did.substring(8)}`;
+      expectedHeader.alg = "EdDSA";
       const expectedPayload = mockedData.DIDAUTH_RESPONSE_PAYLOAD_VP;
       expectedPayload.iss = expect.stringMatching(
         DidAuthTypes.DidAuthResponseIss.SELF_ISSUE
@@ -937,6 +938,7 @@ describe("vidDidAuth", () => {
       ) as string;
       expectedPayload.sub_jwk.x = expect.any(String) as string;
       expectedPayload.sub_jwk.y = expect.any(String) as string;
+      expectedPayload.sub_jwk.crv = "ed25519";
       expectedPayload.sub = expect.any(String) as string;
 
       expect(header).toMatchObject(expectedHeader);
@@ -972,6 +974,77 @@ describe("vidDidAuth", () => {
           did,
           publicKeyHex: hexPublicKey,
         }),
+      });
+
+      jest.spyOn(axios, "post").mockResolvedValue({ status: 204 });
+      const didAuthJwt = await createDidAuthResponse(opts);
+      const optsVerify: DidAuthTypes.DidAuthVerifyOpts = {
+        verificationType: {
+          verifyUri: `${WALLET_API_BASE_URL}/api/v1/signature-validations`,
+          authZToken: tokenEntityAA,
+        },
+        nonce,
+        redirectUri: opts.redirectUri,
+      };
+      const validationResponse = await verifyDidAuthResponse(
+        didAuthJwt,
+        optsVerify
+      );
+      expect(validationResponse).toBeDefined();
+      expect(validationResponse).toHaveProperty("signatureValidation");
+      expect(validationResponse.signatureValidation).toBe(true);
+      jest.clearAllMocks();
+    });
+
+    it("should return valid payload on DID Auth Response validation when using did:key", async () => {
+      expect.assertions(3);
+      const WALLET_API_BASE_URL =
+        process.env.WALLET_API_URL || "https://dev.vidchain.net";
+      const entityAA = await mockedGetEnterpriseAuthToken("COMPANY AA INC");
+      const tokenEntityAA = entityAA.jwt;
+      const { hexPrivateKey, did, hexPublicKey } = await mockedKeyAndDidKey();
+      const state = DidAuthUtil.getState();
+      const nonce = DidAuthUtil.getNonce(state);
+      const opts: DidAuthTypes.DidAuthResponseOpts = {
+        redirectUri: "https://app.example/demo",
+        signatureType: {
+          hexPrivateKey,
+          did,
+          kid: `#${did.substring(8)}`,
+        },
+        nonce,
+        state,
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        did,
+      };
+      jest.spyOn(axios, "get").mockResolvedValue({
+        data: {
+          "@context": ["https://www.w3.org/ns/did/v1", { "@base": did }],
+          id: did,
+          verificationMethod: [
+            {
+              id: `#${did.substring(8)}`,
+              type: "Ed25519VerificationKey2018",
+              controller: did,
+              publicKeyBase58: keyUtils.publicKeyBase58FromPublicKeyHex(
+                hexPublicKey
+              ) as string,
+            },
+            {
+              id: "#z6LSjg5maTATQUt5JE6bbdZ13RbwccUf868p1PXRfvkqtJoa",
+              type: "X25519KeyAgreementKey2019",
+              controller: did,
+              publicKeyBase58: "8zuc49MbK2ALCqiq4z33iqPTmTwYRUxf8QokBU7KAw2p",
+            },
+          ],
+          authentication: [`#${did.substring(8)}`],
+          assertionMethod: [`#${did.substring(8)}`],
+          capabilityInvocation: [`#${did.substring(8)}`],
+          capabilityDelegation: [`#${did.substring(8)}`],
+          keyAgreement: ["#z6LSjg5maTATQUt5JE6bbdZ13RbwccUf868p1PXRfvkqtJoa"],
+        },
       });
 
       jest.spyOn(axios, "post").mockResolvedValue({ status: 204 });

@@ -270,7 +270,7 @@ const getEntityAuthNToken = async (
   enterpiseName?: string
 ): Promise<{ jwt: string }> => {
   const WALLET_API_BASE_URL =
-    process.env.WALLET_API_URL || "http://localhost:8080";
+    process.env.WALLET_API_URL || "https://dev.vidchain.net";
   // get entity API Key
   const result = await doPostCall(
     `${WALLET_API_BASE_URL}/api/v1/authentication-keys`,
@@ -308,7 +308,7 @@ export const getLegalEntityAuthZToken = async (
     scope: "vidchain profile entity",
   };
   const WALLET_API_BASE_URL =
-    process.env.WALLET_API_URL || "http://localhost:8080";
+    process.env.WALLET_API_URL || "https://dev.vidchain.net";
   // Create and sign JWT
   const result = await doPostCall(
     `${WALLET_API_BASE_URL}/api/v1/sessions`,
@@ -335,7 +335,7 @@ export async function getLegalEntityTestAuthZToken(
     scope: "vidchain profile test entity",
   };
   const WALLET_API_BASE_URL =
-    process.env.WALLET_API_URL || "http://localhost:8080";
+    process.env.WALLET_API_URL || "https://dev.vidchain.net";
   // Create and sign JWT
   const result = await doPostCall(
     `${WALLET_API_BASE_URL}/api/v1/sessions`,
@@ -369,7 +369,7 @@ export async function getUserEntityTestAuthZToken(): Promise<{
     scope: "vidchain profile test user",
   };
   const WALLET_API_BASE_URL =
-    process.env.WALLET_API_URL || "http://localhost:8080";
+    process.env.WALLET_API_URL || "https://dev.vidchain.net";
   // Create and sign JWT
   const result = await doPostCall(
     `${WALLET_API_BASE_URL}/api/v1/sessions`,
@@ -564,7 +564,7 @@ export const getParsedDidDocument = (didKey: DidKey): DIDDocument => {
 };
 
 export const getPublicJWKFromDid = async (did: string): Promise<JWK> => {
-  const API_BASE_URL = process.env.WALLET_API_URL || "https://api.vidchain.net";
+  const API_BASE_URL = process.env.WALLET_API_URL || "https://dev.vidchain.net";
   const response = await axios.get(
     `${API_BASE_URL}/api/v1/identifiers/${did};transform-keys=jwks`
   );
