@@ -141,7 +141,9 @@ const signDidAuthInternal = async (
   let didkey = false;
   if (
     issuer.includes("did:key") ||
-    (payload.sub_jwk as JWK).crv === DidAuthKeyCurve.ED25519
+    (payload.sub_jwk &&
+      (payload.sub_jwk as JWK).crv &&
+      (payload.sub_jwk as JWK).crv === DidAuthKeyCurve.ED25519)
   )
     didkey = true;
   const response = await createJwt(
