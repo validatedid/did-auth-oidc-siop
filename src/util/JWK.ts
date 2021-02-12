@@ -18,15 +18,12 @@ const getPublicJWKFromPublicHex = (hexPublicKey: string, kid?: string): JWK => {
     y: pubPoint.getY().toString("hex"),
   };
 };
-// TODO
+
 const getPublicJWKFromPrivateHexDidKey = (
   hexPrivateKey: string,
   kid?: string
 ): JWK => {
-  const privateKeyJwk = keyUtils.privateKeyJwkFromPrivateKeyBase58(
-    keyUtils.privateKeyBase58FromPrivateKeyHex(hexPrivateKey)
-  );
-  const ec = new EC("secp256k1");
+  const ec = new EC("ed25519");
   const privKey = ec.keyFromPrivate(hexPrivateKey);
   const pubPoint = privKey.getPublic();
   return {
@@ -43,7 +40,7 @@ const getPublicJWKFromPrivateHex = (
   kid?: string,
   method?: string
 ): JWK => {
-  if (method && method.includes("did.key"))
+  if (method && method.includes("did:key"))
     return getPublicJWKFromPrivateHexDidKey(hexPrivateKey, kid);
   const ec = new EC("secp256k1");
   const privKey = ec.keyFromPrivate(hexPrivateKey);

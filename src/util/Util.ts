@@ -4,10 +4,14 @@ import { ec as EC } from "elliptic";
 import { JWK } from "jose/types";
 import base64url from "base64url";
 import VidDidResolver from "@validatedid/vid-did-resolver";
-import { decodeJwt, EcdsaSignature, vidVerifyJwt } from "@validatedid/did-jwt";
+import { decodeJwt, EcdsaSignature } from "@validatedid/did-jwt";
 import { Resolver } from "did-resolver";
 import axios, { AxiosResponse } from "axios";
 import { ethers, utils } from "ethers";
+import { keyUtils } from "@transmute/did-key-ed25519";
+import parseJwk from "jose/jwk/parse";
+import jwtVerify from "jose/jwt/verify";
+
 import { DidAuthErrors } from "../interfaces";
 import {
   DidAuthKeyAlgorithm,
@@ -19,7 +23,6 @@ import {
 } from "../interfaces/DIDAuth.types";
 import { Resolvable } from "../interfaces/JWT";
 import { DIDDocument, VerificationMethod } from "../interfaces/oidcSsi";
-import { VID_RESOLVE_DID_URL } from "../config";
 
 export const prefixWith0x = (key: string): string =>
   key.startsWith("0x") ? key : `0x${key}`;
@@ -202,12 +205,22 @@ const verifyES256K = (
   }
 };
 
-const verifyEDDSA = async (jwt: string): Promise<boolean> => {
+const verifyEDDSA = async (
+  jwt: string,
+  verificationMethod: VerificationMethod
+): Promise<boolean> => {
   try {
-    const options = {
-      resolver: VID_RESOLVE_DID_URL,
-    };
-    const result = await vidVerifyJwt(jwt, options);
+    let publicKey: JWK;
+    if (verificationMethod.publicKeyBase58)
+      publicKey = keyUtils.publicKeyJwkFromPublicKeyBase58(
+        verificationMethod.publicKeyBase58
+      );
+    if (verificationMethod.publicKeyJwk)
+      publicKey = verificationMethod.publicKeyJwk;
+    const result = await jwtVerify(
+      jwt,
+      await parseJwk(publicKey, DidAuthKeyAlgorithm.EDDSA)
+    );
     if (!result || !result.payload)
       throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
     return true;
@@ -221,8 +234,9 @@ const verifySignatureFromVerificationMethod = async (
   verificationMethod: VerificationMethod
 ): Promise<boolean> => {
   const { header } = decodeJwt(jwt);
-  if (header.alg === DidAuthKeyAlgorithm.EDDSA) return verifyEDDSA(jwt);
-  return verifyES256K(jwt, verificationMethod);
+  return header.alg === DidAuthKeyAlgorithm.EDDSA
+    ? verifyEDDSA(jwt, verificationMethod)
+    : verifyES256K(jwt, verificationMethod);
 };
 
 export {

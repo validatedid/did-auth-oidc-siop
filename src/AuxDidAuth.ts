@@ -33,6 +33,7 @@ import {
   ExternalVerification,
   DidAuthValidationResponse,
   DidAuthVerifyOpts,
+  DidAuthKeyCurve,
 } from "./interfaces/DIDAuth.types";
 import { getPublicJWKFromPrivateHex } from "./util/JWK";
 import { DIDDocument } from "./interfaces/oidcSsi";
@@ -138,7 +139,11 @@ const signDidAuthInternal = async (
   kid?: string
 ): Promise<string> => {
   let didkey = false;
-  if (issuer.includes("did:key")) didkey = true;
+  if (
+    issuer.includes("did:key") ||
+    (payload.sub_jwk as JWK).crv === DidAuthKeyCurve.ED25519
+  )
+    didkey = true;
   const response = await createJwt(
     payload,
     {
@@ -241,7 +246,9 @@ const createDidAuthResponsePayload = async (
         throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
 
       sub_jwk = didDoc.verificationMethod[0].publicKeyJwk;
-      sub = utilJwk.getThumbprintFromJwk(sub_jwk);
+      sub = opts.did.includes("did:key")
+        ? utilJwk.getThumbprintFromJwkDidKey(sub_jwk)
+        : utilJwk.getThumbprintFromJwk(sub_jwk);
     } catch (error) {
       throw new Error(
         `${DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT} Error: ${JSON.stringify(
@@ -289,17 +296,17 @@ const verifyDidAuth = async (
     const payload = verifiedJWT.payload as DidAuthRequestPayload;
     return { signatureValidation: true, payload };
   }
-  // external verification
+
   const data = {
     jws: jwt,
   };
   try {
-    /* const response: AxiosResponse = await doPostCallWithToken(
+    const response: AxiosResponse = await doPostCallWithToken(
       opts.verificationType.verifyUri,
       data,
       opts.verificationType.authZToken
-    ); */
-    const response = await axios.get(opts.verificationType.verifyUri);
+    );
+    // const response = await axios.get(opts.verificationType.verifyUri);
 
     if (!response || !response.status || response.status !== 200)
       throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);

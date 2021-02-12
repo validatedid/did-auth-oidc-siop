@@ -679,7 +679,7 @@ describe("VidDidAuth using did:key tests should", () => {
       expect(jwt).toBeDefined();
       const optsVerify: DidAuthTypes.DidAuthVerifyOpts = {
         verificationType: {
-          verifyUri: `https://dev.vidchain.net/api/v1/identifiers/${did}`,
+          verifyUri: `https://dev.vidchain.net/api/v1/identifiers`,
         },
       };
       const validationResponse = await verifyDidAuthRequest(jwt, optsVerify);
@@ -861,6 +861,178 @@ describe("VidDidAuth using did:key tests should", () => {
       expect(data.id_token).toBeDefined();
       expect(data.state).toBeDefined();
       expect(data.state).toStrictEqual(state);
+    });
+  });
+  describe("verifyDidAuthResponse tests should", () => {
+    it("verify internally a DidAuth Response JWT", async () => {
+      expect.assertions(7);
+      const { hexPrivateKey, did } = await getUserEntityTestAuthZTokenDidKey();
+      const state = DidAuthUtil.getState();
+      const nonce = DidAuthUtil.getNonce(state);
+      const opts: DidAuthTypes.DidAuthResponseOpts = {
+        redirectUri: "https://app.example/demo",
+        signatureType: {
+          hexPrivateKey,
+          did,
+          kid: `#${did.substring(8)}`,
+        },
+        nonce,
+        state,
+        responseMode: DidAuthResponseMode.FORM_POST,
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        did,
+      };
+
+      const jwt = await siopDidAuth.createDidAuthResponse(opts);
+      expect(jwt).toBeDefined();
+
+      const optsVerify: DidAuthVerifyOpts = {
+        verificationType: {
+          registry: process.env.DID_REGISTRY_SC_ADDRESS,
+          rpcUrl: process.env.DID_PROVIDER_RPC_URL,
+          didUrlResolver: `https://dev.vidchain.net/api/v1/identifiers`,
+        },
+        nonce,
+        redirectUri: opts.redirectUri,
+      };
+      const validationResponse = await verifyDidAuthResponse(jwt, optsVerify);
+      expect(validationResponse).toBeDefined();
+      expect(validationResponse.signatureValidation).toBe(true);
+      expect(validationResponse.payload).toBeDefined();
+
+      const expectedPayload = mockedData.DIDAUTH_RESPONSE_PAYLOAD;
+      expectedPayload.did = did;
+      expectedPayload.nonce = expect.any(String) as string;
+      expectedPayload.aud = opts.redirectUri;
+      expectedPayload.iat = expect.any(Number) as number;
+      expectedPayload.exp = expect.any(Number) as number;
+      expectedPayload.sub = expect.any(String) as string;
+      expectedPayload.sub_jwk = DidAuthJwk.getPublicJWKFromPrivateHexDidKey(
+        hexPrivateKey,
+        `#${did.substring(8)}`
+      );
+
+      expect(validationResponse.payload.iat).toBeDefined();
+      expect(validationResponse.payload).toMatchObject(expectedPayload);
+      expect(validationResponse.payload.exp).toStrictEqual(
+        validationResponse.payload.iat + 5 * 60
+      ); // 5 minutes of expiration time
+    });
+
+    it("verify externally a DidAuth Response JWT generated internally", async () => {
+      expect.assertions(7);
+      const {
+        hexPrivateKey,
+        did,
+        hexPublicKey,
+      } = await getUserEntityTestAuthZTokenDidKey();
+      const state = DidAuthUtil.getState();
+      const nonce = DidAuthUtil.getNonce(state);
+      const opts: DidAuthTypes.DidAuthResponseOpts = {
+        redirectUri: "https://app.example/demo",
+        signatureType: {
+          hexPrivateKey,
+          did,
+          kid: `#${did.substring(8)}`,
+        },
+        nonce,
+        state,
+        responseMode: DidAuthResponseMode.FORM_POST,
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        did,
+      };
+
+      const jwt = await siopDidAuth.createDidAuthResponse(opts);
+      expect(jwt).toBeDefined();
+      const optsVerify: DidAuthVerifyOpts = {
+        verificationType: {
+          verifyUri: `https://dev.vidchain.net/api/v1/identifiers`,
+        },
+        nonce,
+        redirectUri: opts.redirectUri,
+      };
+      const validationResponse = await verifyDidAuthResponse(jwt, optsVerify);
+      expect(validationResponse).toBeDefined();
+      expect(validationResponse.signatureValidation).toBe(true);
+      expect(validationResponse.payload).toBeDefined();
+
+      const expectedPayload = mockedData.DIDAUTH_RESPONSE_PAYLOAD;
+      expectedPayload.did = did;
+      expectedPayload.nonce = expect.any(String) as string;
+      expectedPayload.aud = opts.redirectUri;
+      expectedPayload.iat = expect.any(Number) as number;
+      expectedPayload.exp = expect.any(Number) as number;
+      expectedPayload.sub = expect.any(String) as string;
+      expectedPayload.sub_jwk = getPublicJWKFromPublicHex(hexPublicKey);
+
+      expect(validationResponse.payload.iat).toBeDefined();
+      expect(validationResponse.payload).toMatchObject(expectedPayload);
+      expect(validationResponse.payload.exp).toStrictEqual(
+        validationResponse.payload.iat + 5 * 60
+      ); // 5 minutes of expiration time
+    });
+
+    it("verify externally a DidAuth Response JWT generated externally with a test entity", async () => {
+      expect.assertions(7);
+      const WALLET_API_BASE_URL = process.env.WALLET_API_URL;
+      const entityAA = await getLegalEntityTestAuthZToken("COMPANY E2E INC");
+      const authZToken = entityAA.jwt;
+      const { did } = entityAA;
+      const state = DidAuthUtil.getState();
+      const nonce = DidAuthUtil.getNonce(state);
+      const opts: DidAuthTypes.DidAuthResponseOpts = {
+        redirectUri: "https://app.example/demo",
+        signatureType: {
+          signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
+          did,
+          authZToken,
+          kid: `${did}#keys-1`,
+        },
+        nonce,
+        state,
+        responseMode: DidAuthResponseMode.FORM_POST,
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+          referenceUri: `${WALLET_API_BASE_URL}/api/v1/identifiers/${did};transform-keys=jwks`,
+        },
+        did,
+      };
+
+      const jwt = await siopDidAuth.createDidAuthResponse(opts);
+      expect(jwt).toBeDefined();
+
+      const optsVerify: DidAuthVerifyOpts = {
+        verificationType: {
+          verifyUri: `${WALLET_API_BASE_URL}/api/v1/signature-validations`,
+          authZToken,
+          didUrlResolver: `${WALLET_API_BASE_URL}/api/v1/identifiers`,
+        },
+        nonce,
+        redirectUri: opts.redirectUri,
+      };
+      const validationResponse = await verifyDidAuthResponse(jwt, optsVerify);
+      expect(validationResponse).toBeDefined();
+      expect(validationResponse.signatureValidation).toBe(true);
+      expect(validationResponse.payload).toBeDefined();
+
+      const expectedPayload = mockedData.DIDAUTH_RESPONSE_PAYLOAD;
+      expectedPayload.did = did;
+      expectedPayload.nonce = expect.any(String) as string;
+      expectedPayload.aud = opts.redirectUri;
+      expectedPayload.iat = expect.any(Number) as number;
+      expectedPayload.exp = expect.any(Number) as number;
+      expectedPayload.sub = expect.any(String) as string;
+      expectedPayload.sub_jwk = await getPublicJWKFromDid(did);
+
+      expect(validationResponse.payload.iat).toBeDefined();
+      expect(validationResponse.payload).toMatchObject(expectedPayload);
+      expect(validationResponse.payload.exp).toStrictEqual(
+        validationResponse.payload.iat + 5 * 60
+      ); // 5 minutes of expiration time
     });
   });
 });

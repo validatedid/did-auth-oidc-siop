@@ -73,7 +73,7 @@
   },
   "dependencies": {
     "@transmute/did-key-ed25519": "^0.2.1-unstable.31",
-    "@validatedid/did-jwt": "^1.0.7",
+    "@validatedid/did-jwt": "^1.0.8",
     "@validatedid/vid-did-resolver": "0.0.1",
     "axios": "^0.21.1",
     "base64url": "^3.0.1",
