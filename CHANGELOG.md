@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.2.0](https://github.com/validatedid/did-auth-oidc-siop/compare/v2.1.1...v2.2.0) (2021-02-15)
+
+### 🚀 Features
+
+- add Ed25519 support ([#13](https://github.com/validatedid/did-auth-oidc-siop/issues/13)) ([5c8f1b0](https://github.com/validatedid/did-auth-oidc-siop/commit/5c8f1b05d12fb32e246bb92de47a8a0879bb02f4))
+
 ### [2.1.2](https://github.com/validatedid/did-auth-oidc-siop/compare/v2.1.1...v2.1.2) (2020-12-23)
 
 ### [2.1.1](https://github.com/validatedid/did-auth-oidc-siop/compare/v2.1.0...v2.1.1) (2020-12-22)
