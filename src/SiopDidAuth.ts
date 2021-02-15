@@ -28,11 +28,11 @@ import {
   createDidAuthResponsePayload,
   verifyDidAuth,
 } from "./AuxDidAuth";
-import VID_RESOLVE_DID_URL from "./config";
+import { VID_RESOLVE_DID_URL } from "./config";
 import { util } from "./util";
 import { DIDDocument } from "./interfaces/oidcSsi";
 import { JWTHeader } from "./interfaces/JWT";
-import { getThumbprintFromJwk } from "./util/JWK";
+import { getThumbprintFromJwk, getThumbprintFromJwkDidKey } from "./util/JWK";
 
 /**
  * Creates a didAuth Request Object
@@ -271,9 +271,11 @@ const verifyDidAuthRequest = async (
     throw new Error(DidAuthErrors.VERIFICATION_METHOD_NOT_MATCHES);
 
   // Verify the SIOP Request according to the verification method above.
-
-  if (!util.verifySignatureFromVerificationMethod(jwt, verificationMethod))
-    throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
+  const verification = await util.verifySignatureFromVerificationMethod(
+    jwt,
+    verificationMethod
+  );
+  if (!verification) throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
   // Additionally performs a complete token validation via vidVerifyJwt
   return verifyDidAuth(jwt, opts);
 };
@@ -346,10 +348,11 @@ const verifyDidAuthResponse = async (
     throw Error(DidAuthErrors.ERROR_VALIDATING_NONCE);
   // The Client MUST validate that the sub Claim value is the base64url encoded representation
   // of the thumbprint of the key in the sub_jwk Claim.
-  if (
-    getThumbprintFromJwk((payload as DidAuthResponsePayload).sub_jwk) !==
-    payload.sub
-  )
+  const subClaim =
+    header.alg === DidAuthKeyAlgorithm.EDDSA
+      ? getThumbprintFromJwkDidKey((payload as DidAuthResponsePayload).sub_jwk)
+      : getThumbprintFromJwk((payload as DidAuthResponsePayload).sub_jwk);
+  if (subClaim !== payload.sub)
     throw new Error(DidAuthErrors.JWK_THUMBPRINT_MISMATCH_SUB);
   // The alg value SHOULD be the default of RS256. It MAY also be ES256.
   // In addition to RS256, an SIOP according to this specification MUST support EdDSA and ES256K.
@@ -357,7 +360,8 @@ const verifyDidAuthResponse = async (
   // Note: this library implements only ES256
   if (
     header.alg !== DidAuthKeyAlgorithm.ES256K &&
-    header.alg !== DidAuthKeyAlgorithm.ES256KR
+    header.alg !== DidAuthKeyAlgorithm.ES256KR &&
+    header.alg !== DidAuthKeyAlgorithm.EDDSA
   )
     throw new Error(DidAuthErrors.NO_ALG_SUPPORTED_YET);
 
@@ -366,8 +370,11 @@ const verifyDidAuthResponse = async (
   // using the key in the sub_jwk Claim; the key is a bare key in JWK format (not an X.509 certificate value).
   // SIOP: Verify the id_token according to the verification method above.
   // Verifying that the id_token was signed by the key specified in the sub_jwk claim.
-  if (!util.verifySignatureFromVerificationMethod(id_token, verificationMethod))
-    throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
+  const verification = await util.verifySignatureFromVerificationMethod(
+    id_token,
+    verificationMethod
+  );
+  if (!verification) throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
   // Additionally performs a complete token validation via vidVerifyJwt
   const validationResponse = await verifyDidAuth(id_token, opts);
 

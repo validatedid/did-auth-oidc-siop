@@ -4,8 +4,10 @@ import {
   vidVerifyJwt,
   createJwt,
   SimpleSigner,
-  JWTHeader,
+  NaclSigner,
 } from "@validatedid/did-jwt";
+import base58 from "bs58";
+import { keyUtils } from "@transmute/did-key-ed25519";
 import { util, utilJwk } from "./util";
 import DidAuthErrors from "./interfaces/Errors";
 import { getNonce, doPostCallWithToken, getState } from "./util/Util";
@@ -31,9 +33,11 @@ import {
   ExternalVerification,
   DidAuthValidationResponse,
   DidAuthVerifyOpts,
+  DidAuthKeyCurve,
 } from "./interfaces/DIDAuth.types";
 import { getPublicJWKFromPrivateHex } from "./util/JWK";
 import { DIDDocument } from "./interfaces/oidcSsi";
+import { DEFAULT_PROOF_TYPE, PROOF_TYPE_EDDSA } from "./config";
 
 const isInternalSignature = (
   object: InternalSignature | ExternalSignature
@@ -134,21 +138,42 @@ const signDidAuthInternal = async (
   hexPrivateKey: string,
   kid?: string
 ): Promise<string> => {
-  // assign specific JWT header
-  const header: JWTHeader = {
-    typ: "JWT",
-    alg: DidAuthKeyAlgorithm.ES256K,
-    kid: kid || `${issuer}#keys-1`,
-  };
+  let defaultAlgorithm = DidAuthKeyAlgorithm.ES256K;
+  if (
+    issuer.includes("did:key:z6Mk") ||
+    (payload.sub_jwk &&
+      (payload.sub_jwk as JWK).crv &&
+      (payload.sub_jwk as JWK).crv === DidAuthKeyCurve.ED25519)
+  )
+    defaultAlgorithm = DidAuthKeyAlgorithm.EDDSA;
   const response = await createJwt(
     payload,
     {
       issuer,
-      alg: DidAuthKeyAlgorithm.ES256K,
-      signer: SimpleSigner(hexPrivateKey.replace("0x", "")), // Removing 0x from private key as input of SimpleSigner
+      alg:
+        defaultAlgorithm === DidAuthKeyAlgorithm.EDDSA
+          ? DidAuthKeyAlgorithm.EDDSA
+          : DidAuthKeyAlgorithm.ES256K,
+      signer:
+        defaultAlgorithm === DidAuthKeyAlgorithm.EDDSA
+          ? NaclSigner(
+              Buffer.from(
+                base58.decode(
+                  keyUtils.privateKeyBase58FromPrivateKeyHex(hexPrivateKey)
+                )
+              ).toString("base64")
+            )
+          : SimpleSigner(hexPrivateKey.replace("0x", "")), // Removing 0x from private key as input of SimpleSigner
       expiresIn: expirationTime,
     },
-    header
+    {
+      typ: "JWT",
+      alg:
+        defaultAlgorithm === DidAuthKeyAlgorithm.EDDSA
+          ? DidAuthKeyAlgorithm.EDDSA
+          : DidAuthKeyAlgorithm.ES256K,
+      kid: kid || `${issuer}#keys-1`,
+    }
   );
   return response;
 };
@@ -159,12 +184,21 @@ const signDidAuthExternal = async (
   authZToken: string,
   kid?: string
 ): Promise<string> => {
+  let defaultAlgorithm = DidAuthKeyAlgorithm.ES256K;
+  if (payload.did && (payload.did as string).includes("did:key:z6Mk"))
+    defaultAlgorithm = DidAuthKeyAlgorithm.EDDSA;
   const data = {
     issuer: payload.iss.includes("did:") ? payload.iss : payload.did,
     payload,
-    type: "EcdsaSecp256k1Signature2019", // fixed type
+    type:
+      defaultAlgorithm === DidAuthKeyAlgorithm.EDDSA
+        ? PROOF_TYPE_EDDSA
+        : DEFAULT_PROOF_TYPE,
     expiresIn: expirationTime,
-    alg: DidAuthKeyAlgorithm.ES256K,
+    alg:
+      defaultAlgorithm === DidAuthKeyAlgorithm.EDDSA
+        ? DidAuthKeyAlgorithm.EDDSA
+        : DidAuthKeyAlgorithm.ES256K,
     selfIssued: payload.iss.includes(DidAuthResponseIss.SELF_ISSUE)
       ? payload.iss
       : undefined,
@@ -205,10 +239,11 @@ const createDidAuthResponsePayload = async (
   let sub: string;
 
   if (isInternalSignature(opts.signatureType)) {
-    sub = utilJwk.getThumbprint(opts.signatureType.hexPrivateKey);
+    sub = utilJwk.getThumbprint(opts.signatureType.hexPrivateKey, opts.did);
     sub_jwk = utilJwk.getPublicJWKFromPrivateHex(
       opts.signatureType.hexPrivateKey,
-      opts.signatureType.kid || `${opts.signatureType.did}#keys-1`
+      opts.signatureType.kid || `${opts.signatureType.did}#keys-1`,
+      opts.did
     );
   }
   if (isExternalSignature(opts.signatureType)) {
@@ -227,7 +262,9 @@ const createDidAuthResponsePayload = async (
         throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
 
       sub_jwk = didDoc.verificationMethod[0].publicKeyJwk;
-      sub = utilJwk.getThumbprintFromJwk(sub_jwk);
+      sub = opts.did.includes("did:key:z6Mk")
+        ? utilJwk.getThumbprintFromJwkDidKey(sub_jwk)
+        : utilJwk.getThumbprintFromJwk(sub_jwk);
     } catch (error) {
       throw new Error(
         `${DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT} Error: ${JSON.stringify(
@@ -275,7 +312,7 @@ const verifyDidAuth = async (
     const payload = verifiedJWT.payload as DidAuthRequestPayload;
     return { signatureValidation: true, payload };
   }
-  // external verification
+
   const data = {
     jws: jwt,
   };
@@ -285,7 +322,6 @@ const verifyDidAuth = async (
       data,
       opts.verificationType.authZToken
     );
-
     if (!response || !response.status || response.status !== 204)
       throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
   } catch (error) {
