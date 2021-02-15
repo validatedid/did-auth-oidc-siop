@@ -67,7 +67,7 @@ describe("vidDidAuth", () => {
         redirectUri: "http://localhost:8080/demo/spanish-university",
         requestObjectBy: {
           type: DidAuthTypes.ObjectPassedBy.REFERENCE,
-          referenceUri: "https://dev.vidchain.net/siop/jwts",
+          referenceUri: "https://api.vidchain.net/siop/jwts",
         },
         signatureType: {
           signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
@@ -77,7 +77,7 @@ describe("vidDidAuth", () => {
         },
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.REFERENCE,
-          referenceUri: `https://dev.vidchain.net/api/v1/identifiers/${didAA};transform-keys=jwks`,
+          referenceUri: `https://api.vidchain.net/api/v1/identifiers/${didAA};transform-keys=jwks`,
         },
       };
       jest.spyOn(axios, "post").mockImplementation(async () => {
@@ -95,7 +95,7 @@ describe("vidDidAuth", () => {
           state,
           nonce: DidAuthUtil.getNonce(state),
           registration: {
-            jwks_uri: `https://dev.vidchain.net/api/v1/identifiers/${entityAA.did};transform-keys=jwks`,
+            jwks_uri: `https://api.vidchain.net/api/v1/identifiers/${entityAA.did};transform-keys=jwks`,
             id_token_signed_response_alg:
               DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
           },
@@ -151,7 +151,7 @@ describe("vidDidAuth", () => {
         redirectUri: "http://localhost:8080/demo/spanish-university",
         requestObjectBy: {
           type: DidAuthTypes.ObjectPassedBy.REFERENCE,
-          referenceUri: "https://dev.vidchain.net/siop/jwts",
+          referenceUri: "https://api.vidchain.net/siop/jwts",
         },
         signatureType: {
           signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
@@ -161,7 +161,7 @@ describe("vidDidAuth", () => {
         },
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.REFERENCE,
-          referenceUri: `https://dev.vidchain.net/api/v1/identifiers/${didAA};transform-keys=jwks`,
+          referenceUri: `https://api.vidchain.net/api/v1/identifiers/${didAA};transform-keys=jwks`,
         },
       };
       jest.spyOn(axios, "post").mockResolvedValue({
@@ -198,7 +198,7 @@ describe("vidDidAuth", () => {
         redirectUri: "http://localhost:8080/demo/spanish-university",
         requestObjectBy: {
           type: DidAuthTypes.ObjectPassedBy.REFERENCE,
-          referenceUri: "https://dev.vidchain.net/siop/jwts",
+          referenceUri: "https://api.vidchain.net/siop/jwts",
         },
         signatureType: {
           signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
@@ -208,7 +208,7 @@ describe("vidDidAuth", () => {
         },
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.REFERENCE,
-          referenceUri: `https://dev.vidchain.net/api/v1/identifiers/${didAA};transform-keys=jwks`,
+          referenceUri: `https://api.vidchain.net/api/v1/identifiers/${didAA};transform-keys=jwks`,
         },
       };
       jest.spyOn(axios, "post").mockImplementation(async () => {
@@ -226,7 +226,7 @@ describe("vidDidAuth", () => {
           state,
           nonce: DidAuthUtil.getNonce(state),
           registration: {
-            jwks_uri: `https://dev.vidchain.net/api/v1/identifiers/${entityAA.did};transform-keys=jwks`,
+            jwks_uri: `https://api.vidchain.net/api/v1/identifiers/${entityAA.did};transform-keys=jwks`,
             id_token_signed_response_alg:
               DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
           },
@@ -267,7 +267,7 @@ describe("vidDidAuth", () => {
       expectedPayload.iat = expect.any(Number) as number;
       expectedPayload.exp = expect.any(Number) as number;
       expectedPayload.registration = {
-        jwks_uri: `https://dev.vidchain.net/api/v1/identifiers/${entityAA.did};transform-keys=jwks`,
+        jwks_uri: `https://api.vidchain.net/api/v1/identifiers/${entityAA.did};transform-keys=jwks`,
         id_token_signed_response_alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
       };
       expect(payload.iat).toBeDefined();
@@ -289,7 +289,7 @@ describe("vidDidAuth", () => {
         redirectUri: "http://localhost:8080/demo/spanish-university",
         requestObjectBy: {
           type: DidAuthTypes.ObjectPassedBy.REFERENCE,
-          referenceUri: "https://dev.vidchain.net/siop/jwts",
+          referenceUri: "https://api.vidchain.net/siop/jwts",
         },
         signatureType: {
           signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
@@ -299,7 +299,7 @@ describe("vidDidAuth", () => {
         },
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.REFERENCE,
-          referenceUri: `https://dev.vidchain.net/api/v1/identifiers/${didAA};transform-keys=jwks`,
+          referenceUri: `https://api.vidchain.net/api/v1/identifiers/${didAA};transform-keys=jwks`,
         },
         claims: mockedData.verifiableIdOidcClaim,
       };
@@ -318,7 +318,7 @@ describe("vidDidAuth", () => {
           state,
           nonce: DidAuthUtil.getNonce(state),
           registration: {
-            jwks_uri: `https://dev.vidchain.net/api/v1/identifiers/${entityAA.did};transform-keys=jwks`,
+            jwks_uri: `https://api.vidchain.net/api/v1/identifiers/${entityAA.did};transform-keys=jwks`,
             id_token_signed_response_alg:
               DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
           },
@@ -360,7 +360,7 @@ describe("vidDidAuth", () => {
       expectedPayload.iat = expect.any(Number) as number;
       expectedPayload.exp = expect.any(Number) as number;
       expectedPayload.registration = {
-        jwks_uri: `https://dev.vidchain.net/api/v1/identifiers/${entityAA.did};transform-keys=jwks`,
+        jwks_uri: `https://api.vidchain.net/api/v1/identifiers/${entityAA.did};transform-keys=jwks`,
         id_token_signed_response_alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
       };
       expect(payload.iat).toBeDefined();
@@ -386,7 +386,7 @@ describe("vidDidAuth", () => {
         redirectUri: "http://localhost:8080/demo/spanish-university",
         requestObjectBy: {
           type: DidAuthTypes.ObjectPassedBy.REFERENCE,
-          referenceUri: "https://dev.vidchain.net/siop/jwts",
+          referenceUri: "https://api.vidchain.net/siop/jwts",
         },
         signatureType: {
           signatureUri: `${WALLET_API_BASE_URL}/api/v1/signatures`,
@@ -396,7 +396,7 @@ describe("vidDidAuth", () => {
         },
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.REFERENCE,
-          referenceUri: `https://dev.vidchain.net/api/v1/identifiers/${didAA};transform-keys=jwks`,
+          referenceUri: `https://api.vidchain.net/api/v1/identifiers/${didAA};transform-keys=jwks`,
         },
       };
       jest.spyOn(axios, "get").mockResolvedValue({
@@ -420,7 +420,7 @@ describe("vidDidAuth", () => {
           state,
           nonce: DidAuthUtil.getNonce(state),
           registration: {
-            jwks_uri: `https://dev.vidchain.net/api/v1/identifiers/${entityAA.did};transform-keys=jwks`,
+            jwks_uri: `https://api.vidchain.net/api/v1/identifiers/${entityAA.did};transform-keys=jwks`,
             id_token_signed_response_alg:
               DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
           },
@@ -464,7 +464,7 @@ describe("vidDidAuth", () => {
       expectedPayload.iat = expect.any(Number) as number;
       expectedPayload.exp = expect.any(Number) as number;
       expectedPayload.registration = {
-        jwks_uri: `https://dev.vidchain.net/api/v1/identifiers/${entityAA.did};transform-keys=jwks`,
+        jwks_uri: `https://api.vidchain.net/api/v1/identifiers/${entityAA.did};transform-keys=jwks`,
         id_token_signed_response_alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
       };
 
@@ -526,7 +526,7 @@ describe("vidDidAuth", () => {
         verificationType: {
           registry: process.env.DID_REGISTRY_SC_ADDRESS,
           rpcUrl: process.env.DID_PROVIDER_RPC_URL,
-          didUrlResolver: "https://dev.vidchain.net/api/v1/identifiers",
+          didUrlResolver: "https://api.vidchain.net/api/v1/identifiers",
         },
       };
       const validationResponse = await verifyDidAuthRequest(jwt, optsVerify);
@@ -999,7 +999,7 @@ describe("vidDidAuth", () => {
     it("should return valid payload on DID Auth Response validation when using did:key", async () => {
       expect.assertions(3);
       const WALLET_API_BASE_URL =
-        process.env.WALLET_API_URL || "https://dev.vidchain.net";
+        process.env.WALLET_API_URL || "https://api.vidchain.net";
       const entityAA = await mockedGetEnterpriseAuthToken("COMPANY AA INC");
       const tokenEntityAA = entityAA.jwt;
       const { hexPrivateKey, did, hexPublicKey } = await mockedKeyAndDidKey();
@@ -1272,7 +1272,7 @@ describe("vidDidAuth", () => {
         iss: did,
         scope: DidAuthTypes.DidAuthScope.OPENID_DIDAUTHN,
         registration: {
-          jwks_uri: `https://dev.vidchain.net/api/v1/identifiers/${did};transform-keys=jwks`,
+          jwks_uri: `https://api.vidchain.net/api/v1/identifiers/${did};transform-keys=jwks`,
           id_token_signed_response_alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256K,
         },
         client_id: "http://app.example/demo",
@@ -1289,13 +1289,15 @@ describe("vidDidAuth", () => {
     });
     it("sign when using did:key", async () => {
       expect.assertions(1);
+      const WALLET_API_BASE_URL =
+        process.env.WALLET_API_URL || "https://api.vidchain.net";
       const { hexPrivateKey, did } = await mockedKeyAndDidKey();
       const state = DidAuthUtil.getState();
       const requestPayload: DidAuthTypes.DidAuthRequestPayload = {
         iss: did,
         scope: DidAuthTypes.DidAuthScope.OPENID_DIDAUTHN,
         registration: {
-          jwks_uri: `https://dev.vidchain.net/api/v1/identifiers/${did};transform-keys=jwks`,
+          jwks_uri: `${WALLET_API_BASE_URL}/api/v1/identifiers/${did};transform-keys=jwks`,
           id_token_signed_response_alg: DidAuthTypes.DidAuthKeyAlgorithm.EDDSA,
         },
         client_id: "http://app.example/demo",

@@ -40,7 +40,7 @@ const getPublicJWKFromPrivateHex = (
   kid?: string,
   method?: string
 ): JWK => {
-  if (method && method.includes("did:key"))
+  if (method && method.includes("did:key:z6Mk"))
     return getPublicJWKFromPrivateHexDidKey(hexPrivateKey, kid);
   const ec = new EC("secp256k1");
   const privKey = ec.keyFromPrivate(hexPrivateKey);
@@ -81,10 +81,10 @@ const getThumbprintFromJwkDidKey = (jwk: JWK): string => {
 };
 
 const getThumbprint = (hexPrivateKey: string, method: string): string => {
-  const jwk = method.includes("did:key")
+  const jwk = method.includes("did:key:z6Mk")
     ? getPublicJWKFromPrivateHexDidKey(hexPrivateKey)
     : getPublicJWKFromPrivateHex(hexPrivateKey);
-  return method.includes("did:key")
+  return method.includes("did:key:z6Mk")
     ? getThumbprintFromJwkDidKey(jwk)
     : getThumbprintFromJwk(jwk);
 };

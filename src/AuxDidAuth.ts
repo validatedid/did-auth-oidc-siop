@@ -138,33 +138,40 @@ const signDidAuthInternal = async (
   hexPrivateKey: string,
   kid?: string
 ): Promise<string> => {
-  let didkey = false;
+  let defaultAlgorithm = DidAuthKeyAlgorithm.ES256K;
   if (
-    issuer.includes("did:key") ||
+    issuer.includes("did:key:z6Mk") ||
     (payload.sub_jwk &&
       (payload.sub_jwk as JWK).crv &&
       (payload.sub_jwk as JWK).crv === DidAuthKeyCurve.ED25519)
   )
-    didkey = true;
+    defaultAlgorithm = DidAuthKeyAlgorithm.EDDSA;
   const response = await createJwt(
     payload,
     {
       issuer,
-      alg: didkey ? DidAuthKeyAlgorithm.EDDSA : DidAuthKeyAlgorithm.ES256K,
-      signer: didkey
-        ? NaclSigner(
-            Buffer.from(
-              base58.decode(
-                keyUtils.privateKeyBase58FromPrivateKeyHex(hexPrivateKey)
-              )
-            ).toString("base64")
-          )
-        : SimpleSigner(hexPrivateKey.replace("0x", "")), // Removing 0x from private key as input of SimpleSigner
+      alg:
+        defaultAlgorithm === DidAuthKeyAlgorithm.EDDSA
+          ? DidAuthKeyAlgorithm.EDDSA
+          : DidAuthKeyAlgorithm.ES256K,
+      signer:
+        defaultAlgorithm === DidAuthKeyAlgorithm.EDDSA
+          ? NaclSigner(
+              Buffer.from(
+                base58.decode(
+                  keyUtils.privateKeyBase58FromPrivateKeyHex(hexPrivateKey)
+                )
+              ).toString("base64")
+            )
+          : SimpleSigner(hexPrivateKey.replace("0x", "")), // Removing 0x from private key as input of SimpleSigner
       expiresIn: expirationTime,
     },
     {
       typ: "JWT",
-      alg: didkey ? DidAuthKeyAlgorithm.EDDSA : DidAuthKeyAlgorithm.ES256K,
+      alg:
+        defaultAlgorithm === DidAuthKeyAlgorithm.EDDSA
+          ? DidAuthKeyAlgorithm.EDDSA
+          : DidAuthKeyAlgorithm.ES256K,
       kid: kid || `${issuer}#keys-1`,
     }
   );
@@ -177,14 +184,21 @@ const signDidAuthExternal = async (
   authZToken: string,
   kid?: string
 ): Promise<string> => {
-  let didkey = false;
-  if (payload.did && (payload.did as string).includes("did:key")) didkey = true;
+  let defaultAlgorithm = DidAuthKeyAlgorithm.ES256K;
+  if (payload.did && (payload.did as string).includes("did:key:z6Mk"))
+    defaultAlgorithm = DidAuthKeyAlgorithm.EDDSA;
   const data = {
     issuer: payload.iss.includes("did:") ? payload.iss : payload.did,
     payload,
-    type: didkey ? PROOF_TYPE_EDDSA : DEFAULT_PROOF_TYPE,
+    type:
+      defaultAlgorithm === DidAuthKeyAlgorithm.EDDSA
+        ? PROOF_TYPE_EDDSA
+        : DEFAULT_PROOF_TYPE,
     expiresIn: expirationTime,
-    alg: didkey ? DidAuthKeyAlgorithm.EDDSA : DidAuthKeyAlgorithm.ES256K,
+    alg:
+      defaultAlgorithm === DidAuthKeyAlgorithm.EDDSA
+        ? DidAuthKeyAlgorithm.EDDSA
+        : DidAuthKeyAlgorithm.ES256K,
     selfIssued: payload.iss.includes(DidAuthResponseIss.SELF_ISSUE)
       ? payload.iss
       : undefined,
@@ -248,7 +262,7 @@ const createDidAuthResponsePayload = async (
         throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
 
       sub_jwk = didDoc.verificationMethod[0].publicKeyJwk;
-      sub = opts.did.includes("did:key")
+      sub = opts.did.includes("did:key:z6Mk")
         ? utilJwk.getThumbprintFromJwkDidKey(sub_jwk)
         : utilJwk.getThumbprintFromJwk(sub_jwk);
     } catch (error) {
