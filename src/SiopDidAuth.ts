@@ -95,7 +95,8 @@ const createDidAuthRequest = async (
     jwt: await signDidAuthExternal(
       didAuthRequestPayload,
       opts.signatureType.signatureUri,
-      opts.signatureType.authZToken
+      opts.signatureType.authZToken,
+      opts.signatureType.kid
     ),
     nonce,
     state,
