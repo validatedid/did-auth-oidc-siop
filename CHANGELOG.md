@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+### [2.2.1](https://github.com/validatedid/did-auth-oidc-siop/compare/v2.2.0...v2.2.1) (2021-03-30)
+
+### 🐛 Bug Fixes
+
+- send kid in signDidAuthExternal ([#14](https://github.com/validatedid/did-auth-oidc-siop/issues/14)) ([ebce149](https://github.com/validatedid/did-auth-oidc-siop/commit/ebce149d03e8dfcd6e92e580b5c6ca2ed689819a))
+
 ## [2.2.0](https://github.com/validatedid/did-auth-oidc-siop/compare/v2.1.1...v2.2.0) (2021-02-15)
 
 ### 🚀 Features
