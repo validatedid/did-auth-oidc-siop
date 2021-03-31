@@ -18,13 +18,14 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "dist.browser"
   ],
   "scripts": {
     "audit": "audit-ci --moderate",
     "prepare": "npm run build",
-    "build": "npm run clean && tsc -p tsconfig.build.json",
-    "clean": "rm -rf ./dist ./coverage",
+    "build": "npm run clean && tsc -p tsconfig.build.json && tsc -p tsconfig.browser.json",
+    "clean": "rm -rf ./dist ./dist.browser ./coverage",
     "compile": "tsc",
     "compile:dev": "tsc -w",
     "coverage": "jest --coverage",

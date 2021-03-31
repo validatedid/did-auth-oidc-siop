@@ -192,40 +192,32 @@ const verifyES256K = (
   jwt: string,
   verificationMethod: VerificationMethod
 ): boolean => {
-  try {
-    const publicKey = extractPublicKeyBytes(verificationMethod);
-    const secp256k1 = new EC("secp256k1");
-    const { data, signature } = decodeJwt(jwt);
-    const hash = SHA("sha256").update(data).digest();
-    const sigObj = toSignatureObject(signature);
-    return secp256k1.keyFromPublic(publicKey, "hex").verify(hash, sigObj);
-  } catch (err) {
-    return false;
-  }
+  const publicKey = extractPublicKeyBytes(verificationMethod);
+  const secp256k1 = new EC("secp256k1");
+  const { data, signature } = decodeJwt(jwt);
+  const hash = SHA("sha256").update(data).digest();
+  const sigObj = toSignatureObject(signature);
+  return secp256k1.keyFromPublic(publicKey, "hex").verify(hash, sigObj);
 };
 
 const verifyEDDSA = async (
   jwt: string,
   verificationMethod: VerificationMethod
 ): Promise<boolean> => {
-  try {
-    let publicKey: JWK;
-    if (verificationMethod.publicKeyBase58)
-      publicKey = keyUtils.publicKeyJwkFromPublicKeyBase58(
-        verificationMethod.publicKeyBase58
-      );
-    if (verificationMethod.publicKeyJwk)
-      publicKey = verificationMethod.publicKeyJwk;
-    const result = await jwtVerify(
-      jwt,
-      await parseJwk(publicKey, DidAuthKeyAlgorithm.EDDSA)
+  let publicKey: JWK;
+  if (verificationMethod.publicKeyBase58)
+    publicKey = keyUtils.publicKeyJwkFromPublicKeyBase58(
+      verificationMethod.publicKeyBase58
     );
-    if (!result || !result.payload)
-      throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
-    return true;
-  } catch (err) {
-    return false;
-  }
+  if (verificationMethod.publicKeyJwk)
+    publicKey = verificationMethod.publicKeyJwk;
+  const result = await jwtVerify(
+    jwt,
+    await parseJwk(publicKey, DidAuthKeyAlgorithm.EDDSA)
+  );
+  if (!result || !result.payload)
+    throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
+  return true;
 };
 
 const verifySignatureFromVerificationMethod = async (
