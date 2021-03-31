@@ -1,4 +1,4 @@
-import { decodeJwt } from "@validatedid/did-jwt";
+import { decodeJwt, DIDDocument } from "@validatedid/did-jwt";
 import axios from "axios";
 import {
   DidAuthRequestOpts,
@@ -30,7 +30,6 @@ import {
 } from "./AuxDidAuth";
 import { VID_RESOLVE_DID_URL } from "./config";
 import { util } from "./util";
-import { DIDDocument } from "./interfaces/oidcSsi";
 import { JWTHeader } from "./interfaces/JWT";
 import { getThumbprintFromJwk, getThumbprintFromJwkDidKey } from "./util/JWK";
 

@@ -4,14 +4,14 @@ import { ec as EC } from "elliptic";
 import { JWK } from "jose/types";
 import base64url from "base64url";
 import VidDidResolver from "@validatedid/vid-did-resolver";
-import { decodeJwt, EcdsaSignature } from "@validatedid/did-jwt";
-import { Resolver } from "did-resolver";
+import { decodeJwt, DIDDocument, EcdsaSignature } from "@validatedid/did-jwt";
 import axios, { AxiosResponse } from "axios";
 import { ethers, utils } from "ethers";
 import { keyUtils } from "@transmute/did-key-ed25519";
 import parseJwk from "jose/jwk/parse";
 import jwtVerify from "jose/jwt/verify";
 
+import { Resolver, VerificationMethod } from "did-resolver";
 import { DidAuthErrors } from "../interfaces";
 import {
   DidAuthKeyAlgorithm,
@@ -22,7 +22,6 @@ import {
   RegistrationJwksUri,
 } from "../interfaces/DIDAuth.types";
 import { Resolvable } from "../interfaces/JWT";
-import { DIDDocument, VerificationMethod } from "../interfaces/oidcSsi";
 
 export const prefixWith0x = (key: string): string =>
   key.startsWith("0x") ? key : `0x${key}`;
