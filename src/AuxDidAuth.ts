@@ -5,13 +5,14 @@ import {
   createJwt,
   SimpleSigner,
   NaclSigner,
+  JWTVerifyOptions,
+  DIDDocument,
 } from "@validatedid/did-jwt";
 import base58 from "bs58";
 import { keyUtils } from "@transmute/did-key-ed25519";
 import { util, utilJwk } from "./util";
 import DidAuthErrors from "./interfaces/Errors";
 import { getNonce, doPostCallWithToken, getState } from "./util/Util";
-import { JWTVerifyOptions } from "./interfaces/JWT";
 import {
   DidAuthKeyAlgorithm,
   DidAuthRequestOpts,
@@ -36,7 +37,6 @@ import {
   DidAuthKeyCurve,
 } from "./interfaces/DIDAuth.types";
 import { getPublicJWKFromPrivateHex } from "./util/JWK";
-import { DIDDocument } from "./interfaces/oidcSsi";
 import { DEFAULT_PROOF_TYPE, PROOF_TYPE_EDDSA } from "./config";
 
 const isInternalSignature = (
@@ -66,7 +66,11 @@ const createRegistration = async (
         throw new Error(DidAuthErrors.NO_REFERENCE_URI);
       registration = {
         jwks_uri: registrationType.referenceUri,
-        id_token_signed_response_alg: DidAuthKeyAlgorithm.ES256K,
+        id_token_signed_response_alg: registrationType.referenceUri.includes(
+          "did:key:z6Mk"
+        )
+          ? DidAuthKeyAlgorithm.EDDSA
+          : DidAuthKeyAlgorithm.ES256K,
       };
       return registration;
     case ObjectPassedBy.VALUE:
@@ -187,6 +191,9 @@ const signDidAuthExternal = async (
   let defaultAlgorithm = DidAuthKeyAlgorithm.ES256K;
   if (payload.did && (payload.did as string).includes("did:key:z6Mk"))
     defaultAlgorithm = DidAuthKeyAlgorithm.EDDSA;
+  if (payload.iss && payload.iss.includes("did:key:z6Mk"))
+    defaultAlgorithm = DidAuthKeyAlgorithm.EDDSA;
+
   const data = {
     issuer: payload.iss.includes("did:") ? payload.iss : payload.did,
     payload,
@@ -214,6 +221,7 @@ const signDidAuthExternal = async (
     !(response.data as SignatureResponse).jws
   )
     throw new Error(DidAuthErrors.MALFORMED_SIGNATURE_RESPONSE);
+
   return (response.data as SignatureResponse).jws;
 };
 

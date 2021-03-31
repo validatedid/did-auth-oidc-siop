@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { JWK } from "jose/types";
+import { JWK, JWTPayload } from "jose/types";
 import fromKeyLike from "jose/jwk/from_key_like";
 import parseJwk from "jose/jwk/parse";
 import SignJWT from "jose/jwt/sign";
@@ -10,6 +10,7 @@ import { ethers } from "ethers";
 import jwt_decode from "jwt-decode";
 import base58 from "bs58";
 import { Ed25519KeyPair, keyUtils } from "@transmute/did-key-ed25519";
+import { decodeJwt, DIDDocument } from "@validatedid/did-jwt";
 import { DidAuthErrors, JWTClaims, DidAuthUtil, DidAuthTypes } from "../src";
 import { prefixWith0x } from "../src/util/Util";
 import {
@@ -22,7 +23,6 @@ import {
   DID_DOCUMENT_PUBKEY_B58,
   DID_DOCUMENT_PUBKEY_JWK,
 } from "./data/mockedData";
-import { DIDDocument } from "../src/interfaces/oidcSsi";
 
 export interface TESTKEY {
   key: JWK;
@@ -116,6 +116,7 @@ export const mockedKeyAndDid = async (): Promise<{
   const wallet: ethers.Wallet = new ethers.Wallet(prefixWith0x(hexPrivateKey));
   const did = `did:vid:${wallet.address}`;
   const hexPublicKey = wallet.publicKey;
+
   return {
     hexPrivateKey,
     did,
@@ -228,7 +229,7 @@ const mockedEntityAuthNToken = async (
     jwk,
     DidAuthTypes.DidAuthKeyAlgorithm.ES256K
   );
-  const jwt = await new SignJWT(payload)
+  const jwt = await new SignJWT((payload as unknown) as JWTPayload)
     .setProtectedHeader({
       alg: "ES256K",
       typ: "JWT",
@@ -420,6 +421,39 @@ export async function getUserEntityTestAuthZTokenDidKey(): Promise<{
   };
 }
 
+export const getLegalEntityTestSessionTokenDidKey = async (): Promise<{
+  jwt: string;
+  did: string;
+}> => {
+  const legalEntity = {
+    iss: `Entity ${crypto.randomBytes(4).toString("base64")} test SA`,
+    aud: "vidchain-api",
+    nonce: crypto.randomBytes(16).toString("base64"),
+    method: "key",
+  };
+  const sessionBody = {
+    grantType: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+    assertion: Buffer.from(JSON.stringify(legalEntity)).toString("base64"),
+    scope: "vidchain profile test entity",
+  };
+
+  // Sessions
+  const WALLET_API_BASE_URL =
+    process.env.WALLET_API_URL || "https://api.vidchain.net";
+  // Create and sign JWT
+  const result = await doPostCall(
+    `${WALLET_API_BASE_URL}/api/v1/sessions`,
+    sessionBody
+  );
+  const { accessToken } = result.data as AccessTokenResponseBody;
+  const { payload } = decodeJwt(accessToken);
+
+  return {
+    jwt: accessToken,
+    did: ((payload as unknown) as IEnterpriseAuthZToken).did,
+  };
+};
+
 export async function mockedGetEnterpriseAuthToken(
   enterpriseName?: string
 ): Promise<{
@@ -539,12 +573,15 @@ export interface DidKey {
   jwk?: JWK;
 }
 
+interface FixJwk extends JWK {
+  kty: string;
+}
+
 export const getParsedDidDocument = (didKey: DidKey): DIDDocument => {
   if (didKey.publicKeyHex) {
-    const didDocB58 = DID_DOCUMENT_PUBKEY_B58;
+    const didDocB58 = DID_DOCUMENT_PUBKEY_B58 as DIDDocument;
     didDocB58.id = didKey.did;
     didDocB58.controller = didKey.did;
-    didDocB58.authentication[0].publicKey = `${didKey.did}#keys-1`;
     didDocB58.verificationMethod[0].id = `${didKey.did}#keys-1`;
     didDocB58.verificationMethod[0].controller = didKey.did;
     didDocB58.verificationMethod[0].publicKeyBase58 = base58.encode(
@@ -553,13 +590,14 @@ export const getParsedDidDocument = (didKey: DidKey): DIDDocument => {
     return didDocB58;
   }
   // then didKey jws public key
-  const didDocJwk = DID_DOCUMENT_PUBKEY_JWK;
+  const didDocJwk = DID_DOCUMENT_PUBKEY_JWK as DIDDocument;
+  const { jwk } = didKey;
+  jwk.kty = didKey.jwk.kty || "EC";
   didDocJwk.id = didKey.did;
   didDocJwk.controller = didKey.did;
-  didDocJwk.authentication[0].publicKey = `${didKey.did}#keys-1`;
   didDocJwk.verificationMethod[0].id = `${didKey.did}#keys-1`;
   didDocJwk.verificationMethod[0].controller = didKey.did;
-  didDocJwk.verificationMethod[0].publicKeyJwk = didKey.jwk;
+  didDocJwk.verificationMethod[0].publicKeyJwk = jwk as FixJwk;
   return didDocJwk;
 };
 
