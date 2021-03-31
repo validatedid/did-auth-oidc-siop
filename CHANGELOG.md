@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.0](https://github.com/validatedid/did-auth-oidc-siop/compare/v2.2.4...v2.3.0) (2021-03-31)
+
+### 🚀 Features
+
+- add browser support ([#18](https://github.com/validatedid/did-auth-oidc-siop/issues/18)) ([e3b47d5](https://github.com/validatedid/did-auth-oidc-siop/commit/e3b47d5e8b45273042cd7e6442a798a6e0cd9cbc))
+
 ### [2.2.4](https://github.com/validatedid/did-auth-oidc-siop/compare/v2.2.3...v2.2.4) (2021-03-31)
 
 ### 🐛 Bug Fixes
