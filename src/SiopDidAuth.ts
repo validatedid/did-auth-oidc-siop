@@ -269,13 +269,19 @@ const verifyDidAuthRequest = async (
   );
   if (!verificationMethod)
     throw new Error(DidAuthErrors.VERIFICATION_METHOD_NOT_MATCHES);
+  try {
+    // Verify the SIOP Request according to the verification method above.
+    const verification = await util.verifySignatureFromVerificationMethod(
+      jwt,
+      verificationMethod
+    );
+    if (!verification) throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
+  } catch (error) {
+    throw Error(
+      DidAuthErrors.ERROR_VERIFYING_SIGNATURE + (error as Error).message
+    );
+  }
 
-  // Verify the SIOP Request according to the verification method above.
-  const verification = await util.verifySignatureFromVerificationMethod(
-    jwt,
-    verificationMethod
-  );
-  if (!verification) throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
   // Additionally performs a complete token validation via vidVerifyJwt
   return verifyDidAuth(jwt, opts);
 };
