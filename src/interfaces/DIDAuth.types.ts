@@ -127,6 +127,17 @@ export interface DidAuthResponseOpts {
   vp?: VerifiablePresentation;
 }
 
+export interface DidAuthResponseOptsNoSignature {
+  redirectUri: string;
+  identifiersUri: string;
+  nonce: string;
+  state: string;
+  registrationType: RegistrationType;
+  responseMode?: DidAuthResponseMode;
+  did: string;
+  vp?: VerifiablePresentation;
+}
+
 export interface InternalVerification {
   registry?: string;
   rpcUrl?: string;

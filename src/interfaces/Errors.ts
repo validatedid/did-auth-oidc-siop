@@ -9,6 +9,7 @@ enum DidAuthErrors {
   INVALID_AUDIENCE = "Audience is invalid. Should be a string value.",
   REQUEST_OBJECT_TYPE_NOT_SET = "Request object type is not set.",
   NO_REFERENCE_URI = "referenceUri must be defined when REFERENCE option is used",
+  NO_IDENTIFIERS_URI = "identifiersUri must be defined to get the publick key",
   BAD_SIGNATURE_PARAMS = "Signature parameters should be internal signature with hexPrivateKey, did, and an optional kid, or external signature parameters with signatureUri, did, and optionals parameters authZToken, hexPublicKey, and kid",
   REGISTRATION_OBJECT_TYPE_NOT_SET = "Registration object type is not set.",
   SIGNATURE_OBJECT_TYPE_NOT_SET = "Signature object type is not set.",
