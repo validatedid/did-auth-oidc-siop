@@ -307,7 +307,6 @@ const createDidAuthResponsePayloadNoSignature = async (
     !opts.did
   )
     throw new Error(DidAuthErrors.BAD_PARAMS);
-  // Get PUBLIC KEY from opts.identifiersUri
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
   let sub_jwk: JWK;

@@ -10,6 +10,7 @@ export {
   createDidAuthResponse,
   verifyDidAuthRequest,
   verifyDidAuthResponse,
+  createDidAuthResponseObject,
 } from "./SiopDidAuth";
 export { JWTClaims, JWTHeader } from "./interfaces/JWT";
 export { OidcClaim, OidcClaimRequest } from "./interfaces/oidcSsi";

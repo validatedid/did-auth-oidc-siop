@@ -9,6 +9,7 @@ import {
   verifyDidAuthRequest,
   verifyDidAuthResponse,
 } from "../../src";
+import { signDidAuthInternal } from "../../src/AuxDidAuth";
 import {
   getLegalEntityTestAuthZToken,
   getPublicJWKFromDid,
@@ -19,6 +20,7 @@ import * as mockedData from "../data/mockedData";
 import {
   DidAuthResponseMode,
   DidAuthVerifyOpts,
+  DidAuthResponseIss,
 } from "../../src/interfaces/DIDAuth.types";
 import { getPublicJWKFromPublicHex } from "../../src/util/JWK";
 
@@ -1019,6 +1021,72 @@ describe("VidDidAuth using did:key tests should", () => {
         redirectUri: opts.redirectUri,
       };
       const validationResponse = await verifyDidAuthResponse(jwt, optsVerify);
+      expect(validationResponse).toBeDefined();
+      expect(validationResponse.signatureValidation).toBe(true);
+      expect(validationResponse.payload).toBeDefined();
+
+      const expectedPayload = mockedData.DIDAUTH_RESPONSE_PAYLOAD;
+      expectedPayload.did = did;
+      expectedPayload.nonce = expect.any(String) as string;
+      expectedPayload.aud = opts.redirectUri;
+      expectedPayload.iat = expect.any(Number) as number;
+      expectedPayload.exp = expect.any(Number) as number;
+      expectedPayload.sub = expect.any(String) as string;
+      expectedPayload.sub_jwk = await getPublicJWKFromDid(did);
+
+      expect(validationResponse.payload.iat).toBeDefined();
+      expect(validationResponse.payload).toMatchObject(expectedPayload);
+      expect(validationResponse.payload.exp).toStrictEqual(
+        validationResponse.payload.iat + 5 * 60
+      ); // 5 minutes of expiration time
+    });
+  });
+
+  describe("createDidAuthResponseObject", () => {
+    it("should create Did Auth Response Object without signature", async () => {
+      expect.assertions(7);
+      const { did, hexPrivateKey } = await getUserEntityTestAuthZToken();
+      const entityAA = await getLegalEntityTestAuthZToken("COMPANY E2E INC");
+      const authZToken = entityAA.jwt;
+      const entityDid = entityAA.did;
+      const state = DidAuthUtil.getState();
+      const nonce = DidAuthUtil.getNonce(state);
+      const opts: DidAuthTypes.DidAuthResponseOptsNoSignature = {
+        redirectUri: "https://app.example/demo",
+        identifiersUri: `https://dev.vidchain.net/api/v1/identifiers/${did};transform-keys=jwks`,
+        nonce,
+        state,
+        responseMode: DidAuthResponseMode.FORM_POST,
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        did,
+      };
+
+      const jwt: siopDidAuth.DidAuthTypes.DidAuthResponsePayload = await siopDidAuth.createDidAuthResponseObject(
+        opts
+      );
+      expect(jwt).toBeDefined();
+
+      const signedToken = await signDidAuthInternal(
+        jwt,
+        DidAuthResponseIss.SELF_ISSUE,
+        hexPrivateKey
+      );
+
+      const optsVerify: DidAuthVerifyOpts = {
+        verificationType: {
+          registry: process.env.DID_REGISTRY_SC_ADDRESS,
+          rpcUrl: process.env.DID_PROVIDER_RPC_URL,
+          didUrlResolver: `https://dev.vidchain.net/api/v1/identifiers`,
+        },
+        nonce,
+        redirectUri: opts.redirectUri,
+      };
+      const validationResponse = await verifyDidAuthResponse(
+        signedToken,
+        optsVerify
+      );
       expect(validationResponse).toBeDefined();
       expect(validationResponse.signatureValidation).toBe(true);
       expect(validationResponse.payload).toBeDefined();
