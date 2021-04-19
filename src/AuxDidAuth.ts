@@ -35,6 +35,7 @@ import {
   DidAuthValidationResponse,
   DidAuthVerifyOpts,
   DidAuthKeyCurve,
+  DidAuthResponseOptsNoSignature,
 } from "./interfaces/DIDAuth.types";
 import { getPublicJWKFromPrivateHex } from "./util/JWK";
 import { DEFAULT_PROOF_TYPE, PROOF_TYPE_EDDSA } from "./config";
@@ -295,6 +296,60 @@ const createDidAuthResponsePayload = async (
   };
 };
 
+const createDidAuthResponsePayloadNoSignature = async (
+  opts: DidAuthResponseOptsNoSignature
+): Promise<DidAuthResponsePayload> => {
+  if (
+    !opts ||
+    !opts.redirectUri ||
+    !opts.identifiersUri ||
+    !opts.nonce ||
+    !opts.did
+  )
+    throw new Error(DidAuthErrors.BAD_PARAMS);
+
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  let sub_jwk: JWK;
+  let sub: string;
+
+  if (!opts.identifiersUri) throw new Error(DidAuthErrors.NO_IDENTIFIERS_URI);
+  try {
+    const getResponse = await axios.get(opts.identifiersUri);
+    if (!getResponse || !getResponse.data)
+      throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
+    const didDoc = getResponse.data as DIDDocument;
+    if (
+      !didDoc.verificationMethod &&
+      !didDoc.verificationMethod[0] &&
+      !didDoc.verificationMethod[0].publicKeyJwk
+    )
+      throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
+
+    sub_jwk = didDoc.verificationMethod[0].publicKeyJwk;
+    sub = opts.did.includes("did:key:z6Mk")
+      ? utilJwk.getThumbprintFromJwkDidKey(sub_jwk)
+      : utilJwk.getThumbprintFromJwk(sub_jwk);
+  } catch (error) {
+    throw new Error(
+      `${DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT} Error: ${JSON.stringify(
+        error,
+        null,
+        2
+      )}`
+    );
+  }
+
+  return {
+    iss: DidAuthResponseIss.SELF_ISSUE,
+    sub,
+    nonce: opts.nonce,
+    aud: opts.redirectUri,
+    sub_jwk,
+    did: opts.did,
+    vp: opts.vp,
+  };
+};
+
 const verifyDidAuth = async (
   jwt: string,
   opts: DidAuthVerifyOpts
@@ -352,4 +407,5 @@ export {
   createDidAuthResponsePayload,
   isInternalVerification,
   verifyDidAuth,
+  createDidAuthResponsePayloadNoSignature,
 };

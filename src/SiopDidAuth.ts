@@ -17,6 +17,7 @@ import {
   DidAuthResponseIss,
   DidAuthRequestPayload,
   DidAuthKeyAlgorithm,
+  DidAuthResponseOptsNoSignature,
 } from "./interfaces/DIDAuth.types";
 import { DidAuthErrors } from "./interfaces";
 import {
@@ -27,6 +28,7 @@ import {
   signDidAuthExternal,
   createDidAuthResponsePayload,
   verifyDidAuth,
+  createDidAuthResponsePayloadNoSignature,
 } from "./AuxDidAuth";
 import { VID_RESOLVE_DID_URL } from "./config";
 import { util } from "./util";
@@ -141,6 +143,23 @@ const createDidAuthResponse = async (
     opts.signatureType.authZToken,
     opts.signatureType.kid
   );
+};
+
+const createDidAuthResponseObject = async (
+  opts: DidAuthResponseOptsNoSignature
+): Promise<DidAuthResponsePayload> => {
+  if (
+    !opts ||
+    !opts.redirectUri ||
+    !opts.registrationType ||
+    !opts.identifiersUri
+  )
+    throw new Error(DidAuthErrors.BAD_PARAMS);
+
+  const didAuthResponsePayload: DidAuthResponsePayload = await createDidAuthResponsePayloadNoSignature(
+    opts
+  );
+  return didAuthResponsePayload;
 };
 
 /**
@@ -397,4 +416,5 @@ export {
   createDidAuthResponse,
   verifyDidAuthRequest,
   verifyDidAuthResponse,
+  createDidAuthResponseObject,
 };

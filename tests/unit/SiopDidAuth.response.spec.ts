@@ -8,6 +8,7 @@ import {
   DidAuthTypes,
   DidAuthUtil,
   JWTHeader,
+  createDidAuthResponseObject,
 } from "../../src";
 import { mockedKeyAndDid } from "../AuxTest";
 
@@ -297,5 +298,89 @@ describe("create Did Auth response tests should", () => {
     expect(responsePayload).toBeDefined();
     expect(responsePayload).toHaveProperty("sub");
     expect(responsePayload).toHaveProperty("sub_jwk");
+  });
+});
+
+describe("create Did Auth response object tests should", () => {
+  it("throw BAD_SIGNATURE_PARAMS when no identifier url is set", async () => {
+    expect.assertions(1);
+
+    const opts = {
+      redirectUri: "https://entity.example/demo",
+      registrationType: {
+        type: DidAuthTypes.ObjectPassedBy.VALUE,
+      },
+    };
+    await expect(createDidAuthResponseObject(opts as never)).rejects.toThrow(
+      DidAuthErrors.BAD_PARAMS
+    );
+  });
+
+  it("create a valid response token with external signature and registration by value", async () => {
+    expect.assertions(3);
+    const state = DidAuthUtil.getState();
+    const did = "did:vid:0x29A9D0FDb033BFCb39B8E6CA2A63Bd1B0a2b80c4";
+    const opts: DidAuthTypes.DidAuthResponseOptsNoSignature = {
+      redirectUri: "https://entity.example/demo",
+      identifiersUri: `https://dev.vidchain.net/api/v1/identifiers/${did};transform-keys=jwks`,
+      state,
+      nonce: DidAuthUtil.getNonce(state),
+      registrationType: {
+        type: DidAuthTypes.ObjectPassedBy.VALUE,
+        referenceUri: `https://localhost:8080/api/v1/identifiers/${did}`,
+      },
+      did,
+    };
+    jest.spyOn(axios, "get").mockResolvedValue({
+      data: {
+        verificationMethod: [
+          {
+            publicKeyJwk: {
+              kty: "EC",
+              crv: "secp256k1",
+              x:
+                "62451c7a3e0c6e2276960834b79ae491ba0a366cd6a1dd814571212ffaeaaf5a",
+              y:
+                "1ede3d754090437db67eca78c1659498c9cf275d2becc19cdc8f1ef76b9d8159",
+              kid: "JTa8+HgHPyId90xmMFw6KRD4YUYLosBuWJw33nAuRS0=",
+            },
+          },
+        ],
+      },
+    } as never);
+
+    type DataInput = {
+      payload: Record<string, unknown>;
+    };
+
+    jest
+      .spyOn(axios, "post")
+      .mockImplementation(async (_url: string, data: DataInput) => {
+        // assign specific JWT header
+        const header: JWTHeader = {
+          alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
+          typ: "JWT",
+          kid: `${did}#keys-1`,
+        };
+        const jws = await createJwt(
+          data.payload,
+          {
+            issuer: did,
+            alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
+            signer: SimpleSigner(
+              "278a5de700e29faae8e40e366ec5012b5ec63d36ec77e8a2417154cc1d25383f"
+            ),
+          },
+          header
+        );
+        return Promise.resolve({
+          status: 200,
+          data: { jws },
+        });
+      });
+    const response = await createDidAuthResponseObject(opts);
+    expect(response).toBeDefined();
+    expect(response).toHaveProperty("sub");
+    expect(response).toHaveProperty("sub_jwk");
   });
 });
