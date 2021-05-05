@@ -15,6 +15,7 @@ import {
   getPublicJWKFromDid,
   getUserEntityTestAuthZToken,
   getUserEntityTestAuthZTokenDidKey,
+  getKidFromDID,
 } from "../AuxTest";
 import * as mockedData from "../data/mockedData";
 import {
@@ -25,6 +26,7 @@ import {
 import { getPublicJWKFromPublicHex } from "../../src/util/JWK";
 
 dotenv.config();
+jest.setTimeout(30000);
 
 describe("VidDidAuth tests should", () => {
   describe("create Uri Requests tests with", () => {
@@ -874,12 +876,13 @@ describe("VidDidAuth using did:key tests should", () => {
       const { hexPrivateKey, did } = await getUserEntityTestAuthZTokenDidKey();
       const state = DidAuthUtil.getState();
       const nonce = DidAuthUtil.getNonce(state);
+      const kid = await getKidFromDID(did);
       const opts: DidAuthTypes.DidAuthResponseOpts = {
         redirectUri: "https://app.example/demo",
         signatureType: {
           hexPrivateKey,
           did,
-          kid: `#${did.substring(8)}`,
+          kid,
         },
         nonce,
         state,
@@ -916,7 +919,7 @@ describe("VidDidAuth using did:key tests should", () => {
       expectedPayload.sub = expect.any(String) as string;
       expectedPayload.sub_jwk = DidAuthJwk.getPublicJWKFromPrivateHexDidKey(
         hexPrivateKey,
-        `#${did.substring(8)}`
+        kid
       );
 
       expect(validationResponse.payload.iat).toBeDefined();
@@ -933,12 +936,13 @@ describe("VidDidAuth using did:key tests should", () => {
       const { hexPrivateKey, did } = await getUserEntityTestAuthZTokenDidKey();
       const state = DidAuthUtil.getState();
       const nonce = DidAuthUtil.getNonce(state);
+      const kid = await getKidFromDID(did);
       const opts: DidAuthTypes.DidAuthResponseOpts = {
         redirectUri: "https://app.example/demo",
         signatureType: {
           hexPrivateKey,
           did,
-          kid: `#${did.substring(8)}`,
+          kid,
         },
         nonce,
         state,
@@ -974,7 +978,7 @@ describe("VidDidAuth using did:key tests should", () => {
       expectedPayload.sub = expect.any(String) as string;
       expectedPayload.sub_jwk = DidAuthJwk.getPublicJWKFromPrivateHexDidKey(
         hexPrivateKey,
-        `#${did.substring(8)}`
+        kid
       );
       expect(validationResponse.payload.iat).toBeDefined();
       expect(validationResponse.payload).toMatchObject(expectedPayload);

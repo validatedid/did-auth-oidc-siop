@@ -78,6 +78,7 @@
   },
   "dependencies": {
     "@transmute/did-key-ed25519": "^0.2.1-unstable.31",
+    "@transmute/did-key.js": "*",
     "@validatedid/did-jwt": "^1.0.9",
     "@validatedid/vid-did-resolver": "0.0.1",
     "axios": "^0.21.1",

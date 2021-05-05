@@ -142,6 +142,13 @@ const DidMatchFromJwksUri = (
   return jwksUri.includes(issuerDid);
 };
 
+const compareKidWithId = (kid: string, elem: VerificationMethod): boolean => {
+  if (kid.includes("did:") || kid.startsWith("#")) {
+    return elem.id === kid;
+  }
+  return elem.id.split("#")[1] === kid;
+};
+
 const getVerificationMethod = (
   kid: string,
   didDoc: DIDDocument
@@ -153,11 +160,16 @@ const getVerificationMethod = (
   )
     throw new Error(DidAuthErrors.ERROR_RETRIEVING_VERIFICATION_METHOD);
   const { verificationMethod } = didDoc;
+  console.log("compare");
+  console.log(verificationMethod);
+  console.log(kid);
+  // Get the kid from the publicKeyJwk, if it does not exist (verifyDidAuthRequest) compare with the id
   // kid can be "kid": "H7j7N4Phx2U1JQZ2SBjczz2omRjnMgT8c2gjDBv2Bf0="
   // or "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0#keys-1
-  // and id always contains did:xxx:yyy#kid
-  return verificationMethod.find(
-    (elem) => elem.publicKeyJwk && elem.publicKeyJwk.kid === kid
+  return verificationMethod.find((elem) =>
+    elem.publicKeyJwk
+      ? elem.publicKeyJwk.kid === kid
+      : compareKidWithId(kid, elem)
   );
 };
 
