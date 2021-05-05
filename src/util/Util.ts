@@ -156,10 +156,8 @@ const getVerificationMethod = (
   // kid can be "kid": "H7j7N4Phx2U1JQZ2SBjczz2omRjnMgT8c2gjDBv2Bf0="
   // or "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0#keys-1
   // and id always contains did:xxx:yyy#kid
-  return verificationMethod.find((elem) =>
-    kid.includes("did:") || kid.startsWith("#")
-      ? elem.id === kid
-      : elem.id.split("#")[1] === kid
+  return verificationMethod.find(
+    (elem) => elem.publicKeyJwk && elem.publicKeyJwk.kid === kid
   );
 };
 
