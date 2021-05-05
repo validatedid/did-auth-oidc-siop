@@ -269,13 +269,17 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     ); // 5 minutes of expiration time
 
     // CREATE URI RESPONSE
-    const { hexPrivateKey, did } = await getUserEntityTestAuthZTokenDidKey();
+    const {
+      hexPrivateKey,
+      did,
+      kid,
+    } = await getUserEntityTestAuthZTokenDidKey();
     const responseOpts: DidAuthTypes.DidAuthResponseOpts = {
       redirectUri: requestPayload.client_id,
       signatureType: {
         hexPrivateKey,
         did,
-        kid: `#${did.substring(8)}`,
+        kid,
       },
       nonce: requestPayload.nonce,
       state: requestPayload.state,

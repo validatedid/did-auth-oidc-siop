@@ -3,6 +3,8 @@ import { JWK, JWTPayload } from "jose/types";
 import fromKeyLike from "jose/jwk/from_key_like";
 import parseJwk from "jose/jwk/parse";
 import SignJWT from "jose/jwt/sign";
+import { resolver as didKeyResolver } from "@transmute/did-key.js";
+import { DIDResolutionResult } from "did-resolver";
 import { v4 as uuidv4 } from "uuid";
 import axios, { AxiosResponse } from "axios";
 import moment from "moment";
@@ -139,6 +141,7 @@ export const mockedKeyAndDidKey = async (
   hexPrivateKey: string;
   did: string;
   hexPublicKey: string;
+  kid: string;
 }> => {
   const key = await Ed25519KeyPair.generate({
     secureRandom: () => {
@@ -152,10 +155,15 @@ export const mockedKeyAndDidKey = async (
   const hexPrivateKey = keyUtils.privateKeyHexFromPrivateKeyBase58(
     keyPair.privateKeyBase58
   ) as string;
+  const publicKeyJwk = keyUtils.publicKeyJwkFromPublicKeyBase58(
+    keyPair.publicKeyBase58
+  ) as JWK;
+  const { kid } = publicKeyJwk;
   return {
     hexPrivateKey,
     did: key.controller,
     hexPublicKey,
+    kid,
   };
 };
 
@@ -188,8 +196,9 @@ export const getUserTestAuthNTokenDidKey = async (): Promise<{
   did: string;
   hexPublicKey: string;
   assertion: string;
+  kid: string;
 }> => {
-  const { hexPrivateKey, did, hexPublicKey } = await mockedKeyAndDidKey();
+  const { hexPrivateKey, did, hexPublicKey, kid } = await mockedKeyAndDidKey();
   const payload: UserTestAuthNToken = {
     iss: did,
     aud: "vidchain-api",
@@ -202,6 +211,7 @@ export const getUserTestAuthNTokenDidKey = async (): Promise<{
     did,
     hexPublicKey,
     assertion: Buffer.from(JSON.stringify(payload)).toString("base64"),
+    kid,
   };
 };
 
@@ -392,11 +402,13 @@ export async function getUserEntityTestAuthZTokenDidKey(): Promise<{
   did: string;
   hexPrivateKey: string;
   hexPublicKey: string;
+  kid: string;
 }> {
   const {
     hexPrivateKey,
     did,
     hexPublicKey,
+    kid,
     assertion,
   } = await getUserTestAuthNTokenDidKey();
   const payload = {
@@ -418,6 +430,7 @@ export async function getUserEntityTestAuthZTokenDidKey(): Promise<{
     did,
     hexPrivateKey,
     hexPublicKey,
+    kid,
   };
 }
 
@@ -579,7 +592,7 @@ interface FixJwk extends JWK {
 
 export const getParsedDidDocument = (didKey: DidKey): DIDDocument => {
   if (didKey.publicKeyHex) {
-    const didDocB58 = DID_DOCUMENT_PUBKEY_B58 as DIDDocument;
+    const didDocB58 = DID_DOCUMENT_PUBKEY_B58;
     didDocB58.id = didKey.did;
     didDocB58.controller = didKey.did;
     didDocB58.verificationMethod[0].id = `${didKey.did}#keys-1`;
@@ -590,7 +603,7 @@ export const getParsedDidDocument = (didKey: DidKey): DIDDocument => {
     return didDocB58;
   }
   // then didKey jws public key
-  const didDocJwk = DID_DOCUMENT_PUBKEY_JWK as DIDDocument;
+  const didDocJwk = DID_DOCUMENT_PUBKEY_JWK;
   const { jwk } = didKey;
   jwk.kty = didKey.jwk.kty || "EC";
   didDocJwk.id = didKey.did;
@@ -608,4 +621,19 @@ export const getPublicJWKFromDid = async (did: string): Promise<JWK> => {
   );
 
   return (response.data as DIDDocument).verificationMethod[0].publicKeyJwk;
+};
+
+export const resolveDidKey = async (
+  did: string
+): Promise<DIDResolutionResult> => {
+  return (await didKeyResolver.resolve(did)) as DIDResolutionResult;
+};
+
+export const getKidFromDID = async (did: string) => {
+  const { didDocument } = await resolveDidKey(did);
+  const inputVerificationMethod = didDocument.verificationMethod;
+  const publicKeyJwk = keyUtils.publicKeyJwkFromPublicKeyBase58(
+    inputVerificationMethod[0].publicKeyBase58
+  ) as JWK;
+  return publicKeyJwk.kid;
 };

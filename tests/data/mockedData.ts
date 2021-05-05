@@ -1,5 +1,5 @@
+import { DIDDocument } from "@validatedid/did-jwt";
 import { DidAuthTypes, JWTHeader, OidcSsi } from "../../src";
-import { DIDDocument } from "../../src/interfaces/oidcSsi";
 
 export const DIDAUTH_HEADER: JWTHeader = {
   typ: "JWT",
@@ -108,12 +108,7 @@ export const DID_DOCUMENT_PUBKEY_B58: DIDDocument = {
   "@context": "https://w3id.org/did/v1",
   id: "did:vid:0xE3f80bcbb360F04865AfA795B7507d384154216C",
   controller: "did:vid:0xE3f80bcbb360F04865AfA795B7507d384154216C",
-  authentication: [
-    {
-      type: "EcdsaSecp256k1VerificationKey2019",
-      publicKey: "did:vid:0xE3f80bcbb360F04865AfA795B7507d384154216C#key-1",
-    },
-  ],
+  authentication: ["did:vid:0xE3f80bcbb360F04865AfA795B7507d384154216C#key-1"],
   verificationMethod: [
     {
       id: "did:vid:0xE3f80bcbb360F04865AfA795B7507d384154216C#key-1",
@@ -130,11 +125,7 @@ export const DID_DOCUMENT_PUBKEY_JWK: DIDDocument = {
   id: "did:vid:0x96e9A346905a8F8D5ee0e6BA5D13456965e74513",
   controller: "did:vid:0x96e9A346905a8F8D5ee0e6BA5D13456965e74513",
   authentication: [
-    {
-      type: "EcdsaSecp256k1VerificationKey2019",
-      publicKey:
-        "did:vid:0x96e9A346905a8F8D5ee0e6BA5D13456965e74513#JTa8+HgHPyId90xmMFw6KRD4YUYLosBuWJw33nAuRS0=",
-    },
+    "did:vid:0x96e9A346905a8F8D5ee0e6BA5D13456965e74513#JTa8+HgHPyId90xmMFw6KRD4YUYLosBuWJw33nAuRS0=",
   ],
   verificationMethod: [
     {
