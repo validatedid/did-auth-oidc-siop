@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.5.0](https://github.com/validatedid/did-auth-oidc-siop/compare/v2.3.0...v2.5.0) (2021-05-05)
+
+### 🚀 Features
+
+- create response without signature ([c82722d](https://github.com/validatedid/did-auth-oidc-siop/commit/c82722dadb6f7dcac5a6d5ae5d3080cd05ce820f))
+
+### 🐛 Bug Fixes
+
+- tests ([725f535](https://github.com/validatedid/did-auth-oidc-siop/commit/725f5359b6e39f705a69a457fb5050556c39db51))
+
 ## [2.4.0](https://github.com/validatedid/did-auth-oidc-siop/compare/v2.3.0...v2.4.0) (2021-04-19)
 
 ### 🚀 Features
