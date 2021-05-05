@@ -17,6 +17,7 @@ import * as mockedData from "../data/mockedData";
 
 // importing .env variables
 dotenv.config();
+jest.setTimeout(30000);
 
 describe("SIOP DID Auth end to end flow tests should", () => {
   it("create a web request with a backend to an app flow in the same context (mobile device)", async () => {
@@ -172,6 +173,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     );
     expect(validationResponse).toBeDefined();
     expect(validationResponse.signatureValidation).toBe(true);
+    jest.clearAllMocks();
   });
   it("create a web request WITHOUT a backend to an app flow in the same context (mobile device)", async () => {
     expect.assertions(29);
@@ -318,5 +320,6 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     );
     expect(validationResponse).toBeDefined();
     expect(validationResponse.signatureValidation).toBe(true);
+    jest.clearAllMocks();
   });
 });

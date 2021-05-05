@@ -19,6 +19,7 @@ import * as mockedData from "../data/mockedData";
 
 // importing .env variables
 dotenv.config();
+jest.setTimeout(30000);
 
 describe("SIOP DID Auth end to end flow tests should", () => {
   it("create a desktop web request to an app flow", async () => {
