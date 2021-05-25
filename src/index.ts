@@ -5,6 +5,7 @@ import { util, utilJwk } from "./util";
 
 export {
   createUriRequest,
+  createUriRequestFromJwt,
   createUriResponse,
   createDidAuthRequest,
   createDidAuthRequestObject,

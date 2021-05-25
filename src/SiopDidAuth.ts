@@ -229,20 +229,20 @@ const createUriRequest = async (
  */
 const createUriRequestFromJwt = (
   jwt: string,
-  opts: DidAuthRequestOpts,
-  payload: DidAuthRequestPayload
+  payload: DidAuthRequestPayload,
+  opts: DidAuthRequestOpts
 ): UriRequest => {
   if (
     !jwt ||
     !payload ||
-    !payload.redirectUri ||
+    !payload.client_id ||
     !payload.nonce ||
     !payload.state
   )
     throw new Error(DidAuthErrors.BAD_PARAMS);
 
   const baseOidp = opts.oidpUri ? `${opts.oidpUri}?` : "";
-  let responseUri = `${baseOidp}openid://?response_type=${DidAuthResponseType.ID_TOKEN}&client_id=${opts.redirectUri}&scope=${DidAuthScope.OPENID_DIDAUTHN}&state=${payload.state}&nonce=${payload.nonce}`;
+  let responseUri = `${baseOidp}openid://?response_type=${DidAuthResponseType.ID_TOKEN}&client_id=${payload.client_id}&scope=${DidAuthScope.OPENID_DIDAUTHN}&state=${payload.state}&nonce=${payload.nonce}`;
 
   // returns an URI, with a reference Uri, and JWT
   if (opts.requestObjectBy.type === ObjectPassedBy.REFERENCE) {

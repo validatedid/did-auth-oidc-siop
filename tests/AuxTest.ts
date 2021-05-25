@@ -12,12 +12,19 @@ import { ethers } from "ethers";
 import jwt_decode from "jwt-decode";
 import base58 from "bs58";
 import { Ed25519KeyPair, keyUtils } from "@transmute/did-key-ed25519";
-import { decodeJwt, DIDDocument } from "@validatedid/did-jwt";
+import {
+  decodeJwt,
+  DIDDocument,
+  createJwt,
+  SimpleSigner,
+  NaclSigner,
+} from "@validatedid/did-jwt";
 import { DidAuthErrors, JWTClaims, DidAuthUtil, DidAuthTypes } from "../src";
 import { prefixWith0x } from "../src/util/Util";
 import {
   DidAuthKeyCurve,
   DidAuthKeyType,
+  DidAuthRequestPayload,
 } from "../src/interfaces/DIDAuth.types";
 import { getPublicJWKFromPrivateHex, getThumbprint } from "../src/util/JWK";
 import { EnterpriseAuthZToken, JWTHeader } from "../src/interfaces/JWT";
