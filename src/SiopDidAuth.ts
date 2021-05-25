@@ -39,14 +39,13 @@ import { getThumbprintFromJwk, getThumbprintFromJwkDidKey } from "./util/JWK";
  * Creates a didAuth Request Object
  * @param opts Request input data to build a signed DidAuth Request Token
  */
-const createDidAuthRequest = async (
+const createDidAuthRequestObject = async (
   opts: DidAuthRequestOpts
-): Promise<DidAuthRequestResponse> => {
+): Promise<DidAuthRequestPayload> => {
   if (
     !opts ||
     !opts.redirectUri ||
     !opts.requestObjectBy ||
-    !opts.signatureType ||
     !opts.registrationType
   )
     throw new Error(DidAuthErrors.BAD_PARAMS);
@@ -60,11 +59,7 @@ const createDidAuthRequest = async (
     !opts.requestObjectBy.referenceUri
   )
     throw new Error(DidAuthErrors.NO_REFERENCE_URI);
-  if (
-    !isInternalSignature(opts.signatureType) &&
-    !isExternalSignature(opts.signatureType)
-  )
-    throw new Error(DidAuthErrors.BAD_SIGNATURE_PARAMS);
+
   if (
     opts.registrationType.type !== ObjectPassedBy.REFERENCE &&
     opts.registrationType.type !== ObjectPassedBy.VALUE
@@ -77,6 +72,31 @@ const createDidAuthRequest = async (
     throw new Error(DidAuthErrors.NO_REFERENCE_URI);
 
   const didAuthRequestPayload = await createDidAuthRequestPayload(opts);
+  return didAuthRequestPayload;
+};
+
+/**
+ * Creates a didAuth Request Object
+ * @param opts Request input data to build a signed DidAuth Request Token
+ */
+const createDidAuthRequest = async (
+  opts: DidAuthRequestOpts
+): Promise<DidAuthRequestResponse> => {
+  if (
+    !opts ||
+    !opts.redirectUri ||
+    !opts.requestObjectBy ||
+    !opts.signatureType ||
+    !opts.registrationType
+  )
+    throw new Error(DidAuthErrors.BAD_PARAMS);
+  if (
+    !isInternalSignature(opts.signatureType) &&
+    !isExternalSignature(opts.signatureType)
+  )
+    throw new Error(DidAuthErrors.BAD_SIGNATURE_PARAMS);
+
+  const didAuthRequestPayload = await createDidAuthRequestObject(opts);
   const { nonce, state } = didAuthRequestPayload;
 
   if (isInternalSignature(opts.signatureType)) {
@@ -411,6 +431,7 @@ const verifyDidAuthResponse = async (
 
 export {
   createUriRequest,
+  createDidAuthRequestObject,
   createUriResponse,
   createDidAuthRequest,
   createDidAuthResponse,

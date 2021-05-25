@@ -89,6 +89,12 @@ export interface InternalSignature {
   kid?: string; // Optional: key identifier. default did#keys-1
 }
 
+export interface NoSignature {
+  hexPublicKey: string; // hex public key
+  did: string;
+  kid?: string; // Optional: key identifier. default did#keys-1
+}
+
 export interface ExternalSignature {
   signatureUri: string; // url to call to generate a signature
   did: string;
@@ -106,7 +112,7 @@ export interface DidAuthRequestOpts {
   oidpUri?: string;
   redirectUri: string;
   requestObjectBy: RequestObjectBy;
-  signatureType: InternalSignature | ExternalSignature;
+  signatureType: InternalSignature | ExternalSignature | NoSignature;
   registrationType: RegistrationType;
   responseMode?: DidAuthResponseMode;
   responseContext?: DidAuthResponseContext;

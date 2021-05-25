@@ -6,7 +6,26 @@ import SHA from "sha.js";
 import { types } from "../interfaces";
 import { base64urlEncodeBuffer } from "./Util";
 
-const getPublicJWKFromPublicHex = (hexPublicKey: string, kid?: string): JWK => {
+const getPublicJWKFromPublicHexDidKey = (
+  hexPublicKey: string,
+  kid?: string
+): JWK => {
+  const ec = new EC("ed25519");
+  // Convert the key to base58 in order to get the jwk with another method from library keyUtils
+  const publicKeyBase58 = keyUtils.publicKeyBase58FromPublicKeyHex(
+    hexPublicKey
+  ) as string;
+  const pubJwk = keyUtils.publicKeyJwkFromPublicKeyBase58(publicKeyBase58);
+  return pubJwk;
+};
+
+const getPublicJWKFromPublicHex = (
+  hexPublicKey: string,
+  kid?: string,
+  method?: string
+): JWK => {
+  if (method && method.includes("did:key:z6Mk"))
+    return getPublicJWKFromPublicHexDidKey(hexPublicKey, kid);
   const ec = new EC("secp256k1");
   const key = ec.keyFromPublic(hexPublicKey.replace("0x", ""), "hex");
   const pubPoint = key.getPublic();

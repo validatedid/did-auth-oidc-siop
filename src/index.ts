@@ -7,6 +7,7 @@ export {
   createUriRequest,
   createUriResponse,
   createDidAuthRequest,
+  createDidAuthRequestObject,
   createDidAuthResponse,
   verifyDidAuthRequest,
   verifyDidAuthResponse,

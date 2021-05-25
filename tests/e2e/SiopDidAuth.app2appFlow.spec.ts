@@ -101,8 +101,8 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     // verify a response externally
     const optsVerifyResponse: DidAuthVerifyOpts = {
       verificationType: {
-        verifyUri: `${WALLET_API_BASE_URL}/api/v1/signature-validations`,
-        authZToken,
+        registry: "asadad",
+        rpcUrl: "asada",
         didUrlResolver: `${WALLET_API_BASE_URL}/api/v1/identifiers`,
       },
       nonce,

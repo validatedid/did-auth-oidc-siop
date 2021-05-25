@@ -25,6 +25,7 @@ import {
   expirationTime,
   ExternalSignature,
   InternalSignature,
+  NoSignature,
   ObjectPassedBy,
   RegistrationJwks,
   RegistrationJwksUri,
@@ -37,16 +38,23 @@ import {
   DidAuthKeyCurve,
   DidAuthResponseOptsNoSignature,
 } from "./interfaces/DIDAuth.types";
-import { getPublicJWKFromPrivateHex } from "./util/JWK";
+import {
+  getPublicJWKFromPrivateHex,
+  getPublicJWKFromPublicHex,
+} from "./util/JWK";
 import { DEFAULT_PROOF_TYPE, PROOF_TYPE_EDDSA } from "./config";
 
 const isInternalSignature = (
-  object: InternalSignature | ExternalSignature
+  object: InternalSignature | ExternalSignature | NoSignature
 ): object is InternalSignature => "hexPrivateKey" in object && "did" in object;
 
 const isExternalSignature = (
-  object: InternalSignature | ExternalSignature
+  object: InternalSignature | ExternalSignature | NoSignature
 ): object is ExternalSignature => "signatureUri" in object && "did" in object;
+
+const isNoSignature = (
+  object: InternalSignature | ExternalSignature | NoSignature
+): object is InternalSignature => "hexPublicKey" in object && "did" in object;
 
 const isInternalVerification = (
   object: InternalVerification | ExternalVerification
@@ -54,7 +62,7 @@ const isInternalVerification = (
 
 const createRegistration = async (
   registrationType: RegistrationType,
-  signatureType: InternalSignature | ExternalSignature
+  signatureType: InternalSignature | ExternalSignature | NoSignature
 ): Promise<RegistrationJwksUri | RegistrationJwks> => {
   if (!registrationType || !registrationType.type)
     throw new Error(DidAuthErrors.REGISTRATION_OBJECT_TYPE_NOT_SET);
@@ -80,6 +88,16 @@ const createRegistration = async (
           jwks: getPublicJWKFromPrivateHex(
             signatureType.hexPrivateKey,
             signatureType.kid || `${signatureType.did}#keys-1`
+          ),
+        };
+        return registration;
+      }
+      if (isNoSignature(signatureType)) {
+        registration = {
+          jwks: getPublicJWKFromPublicHex(
+            signatureType.hexPublicKey,
+            signatureType.kid || `${signatureType.did}#keys-1`,
+            signatureType.did
           ),
         };
         return registration;
@@ -401,6 +419,7 @@ const verifyDidAuth = async (
 export {
   isInternalSignature,
   isExternalSignature,
+  isNoSignature,
   createDidAuthRequestPayload,
   signDidAuthInternal,
   signDidAuthExternal,
