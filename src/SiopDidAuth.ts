@@ -224,6 +224,44 @@ const createUriRequest = async (
 };
 
 /**
+ * Creates an URI Request
+ * @param opts Options to define the Uri Request
+ */
+const createUriRequestFromJwt = (
+  jwt: string,
+  opts: DidAuthRequestOpts,
+  payload: DidAuthRequestPayload
+): UriRequest => {
+  if (
+    !jwt ||
+    !payload ||
+    !payload.redirectUri ||
+    !payload.nonce ||
+    !payload.state
+  )
+    throw new Error(DidAuthErrors.BAD_PARAMS);
+
+  const baseOidp = opts.oidpUri ? `${opts.oidpUri}?` : "";
+  let responseUri = `${baseOidp}openid://?response_type=${DidAuthResponseType.ID_TOKEN}&client_id=${opts.redirectUri}&scope=${DidAuthScope.OPENID_DIDAUTHN}&state=${payload.state}&nonce=${payload.nonce}`;
+
+  // returns an URI, with a reference Uri, and JWT
+  if (opts.requestObjectBy.type === ObjectPassedBy.REFERENCE) {
+    responseUri += `&requestUri=${opts.requestObjectBy.referenceUri}`;
+    return {
+      urlEncoded: encodeURI(responseUri),
+      encoding: UrlEncodingFormat.FORM_URL_ENCODED,
+      jwt,
+    };
+  }
+  // returns an URI with Request JWT embedded
+  responseUri += `&request=${jwt}`;
+  return {
+    urlEncoded: encodeURI(responseUri),
+    encoding: UrlEncodingFormat.FORM_URL_ENCODED,
+  };
+};
+
+/**
  * Creates an URI Response
  * @param opts Options to define the Uri Response
  */
@@ -431,6 +469,7 @@ const verifyDidAuthResponse = async (
 
 export {
   createUriRequest,
+  createUriRequestFromJwt,
   createDidAuthRequestObject,
   createUriResponse,
   createDidAuthRequest,

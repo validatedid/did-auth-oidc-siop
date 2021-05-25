@@ -679,6 +679,7 @@ describe("VidDidAuth using did:key tests should", () => {
       };
 
       const { jwt } = await siopDidAuth.createDidAuthRequest(opts);
+      console.log(jwt);
       expect(jwt).toBeDefined();
       const optsVerify: DidAuthVerifyOpts = {
         verificationType: {
@@ -779,7 +780,11 @@ describe("VidDidAuth using did:key tests should", () => {
 
     it("create did Auth request payload without sign it for did keys", async () => {
       expect.assertions(8);
-      const { did, hexPublicKey } = await getUserEntityTestAuthZTokenDidKey();
+      const {
+        did,
+        hexPublicKey,
+        kid,
+      } = await getUserEntityTestAuthZTokenDidKey();
 
       const opts: DidAuthTypes.DidAuthRequestOpts = {
         redirectUri: "http://app.example/demo",
@@ -797,6 +802,7 @@ describe("VidDidAuth using did:key tests should", () => {
       };
 
       const payload = await siopDidAuth.createDidAuthRequestObject(opts);
+      console.log(payload);
       expect(payload).toBeDefined();
       expect(payload.iss).toStrictEqual(did);
       expect(payload.client_id).toStrictEqual("http://app.example/demo");

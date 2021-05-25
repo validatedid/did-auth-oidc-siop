@@ -19,7 +19,8 @@ Current version supports only `ES256k` (and `ES256K-R`) algorithm (the EC secp25
    6. [On Your App, Validate the Authentication Response and retrieve the user DID and requested Verifiable Credentials](#on-your-app-validate-the-authentication-response-and-retrieve-the-user-did-and-requested-verifiable-credentials)
 4. [Mobile Web 2 App Authentication Flow with VIDcredentials API](#Mobile-Web-2-App-Authentication-Flow-with-VIDcredentials-API)
 5. [Desktop Web 2 App Authentication Flow with VIDcredentials API](#Mobile-Web-2-App-Authentication-Flow-with-VIDcredentials-API)
-6. [Library Test](#Library-Test)
+6. [Desktop Web 2 App Authentication Flow without VIDcredentials API](#Desktop-Web-2-App-Authentication-Flow-without-VIDcredentials-API)
+7. [Library Test](#Library-Test)
 
 ## Installation
 
@@ -800,6 +801,152 @@ The POST data is sent in the body encoded as `application/x-www-form-urlencoded`
 This step is similar to the mobile2app authentication process.
 
 You need then to verify the receivied `id_token` calling `verifyDidAuthResponse` with `DidAuthVerifyOpts` similarly as the app2app authentication.
+
+After calling `verifyDidAuthResponse` and receiving `"signatureValidation": true`, you validated the Authentication Response Token and received a Verifiable Presentation that contains the requested Verifiable Credential, under `payload.vp`.
+
+## Desktop Web 2 App Authentication Flow without VIDcredentials API
+
+This flow explains when a Entity, which has their own keys an a web accessible via a web browser, wants to connect to a VIDwallet App user, and perform an mobile web to app authentication with an exchange of DIDs and request a Verifiable Credential to a user, it can use this flow to make it possible.
+
+A User connects to the Entity's website with a desktop browser and perform the authentication using VIDwallet app. Meaning using TWO contexts: a desktop and a mobile device.
+
+> Note: We are assumiing that the Entity web has also a backend to send the Authenticatio Response. However, this library accepts the option that an entity has only a frontend site, and will be similar as the app2app authentication.
+
+### Prepare Authentication Request Data (desktop2app)
+
+To initate the flow you need to set the Authentication Request Data.
+
+The main key points to respect app2app authentication:
+
+- **redirectUri**: This is your Entity backend url to receive the Authentication Response as POST method. Example: `https://entity.example/did-auth`
+- **requestObjectBy**: Whether you want to generate the Authentication Request embedded in the url or via reference. For this flow, we recommend to be set as reference to increase the security. This implies that your Entity backend should have another endpoint to GET the Request object.
+- **referenceUri**: Entity backend Url to get the Request object. Example: `https://entity.example/siop/jwts`.
+- **responseMode**: Specifies the way you want to receive the Authentication Response. In this case, it will be `form_post`, to be sent to the Entity backend.
+- **responseContext**: Specifies whether the response should be returned to the redirect URI in the intiator context, or whether the response can be returned in a new/empty context. In this case, it will be in a different context (desktop and app), thus the value `responseContext` is `wallet`, indicating that the response should be submitted in a different context.
+
+#### Example of a Authentication Request Structure (desktop2app)
+
+```json
+{
+  "redirectUri": "https://entity.example/did-auth",
+  "requestObjectBy": {
+    "type": "VALUE"
+  },
+  "signatureType": {
+    "hexPublicKey": "f7032d4d5c9002851400780708b27fe54d2871f8ff48addcc3df0147f7fbe9b3",
+    "did": "did:key:z6Mkw5VZEUm3ZgQUh2TRuqig3K7HbyohoYYpC4at91MudXPY",
+    "kid": "DnCcY5htLRf7svx45yD7NoEP8yb1l0zJ91QW9gH_bnk"
+  },
+  "registrationType": {
+    "type": "VALUE"
+  },
+  "responseMode": "form_post",
+  "responseContext": "wallet",
+  "state": "1f50031ed2e57ed52cf5fc81",
+  "claims": {
+    "vc": {
+      "VerifiableIdCredential": {
+        "essential": true
+      }
+    }
+  }
+}
+```
+
+### Create an Authentication Request URI (desktop2app)
+
+With the previous Authentication Request Structure you can initate the flow to create an Authentication Request URI and print a QR code on the frontend website to be scanned by the VIDwallet app, and get the Request token via a GET backend call.
+
+Example:
+Assuming we use the previous authentication request structure on `requestOpts` variable.
+
+```js
+const requestPayload = await siopDidAuth.createDidAuthRequestObject(
+  requestOpts
+);
+
+console.log(requestPayload);
+/* {
+      iss: 'did:key:z6Mkw5VZEUm3ZgQUh2TRuqig3K7HbyohoYYpC4at91MudXPY,
+      scope: 'openid did_authn',
+      registration: {
+        jwks: {
+          crv: 'Ed25519',
+          x: 'cdaUbgTT1CzeGpXEt0KDeZJU-RDVXfp4VRAQMbz8kxE',
+          kty: 'OKP',
+          kid: 'AoHRH5XpY-N4yT0_JE5BQYY8d9DMj9oFsMSXvdONdLY'
+        }
+      },
+      client_id: 'http://app.example/demo',
+      nonce: 'jAIi0QE4mceb4IEvD_ne1P-7utaStIwSEw6Cc8KwlOc',
+      state: 'e356b39804827658703e74f8',
+      response_type: 'id_token',
+      response_mode: form_post,
+      response_context: wallet,
+      claims: {
+            "vc": {
+            "VerifiableIdCredential": {
+                "essential": true
+            }
+            }
+        }
+    }
+*/
+```
+
+The entity now has to create a signed JWT with the payload received.
+
+```js
+console.log(jwt);
+// eyJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSIsImtpZCI6IiN6Nk1rb0xhNmt4UjhDb1FlUUU3dmZyUkpWR3ptWlpIU3pzOEY1cnROTmNQU1g5eFEifQ.eyJpYXQiOjE2MjE5NTk0NzcsImV4cCI6MTYyMTk1OTc3NywiaXNzIjoiZGlkOmtleTp6Nk1rb0xhNmt4UjhDb1FlUUU3dmZyUkpWR3ptWlpIU3pzOEY1cnROTmNQU1g5eFEiLCJzY29wZSI6Im9wZW5pZCBkaWRfYXV0aG4iLCJyZWdpc3RyYXRpb24iOnsiandrcyI6eyJraWQiOiIjejZNa29MYTZreFI4Q29RZVFFN3ZmclJKVkd6bVpaSFN6czhGNXJ0Tk5jUFNYOXhRIiwia3R5IjoiRUMiLCJjcnYiOiJzZWNwMjU2azEiLCJ4IjoiODQ3NTZjOGM0ODZkY2U1ZjQxMmRiOTg3ODg4N2NkNjE2MjJiZTMzNjAxYTc3ZDk5ODVkZGEwNzE2ZjFlZGNhMCIsInkiOiIzYmNhYmNiYzQ3ZWY3NDhjMjUyM2EzZWZhMTdhNDg0YTU1MzQ0MGI4Y2QyY2NkZWEzNDZhYWU5YWUyNjM4YmIifX0sImNsaWVudF9pZCI6Imh0dHA6Ly9hcHAuZXhhbXBsZS9kZW1vIiwibm9uY2UiOiJ2MUVfTHpCUVo1RnE5NF9zS3V0UGs0R1NucWZWQW5xVVQ4TkxpajMwRGRJIiwic3RhdGUiOiIwY2E5Yzk3NzQ4YmIwMDMwMDM5MTg5MzEiLCJyZXNwb25zZV90eXBlIjoiaWRfdG9rZW4ifQ.ka7eUy1764ZoKXMxRBwnHq8W22_-AXi4pddRdtdoOr-9qfnPigr587XiI-XtmGDbpFJb2qo95VTxHuQH6S4pCg
+```
+
+And has to create the URI sneding the JWT created, the payload received adobe and the previous authentication request structure on `requestOpts` variable.
+
+The uri request received structure has three components:
+
+- **urlEncoded**: the URI to print as QR
+- **encoding**: the encoding used that will be `application/x-www-form-urlencoded`
+- **jwt**: the Request Token to be retrieved on the GET backend call
+
+```js
+const uriRequest = await siopDidAuth.createUriRequestFromJwt(
+  jwt,
+  requestPayload,
+  requestOpts
+);
+
+console.log(decodeURI(uriRequest.urlEncoded));
+// openid://?response_type=id_token&client_id=https://entity.example/did-auth&scope=openid did_authn&state=626660dce64b2e51fa7b820f&nonce=Pvd_3zBVO92K3xEUFmY2TMMmPRy15_9NVmmZsws26bQ&request=eyJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSIsImtpZCI6IiN6Nk1rb0xhNmt4UjhDb1FlUUU3dmZyUkpWR3ptWlpIU3pzOEY1cnROTmNQU1g5eFEifQ.eyJpYXQiOjE2MjE5NTk0NzcsImV4cCI6MTYyMTk1OTc3NywiaXNzIjoiZGlkOmtleTp6Nk1rb0xhNmt4UjhDb1FlUUU3dmZyUkpWR3ptWlpIU3pzOEY1cnROTmNQU1g5eFEiLCJzY29wZSI6Im9wZW5pZCBkaWRfYXV0aG4iLCJyZWdpc3RyYXRpb24iOnsiandrcyI6eyJraWQiOiIjejZNa29MYTZreFI4Q29RZVFFN3ZmclJKVkd6bVpaSFN6czhGNXJ0Tk5jUFNYOXhRIiwia3R5IjoiRUMiLCJjcnYiOiJzZWNwMjU2azEiLCJ4IjoiODQ3NTZjOGM0ODZkY2U1ZjQxMmRiOTg3ODg4N2NkNjE2MjJiZTMzNjAxYTc3ZDk5ODVkZGEwNzE2ZjFlZGNhMCIsInkiOiIzYmNhYmNiYzQ3ZWY3NDhjMjUyM2EzZWZhMTdhNDg0YTU1MzQ0MGI4Y2QyY2NkZWEzNDZhYWU5YWUyNjM4YmIifX0sImNsaWVudF9pZCI6Imh0dHA6Ly9hcHAuZXhhbXBsZS9kZW1vIiwibm9uY2UiOiJ2MUVfTHpCUVo1RnE5NF9zS3V0UGs0R1NucWZWQW5xVVQ4TkxpajMwRGRJIiwic3RhdGUiOiIwY2E5Yzk3NzQ4YmIwMDMwMDM5MTg5MzEiLCJyZXNwb25zZV90eXBlIjoiaWRfdG9rZW4ifQ.ka7eUy1764ZoKXMxRBwnHq8W22_-AXi4pddRdtdoOr-9qfnPigr587XiI-XtmGDbpFJb2qo95VTxHuQH6S4pCg
+console.log(uriRequest.encoding);
+// application/x-www-form-urlencoded
+```
+
+### VIDwallet App verifies the Request Token after scanning the QR Code (desktop2app)
+
+VIDwallet App scans the QR code that contains an encoded URI, decodes it, gets the `requestUri` to call the entity backend endpoint to obtain the Authentication Request Token to validated it.
+
+The validation process for Authentication Request Token is the same as the app2app authentication.
+
+### VIDwallet prepares the Authentication Response Structure (desktop2app)
+
+This step is similar to the mobile2app authentication process with `form_post` as `responseMode`.
+
+### VIDwallet creates an Authentication Response URI (desktop2app) and sends it as POST
+
+With previous Authentication Response data, we can call the library to create an Authentication Response URI encoded, and ready to be sent to `https://entity.example/did-auth` as POST method to the Entity backend.
+
+This step is similar to the mobile2app authentication process.
+
+### On Your Entity Backend, validate the Authentication Response and retrieve the user DID and requested Verifiable Credentials (desktop2app)
+
+Last step is that on your backend, you parse the received Authentication Response URI, obtain the Response Token and validate it, to finally obtain the desired Verifiable Credentials from the user.
+
+The POST data is sent in the body encoded as `application/x-www-form-urlencoded`, which contains the `id_token` and the `state` to be verified.
+
+This step is similar to the mobile2app authentication process.
+
+You can use the library to verify the receivied `id_token` calling `verifyDidAuthResponse` with `DidAuthVerifyOpts` similarly as the app2app authentication.
 
 After calling `verifyDidAuthResponse` and receiving `"signatureValidation": true`, you validated the Authentication Response Token and received a Verifiable Presentation that contains the requested Verifiable Credential, under `payload.vp`.
 
