@@ -54,7 +54,7 @@ const isExternalSignature = (
 
 const isNoSignature = (
   object: InternalSignature | ExternalSignature | NoSignature
-): object is InternalSignature => "hexPublicKey" in object && "did" in object;
+): object is NoSignature => "hexPublicKey" in object && "did" in object;
 
 const isInternalVerification = (
   object: InternalVerification | ExternalVerification
