@@ -746,6 +746,67 @@ describe("VidDidAuth using did:key tests should", () => {
         validationResponse.payload.iat + 5 * 60
       ); // 5 minutes of expiration time
     });
+
+    it("create did Auth request payload without sign it", async () => {
+      expect.assertions(8);
+      const { did, hexPublicKey } = await getUserEntityTestAuthZToken();
+
+      const opts: DidAuthTypes.DidAuthRequestOpts = {
+        redirectUri: "http://app.example/demo",
+        requestObjectBy: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        signatureType: {
+          hexPublicKey,
+          did,
+          kid: `#${did.substring(8)}`,
+        },
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+      };
+
+      const payload = await siopDidAuth.createDidAuthRequestObject(opts);
+      expect(payload).toBeDefined();
+      expect(payload.iss).toStrictEqual(did);
+      expect(payload.client_id).toStrictEqual("http://app.example/demo");
+      expect(payload).toHaveProperty("scope");
+      expect(payload).toHaveProperty("registration");
+      expect(payload).toHaveProperty("nonce");
+      expect(payload).toHaveProperty("state");
+      expect(payload).toHaveProperty("response_type");
+    });
+
+    it("create did Auth request payload without sign it for did keys", async () => {
+      expect.assertions(8);
+      const { did, hexPublicKey } = await getUserEntityTestAuthZTokenDidKey();
+
+      const opts: DidAuthTypes.DidAuthRequestOpts = {
+        redirectUri: "http://app.example/demo",
+        requestObjectBy: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+        signatureType: {
+          hexPublicKey,
+          did,
+          kid: `#${did.substring(8)}`,
+        },
+        registrationType: {
+          type: DidAuthTypes.ObjectPassedBy.VALUE,
+        },
+      };
+
+      const payload = await siopDidAuth.createDidAuthRequestObject(opts);
+
+      expect(payload).toBeDefined();
+      expect(payload.iss).toStrictEqual(did);
+      expect(payload.client_id).toStrictEqual("http://app.example/demo");
+      expect(payload).toHaveProperty("scope");
+      expect(payload).toHaveProperty("registration");
+      expect(payload).toHaveProperty("nonce");
+      expect(payload).toHaveProperty("state");
+      expect(payload).toHaveProperty("response_type");
+    });
   });
   describe("create Uri Response tests with", () => {
     it("an id_token and state using the default response_mode=fragment with only required params", async () => {
@@ -1051,8 +1112,6 @@ describe("VidDidAuth using did:key tests should", () => {
       expect.assertions(7);
       const { did, hexPrivateKey } = await getUserEntityTestAuthZToken();
       const entityAA = await getLegalEntityTestAuthZToken("COMPANY E2E INC");
-      const authZToken = entityAA.jwt;
-      const entityDid = entityAA.did;
       const state = DidAuthUtil.getState();
       const nonce = DidAuthUtil.getNonce(state);
       const opts: DidAuthTypes.DidAuthResponseOptsNoSignature = {

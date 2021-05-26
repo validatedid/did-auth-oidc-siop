@@ -317,8 +317,8 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     // VERIFY DID AUTH RESPONSE
     const optsVerify: DidAuthVerifyOpts = {
       verificationType: {
-        verifyUri: `${WALLET_API_BASE_URL}/api/v1/signature-validations`,
-        authZToken,
+        registry: "",
+        rpcUrl: "",
         didUrlResolver: `${WALLET_API_BASE_URL}/api/v1/identifiers`,
       },
       nonce: (payload as DidAuthTypes.DidAuthResponsePayload).nonce,

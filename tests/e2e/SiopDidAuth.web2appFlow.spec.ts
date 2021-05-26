@@ -11,9 +11,11 @@ import {
 import {
   getLegalEntityAuthZToken,
   getUserEntityTestAuthZToken,
+  getUserEntityTestAuthZTokenDidKey,
 } from "../AuxTest";
 import { DidAuthVerifyOpts } from "../../src/interfaces/DIDAuth.types";
 import * as mockedData from "../data/mockedData";
+import { signDidAuthInternal } from "../../src/AuxDidAuth";
 
 // importing .env variables
 dotenv.config();
@@ -320,6 +322,85 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     );
     expect(validationResponse).toBeDefined();
     expect(validationResponse.signatureValidation).toBe(true);
+    jest.clearAllMocks();
+  });
+
+  it("flow without vidchain API and without sign the jwt", async () => {
+    expect.assertions(20);
+    const {
+      did,
+      hexPublicKey,
+      hexPrivateKey,
+      kid,
+    } = await getUserEntityTestAuthZTokenDidKey();
+
+    const opts: DidAuthTypes.DidAuthRequestOpts = {
+      oidpUri: "vidchain://did-auth",
+      redirectUri: "http://app.example/demo",
+      requestObjectBy: {
+        type: DidAuthTypes.ObjectPassedBy.VALUE,
+      },
+      signatureType: {
+        hexPublicKey,
+        did,
+        kid: `#${did.substring(8)}`,
+      },
+      registrationType: {
+        type: DidAuthTypes.ObjectPassedBy.VALUE,
+      },
+      responseMode: DidAuthTypes.DidAuthResponseMode.FORM_POST,
+      responseContext: DidAuthTypes.DidAuthResponseContext.RP,
+      claims: mockedData.verifiableIdOidcClaim,
+    };
+
+    const payload = await siopDidAuth.createDidAuthRequestObject(opts);
+
+    expect(payload).toBeDefined();
+    expect(payload.iss).toStrictEqual(did);
+    expect(payload.client_id).toStrictEqual("http://app.example/demo");
+    expect(payload).toHaveProperty("scope");
+    expect(payload).toHaveProperty("registration");
+    expect(payload).toHaveProperty("nonce");
+    expect(payload).toHaveProperty("state");
+    expect(payload).toHaveProperty("response_type");
+
+    const signedJwt = await signDidAuthInternal(
+      payload,
+      did,
+      hexPrivateKey,
+      kid
+    );
+
+    const uriRequest = siopDidAuth.createUriRequestFromJwt(
+      signedJwt,
+      payload,
+      opts
+    );
+
+    expect(uriRequest).toBeDefined();
+    expect(uriRequest).toHaveProperty("urlEncoded");
+    expect(uriRequest).toHaveProperty("encoding");
+    const uriDecoded = decodeURI(uriRequest.urlEncoded);
+    expect(uriDecoded).toContain(opts.oidpUri);
+    expect(uriDecoded).toContain(`openid://`);
+    expect(uriDecoded).toContain(
+      `?response_type=${DidAuthTypes.DidAuthResponseType.ID_TOKEN}`
+    );
+    expect(uriDecoded).toContain(`&client_id=${opts.redirectUri}`);
+    expect(uriDecoded).toContain(
+      `&scope=${DidAuthTypes.DidAuthScope.OPENID_DIDAUTHN}`
+    );
+    expect(uriDecoded).toContain(`&request=`);
+    const data = parse(uriDecoded);
+    expect(data.request).toStrictEqual(signedJwt);
+    const decodedPayload = decodeJwt(data.request as string);
+    const requestPayload = decodedPayload.payload as DidAuthTypes.DidAuthRequestPayload;
+    expect(requestPayload.response_mode).toBe(
+      DidAuthTypes.DidAuthResponseMode.FORM_POST
+    );
+    expect(requestPayload.response_context).toBe(
+      DidAuthTypes.DidAuthResponseContext.RP
+    );
     jest.clearAllMocks();
   });
 });
