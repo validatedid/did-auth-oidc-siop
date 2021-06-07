@@ -1,5 +1,5 @@
 import { parse } from "querystring";
-import * as didJwt from "@validatedid/did-jwt";
+import * as didJwt from "did-jwt";
 import * as dotenv from "dotenv";
 import * as siopDidAuth from "../../src";
 import {
@@ -135,7 +135,7 @@ describe("VidDidAuth tests should", () => {
       expect(jwt).toBeDefined();
       expect(nonce).toBeDefined();
       expect(state).toBeDefined();
-      const { header, payload } = didJwt.decodeJwt(jwt);
+      const { header, payload } = didJwt.decodeJWT(jwt);
 
       const expectedHeader = mockedData.DIDAUTH_HEADER;
       expectedHeader.kid = `${did}#keys-1`;
@@ -189,7 +189,7 @@ describe("VidDidAuth tests should", () => {
       const { jwt } = await siopDidAuth.createDidAuthRequest(opts);
 
       expect(jwt).toBeDefined();
-      const { header, payload } = didJwt.decodeJwt(jwt);
+      const { header, payload } = didJwt.decodeJWT(jwt);
 
       const expectedHeader = mockedData.DIDAUTH_HEADER;
       expectedHeader.kid = `${did}#key-2`;
@@ -1111,7 +1111,6 @@ describe("VidDidAuth using did:key tests should", () => {
     it("should create Did Auth Response Object without signature", async () => {
       expect.assertions(7);
       const { did, hexPrivateKey } = await getUserEntityTestAuthZToken();
-      const entityAA = await getLegalEntityTestAuthZToken("COMPANY E2E INC");
       const state = DidAuthUtil.getState();
       const nonce = DidAuthUtil.getNonce(state);
       const opts: DidAuthTypes.DidAuthResponseOptsNoSignature = {

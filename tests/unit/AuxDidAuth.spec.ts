@@ -1,6 +1,6 @@
 import * as dotenv from "dotenv";
 import axios from "axios";
-import * as didJwt from "@validatedid/did-jwt";
+import * as didJwt from "did-jwt";
 import { parse } from "querystring";
 import { keyUtils } from "@transmute/did-key-ed25519";
 import {
@@ -100,13 +100,14 @@ describe("vidDidAuth", () => {
               DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
           },
         };
-        const jws = await didJwt.createJwt(
+        const jws = await didJwt.createJWT(
           payload,
           {
             issuer: entityAA.did,
             alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
-            signer: didJwt.SimpleSigner(
-              DidAuthUtil.getHexPrivateKey(entityAA.jwk).replace("0x", "")
+            signer: didJwt.ES256KSigner(
+              DidAuthUtil.getHexPrivateKey(entityAA.jwk).replace("0x", ""),
+              true
             ),
             expiresIn: 5 * 60,
           },
@@ -231,13 +232,14 @@ describe("vidDidAuth", () => {
               DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
           },
         };
-        const jws = await didJwt.createJwt(
+        const jws = await didJwt.createJWT(
           payload,
           {
             issuer: entityAA.did,
             alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
-            signer: didJwt.SimpleSigner(
-              DidAuthUtil.getHexPrivateKey(entityAA.jwk).replace("0x", "")
+            signer: didJwt.ES256KSigner(
+              DidAuthUtil.getHexPrivateKey(entityAA.jwk).replace("0x", ""),
+              true
             ),
             expiresIn: 5 * 60,
           },
@@ -254,7 +256,7 @@ describe("vidDidAuth", () => {
       expect(jwt).toBeDefined();
       expect(nonce).toBeDefined();
       expect(state).toBeDefined();
-      const { header, payload } = didJwt.decodeJwt(jwt);
+      const { header, payload } = didJwt.decodeJWT(jwt);
 
       const expectedHeader = { ...mockedData.DIDAUTH_HEADER };
       expectedHeader.alg = "ES256K-R";
@@ -324,13 +326,14 @@ describe("vidDidAuth", () => {
           },
           claims: mockedData.verifiableIdOidcClaim,
         };
-        const jws = await didJwt.createJwt(
+        const jws = await didJwt.createJWT(
           payload,
           {
             issuer: entityAA.did,
             alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
-            signer: didJwt.SimpleSigner(
-              DidAuthUtil.getHexPrivateKey(entityAA.jwk).replace("0x", "")
+            signer: didJwt.ES256KSigner(
+              DidAuthUtil.getHexPrivateKey(entityAA.jwk).replace("0x", ""),
+              true
             ),
             expiresIn: 5 * 60,
           },
@@ -347,7 +350,7 @@ describe("vidDidAuth", () => {
       expect(jwt).toBeDefined();
       expect(nonce).toBeDefined();
       expect(state).toBeDefined();
-      const { header, payload } = didJwt.decodeJwt(jwt);
+      const { header, payload } = didJwt.decodeJWT(jwt);
 
       const expectedHeader = { ...mockedData.DIDAUTH_HEADER };
       expectedHeader.alg = "ES256K-R";
@@ -425,13 +428,14 @@ describe("vidDidAuth", () => {
               DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
           },
         };
-        const jws = await didJwt.createJwt(
+        const jws = await didJwt.createJWT(
           payload,
           {
             issuer: entityAA.did,
             alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
-            signer: didJwt.SimpleSigner(
-              DidAuthUtil.getHexPrivateKey(entityAA.jwk).replace("0x", "")
+            signer: didJwt.ES256KSigner(
+              DidAuthUtil.getHexPrivateKey(entityAA.jwk).replace("0x", ""),
+              true
             ),
             expiresIn: 5 * 60,
           },
@@ -822,7 +826,7 @@ describe("vidDidAuth", () => {
       };
 
       const didAuthJwt = await createDidAuthResponse(opts);
-      const { header, payload } = didJwt.decodeJwt(didAuthJwt);
+      const { header, payload } = didJwt.decodeJWT(didAuthJwt);
 
       const expectedHeader = { ...mockedData.DIDAUTH_HEADER };
       expectedHeader.kid = `${did}#keys-1`;
@@ -872,7 +876,7 @@ describe("vidDidAuth", () => {
       };
 
       const didAuthJwt = await createDidAuthResponse(opts);
-      const { header, payload } = didJwt.decodeJwt(didAuthJwt);
+      const { header, payload } = didJwt.decodeJWT(didAuthJwt);
 
       const expectedHeader = { ...mockedData.DIDAUTH_HEADER };
       expectedHeader.kid = `${did}#keys-1`;
@@ -919,7 +923,7 @@ describe("vidDidAuth", () => {
       };
 
       const didAuthJwt = await createDidAuthResponse(opts);
-      const { header, payload } = didJwt.decodeJwt(didAuthJwt);
+      const { header, payload } = didJwt.decodeJWT(didAuthJwt);
 
       const expectedHeader = { ...mockedData.DIDAUTH_HEADER };
       expectedHeader.kid = `#${did.substring(8)}`;

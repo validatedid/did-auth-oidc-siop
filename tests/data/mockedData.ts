@@ -1,4 +1,4 @@
-import { DIDDocument } from "@validatedid/did-jwt";
+import { DIDDocument } from "did-resolver";
 import { DidAuthTypes, JWTHeader, OidcSsi } from "../../src";
 
 export const DIDAUTH_HEADER: JWTHeader = {

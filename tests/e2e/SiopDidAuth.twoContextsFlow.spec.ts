@@ -1,6 +1,6 @@
 import { parse } from "querystring";
 import * as dotenv from "dotenv";
-import { decodeJwt } from "@validatedid/did-jwt";
+import { decodeJWT } from "did-jwt";
 import * as siopDidAuth from "../../src";
 import {
   DidAuthTypes,
@@ -73,7 +73,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     );
     expect(uriRequest).toHaveProperty("jwt");
     expect(uriRequest.jwt).toBeDefined();
-    const decodedPayload = decodeJwt(uriRequest.jwt);
+    const decodedPayload = decodeJWT(uriRequest.jwt);
     const requestPayload = decodedPayload.payload as DidAuthTypes.DidAuthRequestPayload;
     expect(requestPayload.response_mode).toBe(
       DidAuthTypes.DidAuthResponseMode.FORM_POST
@@ -155,7 +155,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     expect(parsedData.state).toBeDefined();
     expect(parsedData.state).toStrictEqual(state);
     const authResponseToken = parsedData.id_token as string;
-    const { payload } = decodeJwt(authResponseToken);
+    const { payload } = decodeJWT(authResponseToken);
 
     // VERIFY DID AUTH RESPONSE
     const optsVerify: DidAuthVerifyOpts = {
@@ -226,7 +226,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     );
     expect(uriRequest).toHaveProperty("jwt");
     expect(uriRequest.jwt).toBeDefined();
-    const decodedPayload = decodeJwt(uriRequest.jwt);
+    const decodedPayload = decodeJWT(uriRequest.jwt);
     const requestPayload = decodedPayload.payload as DidAuthTypes.DidAuthRequestPayload;
     expect(requestPayload.response_mode).toBe(
       DidAuthTypes.DidAuthResponseMode.FORM_POST
@@ -312,7 +312,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     expect(parsedData.state).toBeDefined();
     expect(parsedData.state).toStrictEqual(state);
     const authResponseToken = parsedData.id_token as string;
-    const { payload } = decodeJwt(authResponseToken);
+    const { payload } = decodeJWT(authResponseToken);
 
     // VERIFY DID AUTH RESPONSE
     const optsVerify: DidAuthVerifyOpts = {

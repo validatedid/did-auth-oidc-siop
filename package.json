@@ -79,14 +79,14 @@
   "dependencies": {
     "@transmute/did-key-ed25519": "^0.2.1-unstable.31",
     "@transmute/did-key.js": "^0.2.1-unstable.31",
-    "@validatedid/did-jwt": "^1.0.9",
-    "@validatedid/vid-did-resolver": "0.0.1",
     "axios": "^0.21.1",
     "base64url": "^3.0.1",
     "bs58": "^4.0.1",
+    "did-jwt": "^5.5.2",
     "did-resolver": "^3.1.0",
     "elliptic": "^6.5.4",
     "ethers": "^5.1.4",
+    "ethr-did-resolver": "^4.3.3",
     "jose": "^3.11.6",
     "sha.js": "^2.4.11",
     "uuid": "^8.3.2"

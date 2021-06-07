@@ -1,6 +1,6 @@
 import { parse } from "querystring";
 import axios from "axios";
-import { decodeJwt, createJwt, SimpleSigner } from "@validatedid/did-jwt";
+import { decodeJWT, createJWT, ES256KSigner } from "did-jwt";
 import {
   createDidAuthResponse,
   createUriResponse,
@@ -275,13 +275,14 @@ describe("create Did Auth response tests should", () => {
           typ: "JWT",
           kid: `${did}#keys-1`,
         };
-        const jws = await createJwt(
+        const jws = await createJWT(
           data.payload,
           {
             issuer: did,
             alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
-            signer: SimpleSigner(
-              "278a5de700e29faae8e40e366ec5012b5ec63d36ec77e8a2417154cc1d25383f"
+            signer: ES256KSigner(
+              "278a5de700e29faae8e40e366ec5012b5ec63d36ec77e8a2417154cc1d25383f",
+              true
             ),
           },
           header
@@ -293,7 +294,7 @@ describe("create Did Auth response tests should", () => {
       });
     const response = await createDidAuthResponse(opts);
     expect(response).toBeDefined();
-    const responsePayload = decodeJwt(response)
+    const responsePayload = decodeJWT(response)
       .payload as DidAuthTypes.DidAuthResponsePayload;
     expect(responsePayload).toBeDefined();
     expect(responsePayload).toHaveProperty("sub");
@@ -362,13 +363,14 @@ describe("create Did Auth response object tests should", () => {
           typ: "JWT",
           kid: `${did}#keys-1`,
         };
-        const jws = await createJwt(
+        const jws = await createJWT(
           data.payload,
           {
             issuer: did,
             alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
-            signer: SimpleSigner(
-              "278a5de700e29faae8e40e366ec5012b5ec63d36ec77e8a2417154cc1d25383f"
+            signer: ES256KSigner(
+              "278a5de700e29faae8e40e366ec5012b5ec63d36ec77e8a2417154cc1d25383f",
+              true
             ),
           },
           header

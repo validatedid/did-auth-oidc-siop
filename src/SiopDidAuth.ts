@@ -1,4 +1,5 @@
-import { decodeJwt, DIDDocument } from "@validatedid/did-jwt";
+import { decodeJWT } from "did-jwt";
+import { DIDDocument } from "did-resolver";
 import axios from "axios";
 import {
   DidAuthRequestOpts,
@@ -313,7 +314,7 @@ const verifyDidAuthRequest = async (
   opts?: DidAuthVerifyOpts
 ): Promise<DidAuthValidationResponse> => {
   if (!jwt) throw new Error(DidAuthErrors.VERIFY_BAD_PARAMETERS);
-  const { header, payload } = decodeJwt(jwt);
+  const { header, payload } = decodeJWT(jwt);
   // Resolve the DID Document from the RP's DID specified in the iss request parameter.
   const resolverUrl =
     opts.verificationType.didUrlResolver || VID_RESOLVE_DID_URL;
@@ -375,7 +376,7 @@ const verifyDidAuthResponse = async (
   if (!id_token || !opts || !opts.nonce || !opts.redirectUri)
     throw new Error(DidAuthErrors.VERIFY_BAD_PARAMETERS);
   // The Client MUST validate that the value of the iss (issuer) Claim is https://self-isued.me.
-  const { header, payload } = decodeJwt(id_token);
+  const { header, payload } = decodeJWT(id_token);
   if (payload.iss !== DidAuthResponseIss.SELF_ISSUE)
     throw new Error(DidAuthErrors.NO_SELFISSUED_ISS);
   // The Client MUST validate that the aud (audience) Claim contains the value of the

@@ -1,4 +1,4 @@
-import { DIDDocument } from "@validatedid/did-jwt";
+import { DIDDocument } from "did-resolver";
 
 export interface Resolvable {
   resolve: (did: string) => Promise<DIDDocument | null>;

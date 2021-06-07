@@ -3,15 +3,21 @@ import base58 from "bs58";
 import { ec as EC } from "elliptic";
 import { JWK } from "jose/types";
 import base64url from "base64url";
-import VidDidResolver from "@validatedid/vid-did-resolver";
-import { decodeJwt, DIDDocument, EcdsaSignature } from "@validatedid/did-jwt";
+import EthrDidResolver from "ethr-did-resolver";
+import { decodeJWT } from "did-jwt";
+import { EcdsaSignature } from "did-jwt/lib/util";
+import {
+  DIDDocument,
+  Resolver,
+  VerificationMethod,
+  DIDResolutionResult,
+} from "did-resolver";
 import axios, { AxiosResponse } from "axios";
 import { ethers, utils } from "ethers";
 import { keyUtils } from "@transmute/did-key-ed25519";
 import parseJwk from "jose/jwk/parse";
 import jwtVerify from "jose/jwt/verify";
 
-import { Resolver, VerificationMethod } from "did-resolver";
 import { DidAuthErrors } from "../interfaces";
 import {
   DidAuthKeyAlgorithm,
@@ -21,7 +27,6 @@ import {
   InternalVerification,
   RegistrationJwksUri,
 } from "../interfaces/DIDAuth.types";
-import { Resolvable } from "../interfaces/JWT";
 
 export const prefixWith0x = (key: string): string =>
   key.startsWith("0x") ? key : `0x${key}`;
@@ -84,7 +89,7 @@ async function doPostCallWithToken(
 }
 
 const getAudience = (jwt: string): string | undefined => {
-  const { payload } = decodeJwt(jwt);
+  const { payload } = decodeJWT(jwt);
   if (!payload) throw new Error(DidAuthErrors.NO_AUDIENCE);
   if (!payload.aud) return undefined;
   if (Array.isArray(payload.aud))
@@ -93,17 +98,34 @@ const getAudience = (jwt: string): string | undefined => {
 };
 
 const getIssuerDid = (jwt: string): string => {
-  const { payload } = decodeJwt(jwt);
+  const { payload } = decodeJWT(jwt);
   if (!payload || !payload.iss) throw new Error(DidAuthErrors.NO_ISS_DID);
   if (payload.iss === DidAuthResponseIss.SELF_ISSUE)
     return (payload as DidAuthResponsePayload).did;
   return payload.iss;
 };
 
+const resolveDid = async (
+  did: string,
+  didUrlResolver: string
+): Promise<DIDResolutionResult> => {
+  return (await axios.get(`${didUrlResolver}/${did}`))
+    .data as DIDResolutionResult;
+};
+
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export const getResolver = (didUrlResolver: string) => {
+  async function resolve(did: string) {
+    return resolveDid(did, didUrlResolver);
+  }
+
+  return { key: resolve };
+};
+
 const getUrlResolver = async (
   jwt: string,
   internalVerification: InternalVerification
-): Promise<Resolvable | Resolver | string> => {
+): Promise<Resolver> => {
   try {
     if (!internalVerification.didUrlResolver)
       throw new Error(DidAuthErrors.BAD_INTERNAL_VERIFICATION_PARAMS);
@@ -111,14 +133,18 @@ const getUrlResolver = async (
     await axios.get(
       `${internalVerification.didUrlResolver}/${getIssuerDid(jwt)}`
     );
-    return internalVerification.didUrlResolver;
+    return new Resolver(getResolver(internalVerification.didUrlResolver));
   } catch (error) {
     if (!internalVerification.registry || !internalVerification.rpcUrl)
       throw new Error(DidAuthErrors.BAD_INTERNAL_VERIFICATION_PARAMS);
     return new Resolver(
-      VidDidResolver.getResolver({
-        rpcUrl: internalVerification.rpcUrl,
-        registry: internalVerification.registry,
+      EthrDidResolver.getResolver({
+        networks: [
+          {
+            rpcUrl: internalVerification.rpcUrl,
+            registry: internalVerification.registry,
+          },
+        ],
       })
     );
   }
@@ -201,7 +227,7 @@ const verifyES256K = (
 ): boolean => {
   const publicKey = extractPublicKeyBytes(verificationMethod);
   const secp256k1 = new EC("secp256k1");
-  const { data, signature } = decodeJwt(jwt);
+  const { data, signature } = decodeJWT(jwt);
   const hash = SHA("sha256").update(data).digest();
   const sigObj = toSignatureObject(signature);
   return secp256k1.keyFromPublic(publicKey, "hex").verify(hash, sigObj);
@@ -231,7 +257,7 @@ const verifySignatureFromVerificationMethod = async (
   jwt: string,
   verificationMethod: VerificationMethod
 ): Promise<boolean> => {
-  const { header } = decodeJwt(jwt);
+  const { header } = decodeJWT(jwt);
   return header.alg === DidAuthKeyAlgorithm.EDDSA
     ? verifyEDDSA(jwt, verificationMethod)
     : verifyES256K(jwt, verificationMethod);

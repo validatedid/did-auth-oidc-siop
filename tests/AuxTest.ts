@@ -4,7 +4,7 @@ import fromKeyLike from "jose/jwk/from_key_like";
 import parseJwk from "jose/jwk/parse";
 import SignJWT from "jose/jwt/sign";
 import { resolver as didKeyResolver } from "@transmute/did-key.js";
-import { DIDResolutionResult } from "did-resolver";
+import { DIDResolutionResult, DIDDocument } from "did-resolver";
 import { v4 as uuidv4 } from "uuid";
 import axios, { AxiosResponse } from "axios";
 import moment from "moment";
@@ -12,19 +12,13 @@ import { ethers } from "ethers";
 import jwt_decode from "jwt-decode";
 import base58 from "bs58";
 import { Ed25519KeyPair, keyUtils } from "@transmute/did-key-ed25519";
-import {
-  decodeJwt,
-  DIDDocument,
-  createJwt,
-  SimpleSigner,
-  NaclSigner,
-} from "@validatedid/did-jwt";
+import { decodeJWT } from "did-jwt";
+
 import { DidAuthErrors, JWTClaims, DidAuthUtil, DidAuthTypes } from "../src";
 import { prefixWith0x } from "../src/util/Util";
 import {
   DidAuthKeyCurve,
   DidAuthKeyType,
-  DidAuthRequestPayload,
 } from "../src/interfaces/DIDAuth.types";
 import { getPublicJWKFromPrivateHex, getThumbprint } from "../src/util/JWK";
 import { EnterpriseAuthZToken, JWTHeader } from "../src/interfaces/JWT";
@@ -466,7 +460,7 @@ export const getLegalEntityTestSessionTokenDidKey = async (): Promise<{
     sessionBody
   );
   const { accessToken } = result.data as AccessTokenResponseBody;
-  const { payload } = decodeJwt(accessToken);
+  const { payload } = decodeJWT(accessToken);
 
   return {
     jwt: accessToken,
