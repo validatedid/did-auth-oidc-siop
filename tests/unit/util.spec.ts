@@ -6,6 +6,7 @@ import {
   getState,
   prefixWith0x,
   getDIDFromKey,
+  getNetworkFromDid,
 } from "../../src/util/Util";
 
 describe("unit tests should", () => {
@@ -52,5 +53,30 @@ describe("unit tests should", () => {
     const did = getDIDFromKey(privateJwk);
     expect(did).toBeDefined();
     expect(did).toContain(`did:ethr:`);
+  });
+
+  it("return the network name from the did", () => {
+    expect.assertions(5);
+    const network = getNetworkFromDid(
+      "did:ethr:mainnet:0xabcabc03e98e0dc2b855be647c39abe984193675"
+    );
+    const network2 = getNetworkFromDid(
+      "did:ethr:0xabcabc03e98e0dc2b855be647c39abe984193675"
+    );
+    const network3 = getNetworkFromDid(
+      "did:ethr:development:0xabcabc03e98e0dc2b855be647c39abe984193675"
+    );
+    const network4 = getNetworkFromDid(
+      "did:ethr:myprivatenet:0xabcabc03e98e0dc2b855be647c39abe984193675"
+    );
+    const network5 = getNetworkFromDid(
+      "did:ethr:rsk:testnet:0xabcabc03e98e0dc2b855be647c39abe984193675"
+    );
+
+    expect(network).toBe("mainnet");
+    expect(network2).toBe("mainnet");
+    expect(network3).toBe("development");
+    expect(network4).toBe("myprivatenet");
+    expect(network5).toBe("rsk:testnet");
   });
 });

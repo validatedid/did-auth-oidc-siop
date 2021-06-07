@@ -105,6 +105,18 @@ const getIssuerDid = (jwt: string): string => {
   return payload.iss;
 };
 
+const getNetworkFromDid = (did: string): string => {
+  const network = "mainnet"; // default
+  const splitDidFormat = did.split(":");
+  if (splitDidFormat.length === 4) {
+    return splitDidFormat[2];
+  }
+  if (splitDidFormat.length > 4) {
+    return `${splitDidFormat[2]}:${splitDidFormat[3]}`;
+  }
+  return network;
+};
+
 const resolveDid = async (
   did: string,
   didUrlResolver: string
@@ -114,7 +126,7 @@ const resolveDid = async (
 };
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export const getResolver = (didUrlResolver: string) => {
+const getResolver = (didUrlResolver: string) => {
   async function resolve(did: string) {
     return resolveDid(did, didUrlResolver);
   }
@@ -126,13 +138,12 @@ const getUrlResolver = async (
   jwt: string,
   internalVerification: InternalVerification
 ): Promise<Resolver> => {
+  const did = getIssuerDid(jwt);
   try {
     if (!internalVerification.didUrlResolver)
       throw new Error(DidAuthErrors.BAD_INTERNAL_VERIFICATION_PARAMS);
     // check if the token issuer DID can be resolved
-    await axios.get(
-      `${internalVerification.didUrlResolver}/${getIssuerDid(jwt)}`
-    );
+    await axios.get(`${internalVerification.didUrlResolver}/${did}`);
     return new Resolver(getResolver(internalVerification.didUrlResolver));
   } catch (error) {
     if (!internalVerification.registry || !internalVerification.rpcUrl)
@@ -141,6 +152,8 @@ const getUrlResolver = async (
       EthrDidResolver.getResolver({
         networks: [
           {
+            // TODO: Be able to understand in case did has chainId instead of name
+            name: getNetworkFromDid(did),
             rpcUrl: internalVerification.rpcUrl,
             registry: internalVerification.registry,
           },
@@ -277,4 +290,5 @@ export {
   base64urlEncodeBuffer,
   getVerificationMethod,
   verifySignatureFromVerificationMethod,
+  getNetworkFromDid,
 };
