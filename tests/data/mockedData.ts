@@ -4,11 +4,11 @@ import { DidAuthTypes, JWTHeader, OidcSsi } from "../../src";
 export const DIDAUTH_HEADER: JWTHeader = {
   typ: "JWT",
   alg: "ES256K",
-  kid: "did:vid:0x416e6e6162656c2e4c65652e452d412d506f652e#key1",
+  kid: "did:ethr:0x416e6e6162656c2e4c65652e452d412d506f652e#key1",
 };
 
 export const DIDAUTH_REQUEST_PAYLOAD: DidAuthTypes.DidAuthRequestPayload = {
-  iss: "did:vid:0x416e6e6162656c2e4c65652e452d412d506f652e", // DID of the RP (kid must point to a key in this DID Document)
+  iss: "did:ethr:0x416e6e6162656c2e4c65652e452d412d506f652e", // DID of the RP (kid must point to a key in this DID Document)
   scope: DidAuthTypes.DidAuthScope.OPENID_DIDAUTHN, // MUST be "openid did_authn"
   response_type: DidAuthTypes.DidAuthResponseType.ID_TOKEN, // MUST be ID Token
   client_id: "http://app.example/demo", // Redirect URI after successful authentication
@@ -33,12 +33,12 @@ export const DIDAUTH_RESPONSE_PAYLOAD: DidAuthTypes.DidAuthResponsePayload = {
   nonce: "6a6b57a9d4e1a130b0edbe1ec4ae8823",
   sub_jwk: {
     crv: "secp256k1",
-    kid: "did:vid:0x226e2e2223333c2e4c65652e452d412d50611111#keys-1",
+    kid: "did:ethr:0x226e2e2223333c2e4c65652e452d412d50611111#keys-1",
     kty: "EC",
     x: "7KEKZa5xJPh7WVqHJyUpb2MgEe3nA8Rk7eUlXsmBl-M",
     y: "3zIgl_ml4RhapyEm5J7lvU-4f5jiBvZr4KgxUjEhl9o",
   },
-  did: "did:vid:0x226e2e2223333c2e4c65652e452d412d50611111",
+  did: "did:ethr:0x226e2e2223333c2e4c65652e452d412d50611111",
 };
 
 export const verifiableIdOidcClaim: OidcSsi.OidcClaim = {
@@ -58,9 +58,9 @@ export const verifiableIdPresentation: OidcSsi.VerifiablePresentation = {
       ],
       id: "https://api.vidchain.net/api/v1/schemas/2391",
       type: ["VerifiableCredential", "VerifiableIdCredential"],
-      issuer: "did:vid:0x5208431C6EC2ec4097aeA7182bB92d018766498c",
+      issuer: "did:ethr:0x5208431C6EC2ec4097aeA7182bB92d018766498c",
       credentialSubject: {
-        id: "did:vid:0x8707CCa835C961334D3F6450C6a61a0AD6592460",
+        id: "did:ethr:0x8707CCa835C961334D3F6450C6a61a0AD6592460",
         firstName: "Eva",
         lastName: "Monroe",
         gender: "Female",
@@ -77,7 +77,7 @@ export const verifiableIdPresentation: OidcSsi.VerifiablePresentation = {
         created: "2019-11-17T14:00:00Z",
         proofPurpose: "assertionMethod",
         verificationMethod:
-          "did:vid:0x5208431C6EC2ec4097aeA7182bB92d018766498c#keys-1",
+          "did:ethr:0x5208431C6EC2ec4097aeA7182bB92d018766498c#keys-1",
         jws:
           "eyJhbGciOiJFUzI1NkstUiIsInR5cCI6IkpXVCIsImtpZCI6ImRpZDp2aWQ6MHgzYWQzZkY4RTVhQjhENjkzQzI4QmREOUI0N2VkRDFmNzQ0NUY4YzNGI2tleS0xIn0.eyJpYXQiOjE1OTE3OTk1MDQsInZjIjp7IkBjb250ZXh0IjpbImh0dHBzOi8vd3d3LnczLm9yZy8yMDE4L2NyZWRlbnRpYWxzL3YxIiwiaHR0cHM6Ly9hcGkudmlkY2hhaW4ubmV0L2NyZWRlbnRpYWxzL3ZlcmlmaWFibGUtaWQvdjEiXSwiaWQiOiJodHRwczovL2FwaS52aWRjaGFpbi5uZXQvYXBpL3YxL3NjaGVtYXMvMjM5MSIsInR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJWZXJpZmlhYmxlSWRDcmVkZW50aWFsIl0sImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImlkIjoiZGlkOnZpZDoweDQyYjg5OEUyN0M1NmU3ZDVBMmQ0RTY0NmRCMmQ0MThCRDVDMTcwYzQiLCJmaXJzdE5hbWUiOiJFdmEiLCJsYXN0TmFtZSI6Ik1vbnJvZSIsImdlbmRlciI6IkZlbWFsZSIsImRhdGVPZkJpcnRoIjoiMTIvMTEvMTk3MCIsInBsYWNlT2ZCaXJ0aCI6Ik1hZHJpZCIsImN1cnJlbnRBZGRyZXNzIjoiQXJhZ28gMTc5IDRhIiwiY2l0eSI6IkJhcmNlbG9uYSIsInN0YXRlIjoiQ2F0YWxvbmlhIiwiemlwIjoiMDgwMTEifSwiaXNzdWVyIjoiZGlkOnZpZDoweDNhZDNmRjhFNWFCOEQ2OTNDMjhCZEQ5QjQ3ZWREMWY3NDQ1RjhjM0YifSwiaXNzIjoiZGlkOnZpZDoweDNhZDNmRjhFNWFCOEQ2OTNDMjhCZEQ5QjQ3ZWREMWY3NDQ1RjhjM0YifQ.B7e4Zp9jGLDXTRG8ID1j0_EVwoQlI_XDzSagKWmDR-INjMVSFG1142asC1r5RedNuu3SR8VIcE9yrbDw9cRuEQA",
       },
@@ -88,7 +88,7 @@ export const verifiableIdPresentation: OidcSsi.VerifiablePresentation = {
     created: "2019-06-22T14:11:44Z",
     proofPurpose: "assertionMethod",
     verificationMethod:
-      "did:vid:0x16048B83FAdaCdCB20198ABc45562Df1A3e289aF#keys-1",
+      "did:ethr:0x16048B83FAdaCdCB20198ABc45562Df1A3e289aF#keys-1",
     jws:
       "eyJhbGciOiJFUzI1NksifQ.eyJzdWIiOiJFQlNJIDIwMTkifQ.oggE3ft3kJYPGGa9eBibpbjgeJXw4fLbVMouVoM2NfcDxsl_UUUIarsS1VpBoYEs7s9cBlc4uC0EbnJCHfVJIw",
   },
@@ -106,14 +106,14 @@ export const DIDAUTH_RESPONSE_PAYLOAD_VP = {
 
 export const DID_DOCUMENT_PUBKEY_B58: DIDDocument = {
   "@context": "https://w3id.org/did/v1",
-  id: "did:vid:0xE3f80bcbb360F04865AfA795B7507d384154216C",
-  controller: "did:vid:0xE3f80bcbb360F04865AfA795B7507d384154216C",
-  authentication: ["did:vid:0xE3f80bcbb360F04865AfA795B7507d384154216C#key-1"],
+  id: "did:ethr:0xE3f80bcbb360F04865AfA795B7507d384154216C",
+  controller: "did:ethr:0xE3f80bcbb360F04865AfA795B7507d384154216C",
+  authentication: ["did:ethr:0xE3f80bcbb360F04865AfA795B7507d384154216C#key-1"],
   verificationMethod: [
     {
-      id: "did:vid:0xE3f80bcbb360F04865AfA795B7507d384154216C#key-1",
+      id: "did:ethr:0xE3f80bcbb360F04865AfA795B7507d384154216C#key-1",
       type: "EcdsaSecp256k1VerificationKey2019",
-      controller: "did:vid:0xE3f80bcbb360F04865AfA795B7507d384154216C",
+      controller: "did:ethr:0xE3f80bcbb360F04865AfA795B7507d384154216C",
       publicKeyBase58:
         "PSPfR29Snu5yxJcLHf2t6SyJ9mttet19ECkDHr4HY3FD5YC8ZenjvspPSAGSpaQ8B8kXADV97WSd7JqaNAUTn8YG",
     },
@@ -122,17 +122,17 @@ export const DID_DOCUMENT_PUBKEY_B58: DIDDocument = {
 
 export const DID_DOCUMENT_PUBKEY_JWK: DIDDocument = {
   "@context": "https://w3id.org/did/v1",
-  id: "did:vid:0x96e9A346905a8F8D5ee0e6BA5D13456965e74513",
-  controller: "did:vid:0x96e9A346905a8F8D5ee0e6BA5D13456965e74513",
+  id: "did:ethr:0x96e9A346905a8F8D5ee0e6BA5D13456965e74513",
+  controller: "did:ethr:0x96e9A346905a8F8D5ee0e6BA5D13456965e74513",
   authentication: [
-    "did:vid:0x96e9A346905a8F8D5ee0e6BA5D13456965e74513#JTa8+HgHPyId90xmMFw6KRD4YUYLosBuWJw33nAuRS0=",
+    "did:ethr:0x96e9A346905a8F8D5ee0e6BA5D13456965e74513#JTa8+HgHPyId90xmMFw6KRD4YUYLosBuWJw33nAuRS0=",
   ],
   verificationMethod: [
     {
       id:
-        "did:vid:0x96e9A346905a8F8D5ee0e6BA5D13456965e74513#JTa8+HgHPyId90xmMFw6KRD4YUYLosBuWJw33nAuRS0=",
+        "did:ethr:0x96e9A346905a8F8D5ee0e6BA5D13456965e74513#JTa8+HgHPyId90xmMFw6KRD4YUYLosBuWJw33nAuRS0=",
       type: "EcdsaSecp256k1VerificationKey2019",
-      controller: "did:vid:0x96e9A346905a8F8D5ee0e6BA5D13456965e74513",
+      controller: "did:ethr:0x96e9A346905a8F8D5ee0e6BA5D13456965e74513",
       publicKeyJwk: {
         kty: "EC",
         crv: "secp256k1",

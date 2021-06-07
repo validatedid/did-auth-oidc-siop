@@ -51,6 +51,6 @@ describe("unit tests should", () => {
 
     const did = getDIDFromKey(privateJwk);
     expect(did).toBeDefined();
-    expect(did).toContain(`did:vid:`);
+    expect(did).toContain(`did:ethr:`);
   });
 });

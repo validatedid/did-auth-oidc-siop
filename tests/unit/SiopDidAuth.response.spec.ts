@@ -229,7 +229,7 @@ describe("create Did Auth response tests should", () => {
   it("create a valid response token with external signature and registration by value", async () => {
     expect.assertions(4);
     const state = DidAuthUtil.getState();
-    const did = "did:vid:0x29A9D0FDb033BFCb39B8E6CA2A63Bd1B0a2b80c4";
+    const did = "did:ethr:0x29A9D0FDb033BFCb39B8E6CA2A63Bd1B0a2b80c4";
     const opts: DidAuthTypes.DidAuthResponseOpts = {
       redirectUri: "https://entity.example/demo",
       signatureType: {
@@ -319,7 +319,7 @@ describe("create Did Auth response object tests should", () => {
   it("create a valid response token with external signature and registration by value", async () => {
     expect.assertions(3);
     const state = DidAuthUtil.getState();
-    const did = "did:vid:0x29A9D0FDb033BFCb39B8E6CA2A63Bd1B0a2b80c4";
+    const did = "did:ethr:0x29A9D0FDb033BFCb39B8E6CA2A63Bd1B0a2b80c4";
     const opts: DidAuthTypes.DidAuthResponseOptsNoSignature = {
       redirectUri: "https://entity.example/demo",
       identifiersUri: `https://dev.vidchain.net/api/v1/identifiers/${did};transform-keys=jwks`,

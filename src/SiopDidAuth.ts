@@ -386,7 +386,7 @@ const verifyDidAuthResponse = async (
   const resolverUrl =
     opts.verificationType.didUrlResolver || VID_RESOLVE_DID_URL;
   const issuerDid = util.getIssuerDid(id_token);
-  // when sub_jwk.kid is like "did:vid:0x9C28b8A941e14f17832D5cABd426D65E7DD02311#keys-1"
+  // when sub_jwk.kid is like "did:ethr:0x9C28b8A941e14f17832D5cABd426D65E7DD02311#keys-1"
   // it can be resolved as a regular DID Doc
   // when it is a key thumbprint like "kid": "zcia2OVav6TYlsEqRosUUjFRQwJiLI/qT1dn4zDcaoU="
   // it requires a DID Document request witn jwks key transformation

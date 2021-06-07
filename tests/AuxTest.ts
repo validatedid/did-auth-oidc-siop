@@ -123,7 +123,7 @@ export const mockedKeyAndDid = async (): Promise<{
   const privateJwk = await fromKeyLike(key.privateKey);
   const hexPrivateKey = Buffer.from(privateJwk.d, "base64").toString("hex");
   const wallet: ethers.Wallet = new ethers.Wallet(prefixWith0x(hexPrivateKey));
-  const did = `did:vid:${wallet.address}`;
+  const did = `did:ethr:${wallet.address}`;
   const hexPublicKey = wallet.publicKey;
 
   return {

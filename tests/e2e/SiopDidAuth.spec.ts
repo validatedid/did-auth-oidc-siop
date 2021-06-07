@@ -40,8 +40,8 @@ describe("VidDidAuth tests should", () => {
         signatureType: {
           hexPrivateKey:
             "f857544a9d1097e242ff0b287a7e6e90f19cf973efe2317f2a4678739664420f",
-          did: "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0",
-          kid: "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0#keys-1",
+          did: "did:ethr:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0",
+          kid: "did:ethr:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0#keys-1",
         },
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.VALUE,
@@ -78,8 +78,8 @@ describe("VidDidAuth tests should", () => {
         signatureType: {
           hexPrivateKey:
             "f857544a9d1097e242ff0b287a7e6e90f19cf973efe2317f2a4678739664420f",
-          did: "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0",
-          kid: "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0#keys-1",
+          did: "did:ethr:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0",
+          kid: "did:ethr:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0#keys-1",
         },
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.VALUE,

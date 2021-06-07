@@ -592,7 +592,7 @@ describe("vidDidAuth", () => {
 
     it("should create a valid payload when registration type is VALUE and is an external signature", async () => {
       expect.assertions(3);
-      const did = "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0";
+      const did = "did:ethr:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0";
       const opts = {
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.VALUE,
@@ -629,7 +629,7 @@ describe("vidDidAuth", () => {
 
     it("should throw ERROR_RETRIEVING_DID_DOCUMENT when DID Document could not be retrieved", async () => {
       expect.assertions(1);
-      const did = "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0";
+      const did = "did:ethr:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0";
       const opts = {
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.VALUE,
@@ -648,7 +648,7 @@ describe("vidDidAuth", () => {
 
     it("should throw ERROR_RETRIEVING_DID_DOCUMENT when DID Document data is not set", async () => {
       expect.assertions(1);
-      const did = "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0";
+      const did = "did:ethr:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0";
       const opts = {
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.VALUE,
@@ -667,7 +667,7 @@ describe("vidDidAuth", () => {
 
     it("should throw ERROR_RETRIEVING_DID_DOCUMENT when DID Document verificationMethod is not set", async () => {
       expect.assertions(1);
-      const did = "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0";
+      const did = "did:ethr:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0";
       const opts = {
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.VALUE,
@@ -688,7 +688,7 @@ describe("vidDidAuth", () => {
 
     it("should throw ERROR_RETRIEVING_DID_DOCUMENT when DID Document verificationMethod is an empty array", async () => {
       expect.assertions(1);
-      const did = "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0";
+      const did = "did:ethr:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0";
       const opts = {
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.VALUE,
@@ -711,7 +711,7 @@ describe("vidDidAuth", () => {
 
     it("should throw ERROR_RETRIEVING_DID_DOCUMENT when DID Document verificationMethod[0].publicKeyJwk is not set", async () => {
       expect.assertions(1);
-      const did = "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0";
+      const did = "did:ethr:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0";
       const opts = {
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.VALUE,
@@ -734,7 +734,7 @@ describe("vidDidAuth", () => {
 
     it("should throw SIGNATURE_OBJECT_TYPE_NOT_SET when reference URI is not set and it is not an internal signature", async () => {
       expect.assertions(1);
-      const did = "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0";
+      const did = "did:ethr:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0";
       const opts = {
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.VALUE,
@@ -837,7 +837,7 @@ describe("vidDidAuth", () => {
       expectedPayload.iat = expect.any(Number) as number;
       expectedPayload.exp = expect.any(Number) as number;
       expectedPayload.sub_jwk.kid = expect.stringContaining(
-        "did:vid:"
+        "did:ethr:"
       ) as string;
       expectedPayload.sub_jwk.x = expect.any(String) as string;
       expectedPayload.sub_jwk.y = expect.any(String) as string;
@@ -886,7 +886,7 @@ describe("vidDidAuth", () => {
       expectedPayload.iat = expect.any(Number) as number;
       expectedPayload.exp = expect.any(Number) as number;
       expectedPayload.sub_jwk.kid = expect.stringContaining(
-        "did:vid:"
+        "did:ethr:"
       ) as string;
       expectedPayload.sub_jwk.x = expect.any(String) as string;
       expectedPayload.sub_jwk.y = expect.any(String) as string;

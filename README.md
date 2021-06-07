@@ -126,7 +126,7 @@ Now on `authZToken` you have an Access Token to call VIDcredentials API and you 
 console.log(authZToken);
 // eyJhbGciOiJFUzI1NksiLCJ0eXAiOiJKV1QiLCJraWQiOiJ2aWRjaGFpbi1hcGkifQ.eyJzdWIiOiJPRFlTU0VZIEFQUCBURVNUIiwiZGlkIjoiZGlkOnZpZDoweDg0QjYwQWRiNzBmNTVjNWNkOGVhMzk3MUFhQzI3MmMzYTBiZEI2NzAiLCJub25jZSI6ImYxYzA3NWVjLWZmMDAtNDY1Zi04ZmI1LTU2MDBjZGU0MjVhNiIsImlhdCI6MTYwNTM1ODkxOCwiZXhwIjoxNjA1MzU5ODE4LCJhdWQiOiJ2aWRjaGFpbi1hcGkifQ.oRl-KFo_0DuAFdVqcVXOaMorlLWnMedzIvXjKMvjK-rJesa4dQ9YoyEwQUnIQOsbwxQ7Sfg3C7AhiqvNhEkQeA
 console.log(entityDid);
-// did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670
+// did:ethr:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670
 ```
 
 ## App 2 App Authentication Flow with VIDcredentials API
@@ -162,13 +162,13 @@ Let's first explain the different Request elements and then show you an example:
   },
   "signatureType": {
     "signatureUri": "https://api.vidchain.net/api/v1/signatures",
-    "did": "did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670",
+    "did": "did:ethr:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670",
     "authZToken": "eyJhbGciOiJFUzI1NksiLCJ0eXAiOiJKV1QiLCJraWQiOiJ2aWRjaGFpbi1hcGkifQ.eyJzdWIiOiJPRFlTU0VZIEFQUCBURVNUIiwiZGlkIjoiZGlkOnZpZDoweDg0QjYwQWRiNzBmNTVjNWNkOGVhMzk3MUFhQzI3MmMzYTBiZEI2NzAiLCJub25jZSI6IjY1MmFhN2Q0LWVhYTctNDEyZi04YjFlLTZhMzJhOWYzODQxNiIsImlhdCI6MTYwNTM2MDI1OSwiZXhwIjoxNjA1MzYxMTU5LCJhdWQiOiJ2aWRjaGFpbi1hcGkifQ.ooEH46tETgCRxFe_UMlPrnkJja2lyxuoF_MdlPgQKDqkeLjOESd_Qev6hKiV-ksdpH3E99Oq_OMdsgmnw-57WA",
-    "kid": "did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670#keys-1"
+    "kid": "did:ethr:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670#keys-1"
   },
   "registrationType": {
     "type": "REFERENCE",
-    "referenceUri": "https://api.vidchain.net/api/v1/identifiers/did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670;transform-keys=jwks"
+    "referenceUri": "https://api.vidchain.net/api/v1/identifiers/did:ethr:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670;transform-keys=jwks"
   },
   "responseMode": "fragment",
   "responseContext": "rp",
@@ -259,10 +259,10 @@ console.log(validationRequestResponse);
 //      "payload": {
 //        "iat": 1605364884,
 //        "exp": 1605365184,
-//        "iss": "did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670",
+//        "iss": "did:ethr:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670",
 //        "scope": "openid did_authn",
 //        "registration": {
-//          "jwks_uri": "https://api.vidchain.net/api/v1/identifiers/did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670;transform-keys=jwks",
+//          "jwks_uri": "https://api.vidchain.net/api/v1/identifiers/did:ethr:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670;transform-keys=jwks",
 //          "id_token_signed_response_alg": "ES256K"
 //        },
 //        "client_id": "odysseyapp://example/did-auth",
@@ -302,8 +302,8 @@ Example:
   "redirectUri": "odysseyapp://example/did-auth",
   "signatureType": {
     "hexPrivateKey": "58ab64245715ee6c67f51abe86de3d07cc0a6555b638becae7dab21d6bbe83b2",
-    "did": "did:vid:0x8D851667cC475114085F24A145134F2AA8223b00",
-    "kid": "did:vid:0x8D851667cC475114085F24A145134F2AA8223b00#keys-1"
+    "did": "did:ethr:0x8D851667cC475114085F24A145134F2AA8223b00",
+    "kid": "did:ethr:0x8D851667cC475114085F24A145134F2AA8223b00#keys-1"
   },
   "nonce": "agxZnO7jbSDvKhRK2BIgx0he-w3TU035pigj6sRXk7s",
   "state": "ac675fe2981496fad688b3ac",
@@ -311,7 +311,7 @@ Example:
   "registrationType": {
     "type": "VALUE"
   },
-  "did": "did:vid:0x8D851667cC475114085F24A145134F2AA8223b00",
+  "did": "did:ethr:0x8D851667cC475114085F24A145134F2AA8223b00",
   "vp": {
     "@context": ["https://www.w3.org/2018/credentials/v1"],
     "type": "VerifiablePresentation",
@@ -323,9 +323,9 @@ Example:
         ],
         "id": "https://api.vidchain.net/api/v1/schemas/2391",
         "type": ["VerifiableCredential", "VerifiableIdCredential"],
-        "issuer": "did:vid:0x5208431C6EC2ec4097aeA7182bB92d018766498c",
+        "issuer": "did:ethr:0x5208431C6EC2ec4097aeA7182bB92d018766498c",
         "credentialSubject": {
-          "id": "did:vid:0x8707CCa835C961334D3F6450C6a61a0AD6592460",
+          "id": "did:ethr:0x8707CCa835C961334D3F6450C6a61a0AD6592460",
           "firstName": "Eva",
           "lastName": "Monroe",
           "gender": "Female",
@@ -341,7 +341,7 @@ Example:
           "type": "EcdsaSecp256k1Signature2019",
           "created": "2019-11-17T14:00:00Z",
           "proofPurpose": "assertionMethod",
-          "verificationMethod": "did:vid:0x5208431C6EC2ec4097aeA7182bB92d018766498c#keys-1",
+          "verificationMethod": "did:ethr:0x5208431C6EC2ec4097aeA7182bB92d018766498c#keys-1",
           "jws": "eyJhbGciOiJFUzI1NkstUiIsInR5cCI6IkpXVCIsImtpZCI6ImRpZDp2aWQ6MHgzYWQzZkY4RTVhQjhENjkzQzI4QmREOUI0N2VkRDFmNzQ0NUY4YzNGI2tleS0xIn0.eyJpYXQiOjE1OTE3OTk1MDQsInZjIjp7IkBjb250ZXh0IjpbImh0dHBzOi8vd3d3LnczLm9yZy8yMDE4L2NyZWRlbnRpYWxzL3YxIiwiaHR0cHM6Ly9hcGkudmlkY2hhaW4ubmV0L2NyZWRlbnRpYWxzL3ZlcmlmaWFibGUtaWQvdjEiXSwiaWQiOiJodHRwczovL2FwaS52aWRjaGFpbi5uZXQvYXBpL3YxL3NjaGVtYXMvMjM5MSIsInR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJWZXJpZmlhYmxlSWRDcmVkZW50aWFsIl0sImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImlkIjoiZGlkOnZpZDoweDQyYjg5OEUyN0M1NmU3ZDVBMmQ0RTY0NmRCMmQ0MThCRDVDMTcwYzQiLCJmaXJzdE5hbWUiOiJFdmEiLCJsYXN0TmFtZSI6Ik1vbnJvZSIsImdlbmRlciI6IkZlbWFsZSIsImRhdGVPZkJpcnRoIjoiMTIvMTEvMTk3MCIsInBsYWNlT2ZCaXJ0aCI6Ik1hZHJpZCIsImN1cnJlbnRBZGRyZXNzIjoiQXJhZ28gMTc5IDRhIiwiY2l0eSI6IkJhcmNlbG9uYSIsInN0YXRlIjoiQ2F0YWxvbmlhIiwiemlwIjoiMDgwMTEifSwiaXNzdWVyIjoiZGlkOnZpZDoweDNhZDNmRjhFNWFCOEQ2OTNDMjhCZEQ5QjQ3ZWREMWY3NDQ1RjhjM0YifSwiaXNzIjoiZGlkOnZpZDoweDNhZDNmRjhFNWFCOEQ2OTNDMjhCZEQ5QjQ3ZWREMWY3NDQ1RjhjM0YifQ.B7e4Zp9jGLDXTRG8ID1j0_EVwoQlI_XDzSagKWmDR-INjMVSFG1142asC1r5RedNuu3SR8VIcE9yrbDw9cRuEQA"
         }
       }
@@ -350,7 +350,7 @@ Example:
       "type": "EcdsaSecp256k1Signature2019",
       "created": "2019-06-22T14:11:44Z",
       "proofPurpose": "assertionMethod",
-      "verificationMethod": "did:vid:0x16048B83FAdaCdCB20198ABc45562Df1A3e289aF#keys-1",
+      "verificationMethod": "did:ethr:0x16048B83FAdaCdCB20198ABc45562Df1A3e289aF#keys-1",
       "jws": "eyJhbGciOiJFUzI1NksifQ.eyJzdWIiOiJFQlNJIDIwMTkifQ.oggE3ft3kJYPGGa9eBibpbjgeJXw4fLbVMouVoM2NfcDxsl_UUUIarsS1VpBoYEs7s9cBlc4uC0EbnJCHfVJIw"
     }
   }
@@ -431,13 +431,13 @@ const validationResponse = await verifyDidAuthResponse(
     "nonce": "duXGNS_U3A5Sj3S0afYFRMQTy5Z_YskadTj9RLbjLXo",
     "aud": "odysseyapp://example/did-auth",
     "sub_jwk": {
-      "kid": "did:vid:0x6B789EF94e1669176e9A414D617e29FbD89f1413#keys-1",
+      "kid": "did:ethr:0x6B789EF94e1669176e9A414D617e29FbD89f1413#keys-1",
       "kty": "EC",
       "crv": "secp256k1",
       "x": "d08288b39daabe0b37d5721da890e76ff846ac46f24e4ad1b94dcaa1ca99d7dc",
       "y": "1d4aa4f4119ef2fb7a3074ec7240c3d4ade41a2c4e57d098e09fff00e2b32790"
     },
-    "did": "did:vid:0x6B789EF94e1669176e9A414D617e29FbD89f1413",
+    "did": "did:ethr:0x6B789EF94e1669176e9A414D617e29FbD89f1413",
     "vp": {
       "@context": ["https://www.w3.org/2018/credentials/v1"],
       "type": "VerifiablePresentation",
@@ -449,9 +449,9 @@ const validationResponse = await verifyDidAuthResponse(
           ],
           "id": "https://api.vidchain.net/api/v1/schemas/2391",
           "type": ["VerifiableCredential", "VerifiableIdCredential"],
-          "issuer": "did:vid:0x5208431C6EC2ec4097aeA7182bB92d018766498c",
+          "issuer": "did:ethr:0x5208431C6EC2ec4097aeA7182bB92d018766498c",
           "credentialSubject": {
-            "id": "did:vid:0x8707CCa835C961334D3F6450C6a61a0AD6592460",
+            "id": "did:ethr:0x8707CCa835C961334D3F6450C6a61a0AD6592460",
             "firstName": "Eva",
             "lastName": "Monroe",
             "gender": "Female",
@@ -467,7 +467,7 @@ const validationResponse = await verifyDidAuthResponse(
             "type": "EcdsaSecp256k1Signature2019",
             "created": "2019-11-17T14:00:00Z",
             "proofPurpose": "assertionMethod",
-            "verificationMethod": "did:vid:0x5208431C6EC2ec4097aeA7182bB92d018766498c#keys-1",
+            "verificationMethod": "did:ethr:0x5208431C6EC2ec4097aeA7182bB92d018766498c#keys-1",
             "jws": "eyJhbGciOiJFUzI1NkstUiIsInR5cCI6IkpXVCIsImtpZCI6ImRpZDp2aWQ6MHgzYWQzZkY4RTVhQjhENjkzQzI4QmREOUI0N2VkRDFmNzQ0NUY4YzNGI2tleS0xIn0.eyJpYXQiOjE1OTE3OTk1MDQsInZjIjp7IkBjb250ZXh0IjpbImh0dHBzOi8vd3d3LnczLm9yZy8yMDE4L2NyZWRlbnRpYWxzL3YxIiwiaHR0cHM6Ly9hcGkudmlkY2hhaW4ubmV0L2NyZWRlbnRpYWxzL3ZlcmlmaWFibGUtaWQvdjEiXSwiaWQiOiJodHRwczovL2FwaS52aWRjaGFpbi5uZXQvYXBpL3YxL3NjaGVtYXMvMjM5MSIsInR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJWZXJpZmlhYmxlSWRDcmVkZW50aWFsIl0sImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImlkIjoiZGlkOnZpZDoweDQyYjg5OEUyN0M1NmU3ZDVBMmQ0RTY0NmRCMmQ0MThCRDVDMTcwYzQiLCJmaXJzdE5hbWUiOiJFdmEiLCJsYXN0TmFtZSI6Ik1vbnJvZSIsImdlbmRlciI6IkZlbWFsZSIsImRhdGVPZkJpcnRoIjoiMTIvMTEvMTk3MCIsInBsYWNlT2ZCaXJ0aCI6Ik1hZHJpZCIsImN1cnJlbnRBZGRyZXNzIjoiQXJhZ28gMTc5IDRhIiwiY2l0eSI6IkJhcmNlbG9uYSIsInN0YXRlIjoiQ2F0YWxvbmlhIiwiemlwIjoiMDgwMTEifSwiaXNzdWVyIjoiZGlkOnZpZDoweDNhZDNmRjhFNWFCOEQ2OTNDMjhCZEQ5QjQ3ZWREMWY3NDQ1RjhjM0YifSwiaXNzIjoiZGlkOnZpZDoweDNhZDNmRjhFNWFCOEQ2OTNDMjhCZEQ5QjQ3ZWREMWY3NDQ1RjhjM0YifQ.B7e4Zp9jGLDXTRG8ID1j0_EVwoQlI_XDzSagKWmDR-INjMVSFG1142asC1r5RedNuu3SR8VIcE9yrbDw9cRuEQA"
           }
         }
@@ -476,7 +476,7 @@ const validationResponse = await verifyDidAuthResponse(
         "type": "EcdsaSecp256k1Signature2019",
         "created": "2019-06-22T14:11:44Z",
         "proofPurpose": "assertionMethod",
-        "verificationMethod": "did:vid:0x16048B83FAdaCdCB20198ABc45562Df1A3e289aF#keys-1",
+        "verificationMethod": "did:ethr:0x16048B83FAdaCdCB20198ABc45562Df1A3e289aF#keys-1",
         "jws": "eyJhbGciOiJFUzI1NksifQ.eyJzdWIiOiJFQlNJIDIwMTkifQ.oggE3ft3kJYPGGa9eBibpbjgeJXw4fLbVMouVoM2NfcDxsl_UUUIarsS1VpBoYEs7s9cBlc4uC0EbnJCHfVJIw"
       }
     }
@@ -522,13 +522,13 @@ The main key points to respect app2app authentication:
   },
   "signatureType": {
     "signatureUri": "https://api.vidchain.net/api/v1/signatures",
-    "did": "did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670",
+    "did": "did:ethr:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670",
     "authZToken": "eyJhbGciOiJFUzI1NksiLCJ0eXAiOiJKV1QiLCJraWQiOiJ2aWRjaGFpbi1hcGkifQ.eyJzdWIiOiJPRFlTU0VZIEFQUCBURVNUIiwiZGlkIjoiZGlkOnZpZDoweDg0QjYwQWRiNzBmNTVjNWNkOGVhMzk3MUFhQzI3MmMzYTBiZEI2NzAiLCJub25jZSI6IjY1MmFhN2Q0LWVhYTctNDEyZi04YjFlLTZhMzJhOWYzODQxNiIsImlhdCI6MTYwNTM2MDI1OSwiZXhwIjoxNjA1MzYxMTU5LCJhdWQiOiJ2aWRjaGFpbi1hcGkifQ.ooEH46tETgCRxFe_UMlPrnkJja2lyxuoF_MdlPgQKDqkeLjOESd_Qev6hKiV-ksdpH3E99Oq_OMdsgmnw-57WA",
-    "kid": "did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670#keys-1"
+    "kid": "did:ethr:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670#keys-1"
   },
   "registrationType": {
     "type": "REFERENCE",
-    "referenceUri": "https://api.vidchain.net/api/v1/identifiers/did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670;transform-keys=jwks"
+    "referenceUri": "https://api.vidchain.net/api/v1/identifiers/did:ethr:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670;transform-keys=jwks"
   },
   "responseMode": "form_post",
   "responseContext": "rp",
@@ -586,8 +586,8 @@ Example:
   "redirectUri": "https://entity.example/did-auth",
   "signatureType": {
     "hexPrivateKey": "58ab64245715ee6c67f51abe86de3d07cc0a6555b638becae7dab21d6bbe83b2",
-    "did": "did:vid:0x8D851667cC475114085F24A145134F2AA8223b00",
-    "kid": "did:vid:0x8D851667cC475114085F24A145134F2AA8223b00#keys-1"
+    "did": "did:ethr:0x8D851667cC475114085F24A145134F2AA8223b00",
+    "kid": "did:ethr:0x8D851667cC475114085F24A145134F2AA8223b00#keys-1"
   },
   "nonce": "agxZnO7jbSDvKhRK2BIgx0he-w3TU035pigj6sRXk7s",
   "state": "ac675fe2981496fad688b3ac",
@@ -595,7 +595,7 @@ Example:
   "registrationType": {
     "type": "VALUE"
   },
-  "did": "did:vid:0x8D851667cC475114085F24A145134F2AA8223b00",
+  "did": "did:ethr:0x8D851667cC475114085F24A145134F2AA8223b00",
   "vp": {
     "@context": ["https://www.w3.org/2018/credentials/v1"],
     "type": "VerifiablePresentation",
@@ -607,9 +607,9 @@ Example:
         ],
         "id": "https://api.vidchain.net/api/v1/schemas/2391",
         "type": ["VerifiableCredential", "VerifiableIdCredential"],
-        "issuer": "did:vid:0x5208431C6EC2ec4097aeA7182bB92d018766498c",
+        "issuer": "did:ethr:0x5208431C6EC2ec4097aeA7182bB92d018766498c",
         "credentialSubject": {
-          "id": "did:vid:0x8707CCa835C961334D3F6450C6a61a0AD6592460",
+          "id": "did:ethr:0x8707CCa835C961334D3F6450C6a61a0AD6592460",
           "firstName": "Eva",
           "lastName": "Monroe",
           "gender": "Female",
@@ -625,7 +625,7 @@ Example:
           "type": "EcdsaSecp256k1Signature2019",
           "created": "2019-11-17T14:00:00Z",
           "proofPurpose": "assertionMethod",
-          "verificationMethod": "did:vid:0x5208431C6EC2ec4097aeA7182bB92d018766498c#keys-1",
+          "verificationMethod": "did:ethr:0x5208431C6EC2ec4097aeA7182bB92d018766498c#keys-1",
           "jws": "eyJhbGciOiJFUzI1NkstUiIsInR5cCI6IkpXVCIsImtpZCI6ImRpZDp2aWQ6MHgzYWQzZkY4RTVhQjhENjkzQzI4QmREOUI0N2VkRDFmNzQ0NUY4YzNGI2tleS0xIn0.eyJpYXQiOjE1OTE3OTk1MDQsInZjIjp7IkBjb250ZXh0IjpbImh0dHBzOi8vd3d3LnczLm9yZy8yMDE4L2NyZWRlbnRpYWxzL3YxIiwiaHR0cHM6Ly9hcGkudmlkY2hhaW4ubmV0L2NyZWRlbnRpYWxzL3ZlcmlmaWFibGUtaWQvdjEiXSwiaWQiOiJodHRwczovL2FwaS52aWRjaGFpbi5uZXQvYXBpL3YxL3NjaGVtYXMvMjM5MSIsInR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJWZXJpZmlhYmxlSWRDcmVkZW50aWFsIl0sImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImlkIjoiZGlkOnZpZDoweDQyYjg5OEUyN0M1NmU3ZDVBMmQ0RTY0NmRCMmQ0MThCRDVDMTcwYzQiLCJmaXJzdE5hbWUiOiJFdmEiLCJsYXN0TmFtZSI6Ik1vbnJvZSIsImdlbmRlciI6IkZlbWFsZSIsImRhdGVPZkJpcnRoIjoiMTIvMTEvMTk3MCIsInBsYWNlT2ZCaXJ0aCI6Ik1hZHJpZCIsImN1cnJlbnRBZGRyZXNzIjoiQXJhZ28gMTc5IDRhIiwiY2l0eSI6IkJhcmNlbG9uYSIsInN0YXRlIjoiQ2F0YWxvbmlhIiwiemlwIjoiMDgwMTEifSwiaXNzdWVyIjoiZGlkOnZpZDoweDNhZDNmRjhFNWFCOEQ2OTNDMjhCZEQ5QjQ3ZWREMWY3NDQ1RjhjM0YifSwiaXNzIjoiZGlkOnZpZDoweDNhZDNmRjhFNWFCOEQ2OTNDMjhCZEQ5QjQ3ZWREMWY3NDQ1RjhjM0YifQ.B7e4Zp9jGLDXTRG8ID1j0_EVwoQlI_XDzSagKWmDR-INjMVSFG1142asC1r5RedNuu3SR8VIcE9yrbDw9cRuEQA"
         }
       }
@@ -634,7 +634,7 @@ Example:
       "type": "EcdsaSecp256k1Signature2019",
       "created": "2019-06-22T14:11:44Z",
       "proofPurpose": "assertionMethod",
-      "verificationMethod": "did:vid:0x16048B83FAdaCdCB20198ABc45562Df1A3e289aF#keys-1",
+      "verificationMethod": "did:ethr:0x16048B83FAdaCdCB20198ABc45562Df1A3e289aF#keys-1",
       "jws": "eyJhbGciOiJFUzI1NksifQ.eyJzdWIiOiJFQlNJIDIwMTkifQ.oggE3ft3kJYPGGa9eBibpbjgeJXw4fLbVMouVoM2NfcDxsl_UUUIarsS1VpBoYEs7s9cBlc4uC0EbnJCHfVJIw"
     }
   }
@@ -731,13 +731,13 @@ The main key points to respect app2app authentication:
   },
   "signatureType": {
     "signatureUri": "https://api.vidchain.net/api/v1/signatures",
-    "did": "did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670",
+    "did": "did:ethr:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670",
     "authZToken": "eyJhbGciOiJFUzI1NksiLCJ0eXAiOiJKV1QiLCJraWQiOiJ2aWRjaGFpbi1hcGkifQ.eyJzdWIiOiJPRFlTU0VZIEFQUCBURVNUIiwiZGlkIjoiZGlkOnZpZDoweDg0QjYwQWRiNzBmNTVjNWNkOGVhMzk3MUFhQzI3MmMzYTBiZEI2NzAiLCJub25jZSI6IjY1MmFhN2Q0LWVhYTctNDEyZi04YjFlLTZhMzJhOWYzODQxNiIsImlhdCI6MTYwNTM2MDI1OSwiZXhwIjoxNjA1MzYxMTU5LCJhdWQiOiJ2aWRjaGFpbi1hcGkifQ.ooEH46tETgCRxFe_UMlPrnkJja2lyxuoF_MdlPgQKDqkeLjOESd_Qev6hKiV-ksdpH3E99Oq_OMdsgmnw-57WA",
-    "kid": "did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670#keys-1"
+    "kid": "did:ethr:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670#keys-1"
   },
   "registrationType": {
     "type": "REFERENCE",
-    "referenceUri": "https://api.vidchain.net/api/v1/identifiers/did:vid:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670;transform-keys=jwks"
+    "referenceUri": "https://api.vidchain.net/api/v1/identifiers/did:ethr:0x84B60Adb70f55c5cd8ea3971AaC272c3a0bdB670;transform-keys=jwks"
   },
   "responseMode": "form_post",
   "responseContext": "wallet",

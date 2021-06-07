@@ -60,7 +60,7 @@ function getEthAddress(key: JWK): string {
 }
 
 function getDIDFromKey(key: JWK): string {
-  return `did:vid:${getEthAddress(key)}`;
+  return `did:ethr:${getEthAddress(key)}`;
 }
 
 async function doPostCallWithToken(
@@ -144,7 +144,7 @@ const DidMatchFromJwksUri = (
 
 const compareKidWithId = (kid: string, elem: VerificationMethod): boolean => {
   // kid can be "kid": "H7j7N4Phx2U1JQZ2SBjczz2omRjnMgT8c2gjDBv2Bf0="
-  // or "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0#keys-1
+  // or "did:ethr:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0#keys-1
   if (kid.includes("did:") || kid.startsWith("#")) {
     return elem.id === kid;
   }
