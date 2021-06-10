@@ -9,8 +9,8 @@ describe("jwk tests should", () => {
     const expectedJwk = {
       kty: "EC",
       crv: "secp256k1",
-      x: "92effe517268785a80b98fbe60e4a712ee096b9c5224ad23a61ff129bdb341a0",
-      y: "8936c9d407f5b089ff635f85c305c105499bd1b668814a23e7d9865edd4d665a",
+      x: "ku_-UXJoeFqAuY--YOSnEu4Ja5xSJK0jph_xKb2zQaA",
+      y: "iTbJ1Af1sIn_Y1-FwwXBBUmb0bZogUoj59mGXt1NZlo",
     };
     expect(jwk).toMatchObject(expectedJwk);
   });
@@ -23,8 +23,8 @@ describe("jwk tests should", () => {
     const expectedJwk = {
       kty: "EC",
       crv: "secp256k1",
-      x: "92effe517268785a80b98fbe60e4a712ee096b9c5224ad23a61ff129bdb341a0",
-      y: "8936c9d407f5b089ff635f85c305c105499bd1b668814a23e7d9865edd4d665a",
+      x: "ku_-UXJoeFqAuY--YOSnEu4Ja5xSJK0jph_xKb2zQaA",
+      y: "iTbJ1Af1sIn_Y1-FwwXBBUmb0bZogUoj59mGXt1NZlo",
     };
     expect(jwk).toMatchObject(expectedJwk);
   });
@@ -39,8 +39,8 @@ describe("jwk tests should", () => {
       kid,
       kty: "EC",
       crv: "secp256k1",
-      x: "92effe517268785a80b98fbe60e4a712ee096b9c5224ad23a61ff129bdb341a0",
-      y: "8936c9d407f5b089ff635f85c305c105499bd1b668814a23e7d9865edd4d665a",
+      x: "ku_-UXJoeFqAuY--YOSnEu4Ja5xSJK0jph_xKb2zQaA",
+      y: "iTbJ1Af1sIn_Y1-FwwXBBUmb0bZogUoj59mGXt1NZlo",
     };
     expect(jwk).toMatchObject(expectedJwk);
   });
@@ -55,8 +55,8 @@ describe("jwk tests should", () => {
       kid,
       kty: "EC",
       crv: "secp256k1",
-      x: "92effe517268785a80b98fbe60e4a712ee096b9c5224ad23a61ff129bdb341a0",
-      y: "8936c9d407f5b089ff635f85c305c105499bd1b668814a23e7d9865edd4d665a",
+      x: "ku_-UXJoeFqAuY--YOSnEu4Ja5xSJK0jph_xKb2zQaA",
+      y: "iTbJ1Af1sIn_Y1-FwwXBBUmb0bZogUoj59mGXt1NZlo",
     };
     expect(jwk).toMatchObject(expectedJwk);
   });
