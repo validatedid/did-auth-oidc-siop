@@ -121,8 +121,13 @@ const resolveDid = async (
   did: string,
   didUrlResolver: string
 ): Promise<DIDResolutionResult> => {
-  return (await axios.get(`${didUrlResolver}/${did}`))
-    .data as DIDResolutionResult;
+  const response = await axios.get(`${didUrlResolver}/${did}`);
+  const didDocument = response.data as DIDDocument;
+  return {
+    didResolutionMetadata: {},
+    didDocument,
+    didDocumentMetadata: {},
+  } as DIDResolutionResult;
 };
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
