@@ -4,7 +4,7 @@ import { ec as EC } from "elliptic";
 import { JWK } from "jose/types";
 import base64url from "base64url";
 import EthrDidResolver from "ethr-did-resolver";
-import { decodeJWT } from "did-jwt";
+import { decodeJWT, JWTPayload, JWTHeader } from "did-jwt";
 import { EcdsaSignature } from "did-jwt/lib/util";
 import {
   DIDDocument,
@@ -110,6 +110,11 @@ const getIssuerDid = (jwt: string): string => {
   return payload.iss;
 };
 
+const parseJWT = (jwt: string): { payload: JWTPayload; header: JWTHeader } => {
+  const { payload, header } = decodeJWT(jwt);
+  if (!payload || !header) throw new Error(DidAuthErrors.NO_ISS_DID);
+  return { payload, header };
+};
 const getNetworkFromDid = (did: string): string => {
   const network = "mainnet"; // default
   const splitDidFormat = did.split(":");
@@ -126,7 +131,9 @@ const resolveDid = async (
   did: string,
   didUrlResolver: string
 ): Promise<DIDResolutionResult> => {
-  const response = await axios.get(`${didUrlResolver}/${did}`);
+  const response = await axios.get(
+    `${didUrlResolver}/${did};transform-keys=jwks`
+  );
   const didDocument = response.data as DIDDocument;
   return {
     didResolutionMetadata: {},
@@ -299,6 +306,7 @@ export {
   hasJwksUri,
   getAudience,
   getIssuerDid,
+  parseJWT,
   getDIDFromKey,
   getUrlResolver,
   getHexPrivateKey,
@@ -309,4 +317,5 @@ export {
   verifySignatureFromVerificationMethod,
   getNetworkFromDid,
   extractPublicKeyBytes,
+  resolveDid,
 };
