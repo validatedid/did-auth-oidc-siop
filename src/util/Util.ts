@@ -52,6 +52,11 @@ function toHex(data: string): string {
   return Buffer.from(data, "base64").toString("hex");
 }
 
+function isHex(str) {
+  const re = /[0-9A-Fa-f]{6}/g;
+  return re.test(str);
+}
+
 function getEthWallet(key: JWK): ethers.Wallet {
   return new ethers.Wallet(prefixWith0x(toHex(key.d)));
 }
@@ -222,7 +227,14 @@ const extractPublicKeyBytes = (
   }
 
   if (vm.publicKeyJwk) {
-    return { x: vm.publicKeyJwk.x, y: vm.publicKeyJwk.y };
+    return {
+      x: isHex(vm.publicKeyJwk.x)
+        ? vm.publicKeyJwk.x
+        : toHex(vm.publicKeyJwk.x),
+      y: isHex(vm.publicKeyJwk.x)
+        ? vm.publicKeyJwk.y
+        : toHex(vm.publicKeyJwk.y),
+    };
   }
   throw new Error("No public key found!");
 };
@@ -248,7 +260,7 @@ const verifyES256K = (
   const { data, signature } = decodeJWT(jwt);
   const hash = SHA("sha256").update(data).digest();
   const sigObj = toSignatureObject(signature);
-  return secp256k1.keyFromPublic(publicKey, "hex").verify(hash, sigObj);
+  return secp256k1.keyFromPublic(publicKey).verify(hash, sigObj);
 };
 
 const verifyEDDSA = async (
@@ -296,4 +308,5 @@ export {
   getVerificationMethod,
   verifySignatureFromVerificationMethod,
   getNetworkFromDid,
+  extractPublicKeyBytes,
 };
