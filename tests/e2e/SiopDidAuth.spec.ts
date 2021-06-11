@@ -1,5 +1,5 @@
 import { parse } from "querystring";
-import * as didJwt from "@validatedid/did-jwt";
+import * as didJwt from "did-jwt";
 import * as dotenv from "dotenv";
 import * as siopDidAuth from "../../src";
 import {
@@ -40,8 +40,8 @@ describe("VidDidAuth tests should", () => {
         signatureType: {
           hexPrivateKey:
             "f857544a9d1097e242ff0b287a7e6e90f19cf973efe2317f2a4678739664420f",
-          did: "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0",
-          kid: "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0#keys-1",
+          did: "did:ethr:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0",
+          kid: "did:ethr:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0#keys-1",
         },
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.VALUE,
@@ -78,8 +78,8 @@ describe("VidDidAuth tests should", () => {
         signatureType: {
           hexPrivateKey:
             "f857544a9d1097e242ff0b287a7e6e90f19cf973efe2317f2a4678739664420f",
-          did: "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0",
-          kid: "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0#keys-1",
+          did: "did:ethr:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0",
+          kid: "did:ethr:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0#keys-1",
         },
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.VALUE,
@@ -135,7 +135,7 @@ describe("VidDidAuth tests should", () => {
       expect(jwt).toBeDefined();
       expect(nonce).toBeDefined();
       expect(state).toBeDefined();
-      const { header, payload } = didJwt.decodeJwt(jwt);
+      const { header, payload } = didJwt.decodeJWT(jwt);
 
       const expectedHeader = mockedData.DIDAUTH_HEADER;
       expectedHeader.kid = `${did}#keys-1`;
@@ -189,7 +189,7 @@ describe("VidDidAuth tests should", () => {
       const { jwt } = await siopDidAuth.createDidAuthRequest(opts);
 
       expect(jwt).toBeDefined();
-      const { header, payload } = didJwt.decodeJwt(jwt);
+      const { header, payload } = didJwt.decodeJWT(jwt);
 
       const expectedHeader = mockedData.DIDAUTH_HEADER;
       expectedHeader.kid = `${did}#key-2`;
@@ -1111,7 +1111,6 @@ describe("VidDidAuth using did:key tests should", () => {
     it("should create Did Auth Response Object without signature", async () => {
       expect.assertions(7);
       const { did, hexPrivateKey } = await getUserEntityTestAuthZToken();
-      const entityAA = await getLegalEntityTestAuthZToken("COMPANY E2E INC");
       const state = DidAuthUtil.getState();
       const nonce = DidAuthUtil.getNonce(state);
       const opts: DidAuthTypes.DidAuthResponseOptsNoSignature = {

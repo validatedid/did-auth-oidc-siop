@@ -1,6 +1,6 @@
 import { parse } from "querystring";
 import * as dotenv from "dotenv";
-import { decodeJwt } from "@validatedid/did-jwt";
+import { decodeJWT } from "did-jwt";
 import * as siopDidAuth from "../../src";
 import {
   DidAuthTypes,
@@ -204,7 +204,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     const responseData = parse(splitUrl[1]);
     expect(responseData.id_token).toBeDefined();
     const authResponseToken = responseData.id_token as string;
-    const { payload } = decodeJwt(authResponseToken);
+    const { payload } = decodeJWT(authResponseToken);
 
     const optsVerify: DidAuthVerifyOpts = {
       verificationType: {

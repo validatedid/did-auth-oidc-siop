@@ -1,13 +1,10 @@
 import axios, { AxiosResponse } from "axios";
 import { JWK } from "jose/types";
-import {
-  vidVerifyJwt,
-  createJwt,
-  SimpleSigner,
-  NaclSigner,
-  JWTVerifyOptions,
-  DIDDocument,
-} from "@validatedid/did-jwt";
+import jwtVerify from "jose/jwt/verify";
+import { parseJwk } from "jose/jwk/parse";
+import { verifyJWT, createJWT, ES256KSigner, EdDSASigner } from "did-jwt";
+import { JWTVerifyOptions } from "did-jwt/lib/JWT";
+import { DIDDocument } from "did-resolver";
 import base58 from "bs58";
 import { keyUtils } from "@transmute/did-key-ed25519";
 import { util, utilJwk } from "./util";
@@ -169,7 +166,7 @@ const signDidAuthInternal = async (
       (payload.sub_jwk as JWK).crv === DidAuthKeyCurve.ED25519)
   )
     defaultAlgorithm = DidAuthKeyAlgorithm.EDDSA;
-  const response = await createJwt(
+  const response = await createJWT(
     payload,
     {
       issuer,
@@ -179,14 +176,14 @@ const signDidAuthInternal = async (
           : DidAuthKeyAlgorithm.ES256K,
       signer:
         defaultAlgorithm === DidAuthKeyAlgorithm.EDDSA
-          ? NaclSigner(
+          ? EdDSASigner(
               Buffer.from(
                 base58.decode(
                   keyUtils.privateKeyBase58FromPrivateKeyHex(hexPrivateKey)
                 )
               ).toString("base64")
             )
-          : SimpleSigner(hexPrivateKey.replace("0x", "")), // Removing 0x from private key as input of SimpleSigner
+          : ES256KSigner(hexPrivateKey.replace("0x", "")), // Removing 0x from private key as input of SimpleSigner
       expiresIn: expirationTime,
     },
     {
@@ -195,7 +192,13 @@ const signDidAuthInternal = async (
         defaultAlgorithm === DidAuthKeyAlgorithm.EDDSA
           ? DidAuthKeyAlgorithm.EDDSA
           : DidAuthKeyAlgorithm.ES256K,
-      kid: kid || `${issuer}#keys-1`,
+      kid:
+        kid ||
+        `${
+          issuer === DidAuthResponseIss.SELF_ISSUE
+            ? (payload.did as string)
+            : issuer
+        }#keys-1`,
     }
   );
   return response;
@@ -386,12 +389,42 @@ const verifyDidAuth = async (
           ? audience
           : undefined,
     };
+    const did = util.getIssuerDid(jwt);
+    const { payload, header } = util.parseJWT(jwt);
+    if (payload.iss === DidAuthResponseIss.SELF_ISSUE) {
+      const didDocumentResult = await util.resolveDid(
+        did,
+        opts.verificationType.didUrlResolver
+      );
+      const { didDocument } = didDocumentResult;
+      if (
+        !didDocument ||
+        !didDocument.verificationMethod ||
+        !didDocument.verificationMethod[0].publicKeyJwk
+      )
+        throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
 
-    const verifiedJWT = await vidVerifyJwt(jwt, options);
+      const publicKey = await parseJwk(
+        didDocument.verificationMethod[0].publicKeyJwk,
+        header.alg
+      );
+      try {
+        const verificationWithJose = await jwtVerify(jwt, publicKey); // DO NOT SUPPORT ES256K-R
+        return {
+          signatureValidation: true,
+          payload: verificationWithJose.payload as DidAuthRequestPayload,
+        };
+      } catch (error) {
+        throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
+      }
+    }
+    const verifiedJWT = await verifyJWT(jwt, options);
     if (!verifiedJWT || !verifiedJWT.payload)
       throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
-    const payload = verifiedJWT.payload as DidAuthRequestPayload;
-    return { signatureValidation: true, payload };
+    return {
+      signatureValidation: true,
+      payload: verifiedJWT.payload as DidAuthRequestPayload,
+    };
   }
 
   const data = {

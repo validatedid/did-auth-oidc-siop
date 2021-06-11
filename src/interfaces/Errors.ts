@@ -28,6 +28,7 @@ enum DidAuthErrors {
   NO_ALG_SUPPORTED_YET = "Algorithm is not supported yet. Only ES256 supported for this version.",
   JWK_THUMBPRINT_MISMATCH_SUB = "JWK computed thumbprint does not match thumbprint included in Response Token sub claim",
   ERROR_ON_POST_CALL = "Error on Post call: ",
+  NO_DID_PAYLOAD = "payload must contain did field in payload for self-issued tokens",
 }
 
 export default DidAuthErrors;

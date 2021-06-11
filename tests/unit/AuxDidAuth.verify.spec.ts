@@ -2,7 +2,7 @@ import axios from "axios";
 import * as dotenv from "dotenv";
 import parseJwk from "jose/jwk/parse";
 import SignJWT from "jose/jwt/sign";
-import { vidVerifyJwt, decodeJwt } from "@validatedid/did-jwt";
+import { verifyJWT, decodeJWT } from "did-jwt";
 import {
   DidAuthErrors,
   DidAuthTypes,
@@ -15,9 +15,9 @@ import { getParsedDidDocument, mockedGetEnterpriseAuthToken } from "../AuxTest";
 // importing .env variables
 dotenv.config();
 jest.mock("axios");
-jest.mock("@validatedid/did-jwt");
-const mockVerifyJwt = vidVerifyJwt as jest.Mock;
-const mockDecodeJWT = decodeJwt as jest.Mock;
+jest.mock("did-jwt");
+const mockVerifyJwt = verifyJWT as jest.Mock;
+const mockDecodeJWT = decodeJWT as jest.Mock;
 
 describe("vid DID Auth Request Validation", () => {
   it("should throw ERROR_VERIFYING_SIGNATURE", async () => {

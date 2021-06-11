@@ -1,6 +1,6 @@
 import { parse } from "querystring";
 import axios from "axios";
-import { decodeJwt, createJwt, SimpleSigner } from "@validatedid/did-jwt";
+import { decodeJWT, createJWT, ES256KSigner } from "did-jwt";
 import {
   createDidAuthResponse,
   createUriResponse,
@@ -229,7 +229,7 @@ describe("create Did Auth response tests should", () => {
   it("create a valid response token with external signature and registration by value", async () => {
     expect.assertions(4);
     const state = DidAuthUtil.getState();
-    const did = "did:vid:0x29A9D0FDb033BFCb39B8E6CA2A63Bd1B0a2b80c4";
+    const did = "did:ethr:0x29A9D0FDb033BFCb39B8E6CA2A63Bd1B0a2b80c4";
     const opts: DidAuthTypes.DidAuthResponseOpts = {
       redirectUri: "https://entity.example/demo",
       signatureType: {
@@ -275,13 +275,14 @@ describe("create Did Auth response tests should", () => {
           typ: "JWT",
           kid: `${did}#keys-1`,
         };
-        const jws = await createJwt(
+        const jws = await createJWT(
           data.payload,
           {
             issuer: did,
             alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
-            signer: SimpleSigner(
-              "278a5de700e29faae8e40e366ec5012b5ec63d36ec77e8a2417154cc1d25383f"
+            signer: ES256KSigner(
+              "278a5de700e29faae8e40e366ec5012b5ec63d36ec77e8a2417154cc1d25383f",
+              true
             ),
           },
           header
@@ -293,7 +294,7 @@ describe("create Did Auth response tests should", () => {
       });
     const response = await createDidAuthResponse(opts);
     expect(response).toBeDefined();
-    const responsePayload = decodeJwt(response)
+    const responsePayload = decodeJWT(response)
       .payload as DidAuthTypes.DidAuthResponsePayload;
     expect(responsePayload).toBeDefined();
     expect(responsePayload).toHaveProperty("sub");
@@ -319,7 +320,7 @@ describe("create Did Auth response object tests should", () => {
   it("create a valid response token with external signature and registration by value", async () => {
     expect.assertions(3);
     const state = DidAuthUtil.getState();
-    const did = "did:vid:0x29A9D0FDb033BFCb39B8E6CA2A63Bd1B0a2b80c4";
+    const did = "did:ethr:0x29A9D0FDb033BFCb39B8E6CA2A63Bd1B0a2b80c4";
     const opts: DidAuthTypes.DidAuthResponseOptsNoSignature = {
       redirectUri: "https://entity.example/demo",
       identifiersUri: `https://dev.vidchain.net/api/v1/identifiers/${did};transform-keys=jwks`,
@@ -362,13 +363,14 @@ describe("create Did Auth response object tests should", () => {
           typ: "JWT",
           kid: `${did}#keys-1`,
         };
-        const jws = await createJwt(
+        const jws = await createJWT(
           data.payload,
           {
             issuer: did,
             alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256KR,
-            signer: SimpleSigner(
-              "278a5de700e29faae8e40e366ec5012b5ec63d36ec77e8a2417154cc1d25383f"
+            signer: ES256KSigner(
+              "278a5de700e29faae8e40e366ec5012b5ec63d36ec77e8a2417154cc1d25383f",
+              true
             ),
           },
           header
