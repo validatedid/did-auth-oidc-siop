@@ -418,7 +418,6 @@ const verifyDidAuth = async (
         throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
       }
     }
-
     const verifiedJWT = await verifyJWT(jwt, options);
     if (!verifiedJWT || !verifiedJWT.payload)
       throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);

@@ -4,6 +4,7 @@ import { ec as EC } from "elliptic";
 import { JWK } from "jose/types";
 import base64url from "base64url";
 import EthrDidResolver from "ethr-did-resolver";
+import { resolver as didKeyResolver } from "@transmute/did-key.js";
 import { decodeJWT, JWTPayload, JWTHeader } from "did-jwt";
 import { EcdsaSignature } from "did-jwt/lib/util";
 import {
@@ -142,13 +143,31 @@ const resolveDid = async (
   } as DIDResolutionResult;
 };
 
+const resolveDidKey = async (did: string): Promise<DIDResolutionResult> =>
+  (await didKeyResolver.resolve(did)) as DIDResolutionResult;
+
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 const getResolver = (didUrlResolver: string) => {
   async function resolve(did: string) {
     return resolveDid(did, didUrlResolver);
   }
 
+  return { ethr: resolve };
+};
+
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+const getResolverDidKey = () => {
+  async function resolve(did: string) {
+    return resolveDidKey(did);
+  }
+
   return { key: resolve };
+};
+
+const isKeyDid = (did: string): boolean => {
+  if (!did) return false;
+  if (did.match(/^did:key:/g)) return true;
+  return false;
 };
 
 const getUrlResolver = async (
@@ -161,7 +180,10 @@ const getUrlResolver = async (
       throw new Error(DidAuthErrors.BAD_INTERNAL_VERIFICATION_PARAMS);
     // check if the token issuer DID can be resolved
     await axios.get(`${internalVerification.didUrlResolver}/${did}`);
-    return new Resolver(getResolver(internalVerification.didUrlResolver));
+
+    return isKeyDid(did)
+      ? new Resolver(getResolverDidKey())
+      : new Resolver(getResolver(internalVerification.didUrlResolver));
   } catch (error) {
     if (!internalVerification.registry || !internalVerification.rpcUrl)
       throw new Error(DidAuthErrors.BAD_INTERNAL_VERIFICATION_PARAMS);
@@ -267,7 +289,7 @@ const verifyES256K = (
   const { data, signature } = decodeJWT(jwt);
   const hash = SHA("sha256").update(data).digest();
   const sigObj = toSignatureObject(signature);
-  return secp256k1.keyFromPublic(publicKey).verify(hash, sigObj);
+  return secp256k1.keyFromPublic(publicKey, "hex").verify(hash, sigObj);
 };
 
 const verifyEDDSA = async (
