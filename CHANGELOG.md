@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.7.0](https://github.com/validatedid/did-auth-oidc-siop/compare/v2.3.0...v2.7.0) (2021-06-11)
+
+### 🚀 Features
+
+- support for did-ethr
+
+- create response without signature ([c82722d](https://github.com/validatedid/did-auth-oidc-siop/commit/c82722dadb6f7dcac5a6d5ae5d3080cd05ce820f))
+
+### 🐛 Bug Fixes
+
+- tests ([725f535](https://github.com/validatedid/did-auth-oidc-siop/commit/725f5359b6e39f705a69a457fb5050556c39db51))
+- update release ([acd439d](https://github.com/validatedid/did-auth-oidc-siop/commit/acd439da7f401f1c9b90083ba3a6e9e0a91cd847))
+
 ## [2.6.0](https://github.com/validatedid/did-auth-oidc-siop/compare/v2.3.0...v2.6.0) (2021-05-26)
 
 ### 🚀 Features
