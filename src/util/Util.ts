@@ -3,15 +3,22 @@ import base58 from "bs58";
 import { ec as EC } from "elliptic";
 import { JWK } from "jose/types";
 import base64url from "base64url";
-import VidDidResolver from "@validatedid/vid-did-resolver";
-import { decodeJwt, DIDDocument, EcdsaSignature } from "@validatedid/did-jwt";
+import EthrDidResolver from "ethr-did-resolver";
+import { resolver as didKeyResolver } from "@transmute/did-key.js";
+import { decodeJWT, JWTPayload, JWTHeader } from "did-jwt";
+import { EcdsaSignature } from "did-jwt/lib/util";
+import {
+  DIDDocument,
+  Resolver,
+  VerificationMethod,
+  DIDResolutionResult,
+} from "did-resolver";
 import axios, { AxiosResponse } from "axios";
 import { ethers, utils } from "ethers";
 import { keyUtils } from "@transmute/did-key-ed25519";
 import parseJwk from "jose/jwk/parse";
 import jwtVerify from "jose/jwt/verify";
 
-import { Resolver, VerificationMethod } from "did-resolver";
 import { DidAuthErrors } from "../interfaces";
 import {
   DidAuthKeyAlgorithm,
@@ -21,7 +28,6 @@ import {
   InternalVerification,
   RegistrationJwksUri,
 } from "../interfaces/DIDAuth.types";
-import { Resolvable } from "../interfaces/JWT";
 
 export const prefixWith0x = (key: string): string =>
   key.startsWith("0x") ? key : `0x${key}`;
@@ -47,6 +53,11 @@ function toHex(data: string): string {
   return Buffer.from(data, "base64").toString("hex");
 }
 
+function isHex(str) {
+  const re = /[0-9A-Fa-f]{6}/g;
+  return re.test(str);
+}
+
 function getEthWallet(key: JWK): ethers.Wallet {
   return new ethers.Wallet(prefixWith0x(toHex(key.d)));
 }
@@ -60,7 +71,7 @@ function getEthAddress(key: JWK): string {
 }
 
 function getDIDFromKey(key: JWK): string {
-  return `did:vid:${getEthAddress(key)}`;
+  return `did:ethr:${getEthAddress(key)}`;
 }
 
 async function doPostCallWithToken(
@@ -84,7 +95,7 @@ async function doPostCallWithToken(
 }
 
 const getAudience = (jwt: string): string | undefined => {
-  const { payload } = decodeJwt(jwt);
+  const { payload } = decodeJWT(jwt);
   if (!payload) throw new Error(DidAuthErrors.NO_AUDIENCE);
   if (!payload.aud) return undefined;
   if (Array.isArray(payload.aud))
@@ -93,32 +104,99 @@ const getAudience = (jwt: string): string | undefined => {
 };
 
 const getIssuerDid = (jwt: string): string => {
-  const { payload } = decodeJwt(jwt);
+  const { payload } = decodeJWT(jwt);
   if (!payload || !payload.iss) throw new Error(DidAuthErrors.NO_ISS_DID);
   if (payload.iss === DidAuthResponseIss.SELF_ISSUE)
     return (payload as DidAuthResponsePayload).did;
   return payload.iss;
 };
 
+const parseJWT = (jwt: string): { payload: JWTPayload; header: JWTHeader } => {
+  const { payload, header } = decodeJWT(jwt);
+  if (!payload || !header) throw new Error(DidAuthErrors.NO_ISS_DID);
+  return { payload, header };
+};
+const getNetworkFromDid = (did: string): string => {
+  const network = "mainnet"; // default
+  const splitDidFormat = did.split(":");
+  if (splitDidFormat.length === 4) {
+    return splitDidFormat[2];
+  }
+  if (splitDidFormat.length > 4) {
+    return `${splitDidFormat[2]}:${splitDidFormat[3]}`;
+  }
+  return network;
+};
+
+const resolveDid = async (
+  did: string,
+  didUrlResolver: string
+): Promise<DIDResolutionResult> => {
+  const response = await axios.get(
+    `${didUrlResolver}/${did};transform-keys=jwks`
+  );
+  const didDocument = response.data as DIDDocument;
+  return {
+    didResolutionMetadata: {},
+    didDocument,
+    didDocumentMetadata: {},
+  } as DIDResolutionResult;
+};
+
+const resolveDidKey = async (did: string): Promise<DIDResolutionResult> =>
+  (await didKeyResolver.resolve(did)) as DIDResolutionResult;
+
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+const getResolver = (didUrlResolver: string) => {
+  async function resolve(did: string) {
+    return resolveDid(did, didUrlResolver);
+  }
+
+  return { ethr: resolve };
+};
+
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+const getResolverDidKey = () => {
+  async function resolve(did: string) {
+    return resolveDidKey(did);
+  }
+
+  return { key: resolve };
+};
+
+const isKeyDid = (did: string): boolean => {
+  if (!did) return false;
+  if (did.match(/^did:key:/g)) return true;
+  return false;
+};
+
 const getUrlResolver = async (
   jwt: string,
   internalVerification: InternalVerification
-): Promise<Resolvable | Resolver | string> => {
+): Promise<Resolver> => {
+  const did = getIssuerDid(jwt);
   try {
     if (!internalVerification.didUrlResolver)
       throw new Error(DidAuthErrors.BAD_INTERNAL_VERIFICATION_PARAMS);
     // check if the token issuer DID can be resolved
-    await axios.get(
-      `${internalVerification.didUrlResolver}/${getIssuerDid(jwt)}`
-    );
-    return internalVerification.didUrlResolver;
+    await axios.get(`${internalVerification.didUrlResolver}/${did}`);
+
+    return isKeyDid(did)
+      ? new Resolver(getResolverDidKey())
+      : new Resolver(getResolver(internalVerification.didUrlResolver));
   } catch (error) {
     if (!internalVerification.registry || !internalVerification.rpcUrl)
       throw new Error(DidAuthErrors.BAD_INTERNAL_VERIFICATION_PARAMS);
     return new Resolver(
-      VidDidResolver.getResolver({
-        rpcUrl: internalVerification.rpcUrl,
-        registry: internalVerification.registry,
+      EthrDidResolver.getResolver({
+        networks: [
+          {
+            // TODO: Be able to understand in case did has chainId instead of name
+            name: getNetworkFromDid(did),
+            rpcUrl: internalVerification.rpcUrl,
+            registry: internalVerification.registry,
+          },
+        ],
       })
     );
   }
@@ -144,7 +222,7 @@ const DidMatchFromJwksUri = (
 
 const compareKidWithId = (kid: string, elem: VerificationMethod): boolean => {
   // kid can be "kid": "H7j7N4Phx2U1JQZ2SBjczz2omRjnMgT8c2gjDBv2Bf0="
-  // or "did:vid:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0#keys-1
+  // or "did:ethr:0x0106a2e985b1E1De9B5ddb4aF6dC9e928F4e99D0#keys-1
   if (kid.includes("did:") || kid.startsWith("#")) {
     return elem.id === kid;
   }
@@ -178,7 +256,14 @@ const extractPublicKeyBytes = (
   }
 
   if (vm.publicKeyJwk) {
-    return { x: vm.publicKeyJwk.x, y: vm.publicKeyJwk.y };
+    return {
+      x: isHex(vm.publicKeyJwk.x)
+        ? vm.publicKeyJwk.x
+        : toHex(vm.publicKeyJwk.x),
+      y: isHex(vm.publicKeyJwk.x)
+        ? vm.publicKeyJwk.y
+        : toHex(vm.publicKeyJwk.y),
+    };
   }
   throw new Error("No public key found!");
 };
@@ -201,7 +286,7 @@ const verifyES256K = (
 ): boolean => {
   const publicKey = extractPublicKeyBytes(verificationMethod);
   const secp256k1 = new EC("secp256k1");
-  const { data, signature } = decodeJwt(jwt);
+  const { data, signature } = decodeJWT(jwt);
   const hash = SHA("sha256").update(data).digest();
   const sigObj = toSignatureObject(signature);
   return secp256k1.keyFromPublic(publicKey, "hex").verify(hash, sigObj);
@@ -231,7 +316,7 @@ const verifySignatureFromVerificationMethod = async (
   jwt: string,
   verificationMethod: VerificationMethod
 ): Promise<boolean> => {
-  const { header } = decodeJwt(jwt);
+  const { header } = decodeJWT(jwt);
   return header.alg === DidAuthKeyAlgorithm.EDDSA
     ? verifyEDDSA(jwt, verificationMethod)
     : verifyES256K(jwt, verificationMethod);
@@ -243,6 +328,7 @@ export {
   hasJwksUri,
   getAudience,
   getIssuerDid,
+  parseJWT,
   getDIDFromKey,
   getUrlResolver,
   getHexPrivateKey,
@@ -251,4 +337,7 @@ export {
   base64urlEncodeBuffer,
   getVerificationMethod,
   verifySignatureFromVerificationMethod,
+  getNetworkFromDid,
+  extractPublicKeyBytes,
+  resolveDid,
 };

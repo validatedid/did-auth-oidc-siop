@@ -4,7 +4,7 @@ import fromKeyLike from "jose/jwk/from_key_like";
 import parseJwk from "jose/jwk/parse";
 import SignJWT from "jose/jwt/sign";
 import { resolver as didKeyResolver } from "@transmute/did-key.js";
-import { DIDResolutionResult } from "did-resolver";
+import { DIDResolutionResult, DIDDocument } from "did-resolver";
 import { v4 as uuidv4 } from "uuid";
 import axios, { AxiosResponse } from "axios";
 import moment from "moment";
@@ -12,19 +12,13 @@ import { ethers } from "ethers";
 import jwt_decode from "jwt-decode";
 import base58 from "bs58";
 import { Ed25519KeyPair, keyUtils } from "@transmute/did-key-ed25519";
-import {
-  decodeJwt,
-  DIDDocument,
-  createJwt,
-  SimpleSigner,
-  NaclSigner,
-} from "@validatedid/did-jwt";
+import { decodeJWT } from "did-jwt";
+
 import { DidAuthErrors, JWTClaims, DidAuthUtil, DidAuthTypes } from "../src";
 import { prefixWith0x } from "../src/util/Util";
 import {
   DidAuthKeyCurve,
   DidAuthKeyType,
-  DidAuthRequestPayload,
 } from "../src/interfaces/DIDAuth.types";
 import { getPublicJWKFromPrivateHex, getThumbprint } from "../src/util/JWK";
 import { EnterpriseAuthZToken, JWTHeader } from "../src/interfaces/JWT";
@@ -123,7 +117,7 @@ export const mockedKeyAndDid = async (): Promise<{
   const privateJwk = await fromKeyLike(key.privateKey);
   const hexPrivateKey = Buffer.from(privateJwk.d, "base64").toString("hex");
   const wallet: ethers.Wallet = new ethers.Wallet(prefixWith0x(hexPrivateKey));
-  const did = `did:vid:${wallet.address}`;
+  const did = `did:ethr:${wallet.address}`;
   const hexPublicKey = wallet.publicKey;
 
   return {
@@ -288,7 +282,7 @@ const getEntityAuthNToken = async (
   enterpiseName?: string
 ): Promise<{ jwt: string }> => {
   const WALLET_API_BASE_URL =
-    process.env.WALLET_API_URL || "https://api.vidchain.net";
+    process.env.WALLET_API_URL || "https://dev.vidchain.net";
   // get entity API Key
   const result = await doPostCall(
     `${WALLET_API_BASE_URL}/api/v1/authentication-keys`,
@@ -326,7 +320,7 @@ export const getLegalEntityAuthZToken = async (
     scope: "vidchain profile entity",
   };
   const WALLET_API_BASE_URL =
-    process.env.WALLET_API_URL || "https://api.vidchain.net";
+    process.env.WALLET_API_URL || "https://dev.vidchain.net";
   // Create and sign JWT
   const result = await doPostCall(
     `${WALLET_API_BASE_URL}/api/v1/sessions`,
@@ -353,7 +347,7 @@ export async function getLegalEntityTestAuthZToken(
     scope: "vidchain profile test entity",
   };
   const WALLET_API_BASE_URL =
-    process.env.WALLET_API_URL || "https://api.vidchain.net";
+    process.env.WALLET_API_URL || "https://dev.vidchain.net";
   // Create and sign JWT
   const result = await doPostCall(
     `${WALLET_API_BASE_URL}/api/v1/sessions`,
@@ -387,7 +381,7 @@ export async function getUserEntityTestAuthZToken(): Promise<{
     scope: "vidchain profile test user",
   };
   const WALLET_API_BASE_URL =
-    process.env.WALLET_API_URL || "https://api.vidchain.net";
+    process.env.WALLET_API_URL || "https://dev.vidchain.net";
   // Create and sign JWT
   const result = await doPostCall(
     `${WALLET_API_BASE_URL}/api/v1/sessions`,
@@ -424,7 +418,7 @@ export async function getUserEntityTestAuthZTokenDidKey(): Promise<{
     scope: "vidchain profile test user",
   };
   const WALLET_API_BASE_URL =
-    process.env.WALLET_API_URL || "https://api.vidchain.net";
+    process.env.WALLET_API_URL || "https://dev.vidchain.net";
   // Create and sign JWT
   const result = await doPostCall(
     `${WALLET_API_BASE_URL}/api/v1/sessions`,
@@ -459,14 +453,14 @@ export const getLegalEntityTestSessionTokenDidKey = async (): Promise<{
 
   // Sessions
   const WALLET_API_BASE_URL =
-    process.env.WALLET_API_URL || "https://api.vidchain.net";
+    process.env.WALLET_API_URL || "https://dev.vidchain.net";
   // Create and sign JWT
   const result = await doPostCall(
     `${WALLET_API_BASE_URL}/api/v1/sessions`,
     sessionBody
   );
   const { accessToken } = result.data as AccessTokenResponseBody;
-  const { payload } = decodeJwt(accessToken);
+  const { payload } = decodeJWT(accessToken);
 
   return {
     jwt: accessToken,
@@ -622,7 +616,7 @@ export const getParsedDidDocument = (didKey: DidKey): DIDDocument => {
 };
 
 export const getPublicJWKFromDid = async (did: string): Promise<JWK> => {
-  const API_BASE_URL = process.env.WALLET_API_URL || "https://api.vidchain.net";
+  const API_BASE_URL = process.env.WALLET_API_URL || "https://dev.vidchain.net";
   const response = await axios.get(
     `${API_BASE_URL}/api/v1/identifiers/${did};transform-keys=jwks`
   );

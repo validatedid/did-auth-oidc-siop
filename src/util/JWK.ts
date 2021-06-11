@@ -3,6 +3,7 @@ import bs58 from "bs58";
 import { ec as EC } from "elliptic";
 import { JWK } from "jose/types";
 import SHA from "sha.js";
+import { Base64 } from "js-base64";
 import { types } from "../interfaces";
 import { base64urlEncodeBuffer } from "./Util";
 
@@ -33,8 +34,8 @@ const getPublicJWKFromPublicHex = (
     kid,
     kty: types.DidAuthKeyType.EC,
     crv: types.DidAuthKeyCurve.SECP256k1,
-    x: pubPoint.getX().toString("hex"),
-    y: pubPoint.getY().toString("hex"),
+    x: Base64.fromUint8Array(pubPoint.getX().toArrayLike(Buffer), true),
+    y: Base64.fromUint8Array(pubPoint.getY().toArrayLike(Buffer), true),
   };
 };
 
@@ -49,8 +50,8 @@ const getPublicJWKFromPrivateHexDidKey = (
     kid,
     kty: types.DidAuthKeyType.EC,
     crv: types.DidAuthKeyCurve.ED25519,
-    x: pubPoint.getX().toString("hex"),
-    y: pubPoint.getY().toString("hex"),
+    x: Base64.fromUint8Array(pubPoint.getX().toArrayLike(Buffer), true),
+    y: Base64.fromUint8Array(pubPoint.getY().toArrayLike(Buffer), true),
   };
 };
 
@@ -68,8 +69,8 @@ const getPublicJWKFromPrivateHex = (
     kid,
     kty: types.DidAuthKeyType.EC,
     crv: types.DidAuthKeyCurve.SECP256k1,
-    x: pubPoint.getX().toString("hex"),
-    y: pubPoint.getY().toString("hex"),
+    x: Base64.fromUint8Array(pubPoint.getX().toArrayLike(Buffer), true),
+    y: Base64.fromUint8Array(pubPoint.getY().toArrayLike(Buffer), true),
   };
 };
 
