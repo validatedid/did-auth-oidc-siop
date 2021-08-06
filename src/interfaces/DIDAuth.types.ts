@@ -133,6 +133,11 @@ export interface DidAuthResponseOpts {
   vp?: VerifiablePresentation;
 }
 
+export interface ResponseClaims {
+  verified_claims?: string;
+  encryption_key?: JsonWebKey;
+}
+
 export interface DidAuthResponseOptsNoSignature {
   redirectUri: string;
   identifiersUri: string;
@@ -142,6 +147,7 @@ export interface DidAuthResponseOptsNoSignature {
   responseMode?: DidAuthResponseMode;
   did: string;
   vp?: VerifiablePresentation;
+  claims?: ResponseClaims;
 }
 
 export interface InternalVerification {
@@ -185,6 +191,7 @@ export interface DidAuthResponsePayload extends JWTPayload {
   sub_jwk: JWK;
   did: string;
   vp?: VerifiablePresentation;
+  claims?: ResponseClaims;
 }
 
 export interface DidAuthValidationResponse {

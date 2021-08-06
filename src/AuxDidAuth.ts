@@ -359,16 +359,20 @@ const createDidAuthResponsePayloadNoSignature = async (
       )}`
     );
   }
-
-  return {
+  const didAuthResponsePayload: DidAuthResponsePayload = {
     iss: DidAuthResponseIss.SELF_ISSUE,
     sub,
     nonce: opts.nonce,
     aud: opts.redirectUri,
     sub_jwk,
     did: opts.did,
-    vp: opts.vp,
   };
+  if (opts.claims) {
+    didAuthResponsePayload.claims = opts.claims;
+    return didAuthResponsePayload;
+  }
+  didAuthResponsePayload.vp = opts.vp;
+  return didAuthResponsePayload;
 };
 
 const verifyDidAuth = async (
