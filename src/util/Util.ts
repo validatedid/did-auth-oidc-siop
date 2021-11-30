@@ -28,6 +28,8 @@ import {
   InternalVerification,
   RegistrationJwksUri,
 } from "../interfaces/DIDAuth.types";
+// eslint-disable-next-line import/no-cycle
+import { getPublicJWKFromPublicHex } from "./JWK";
 
 export const prefixWith0x = (key: string): string =>
   key.startsWith("0x") ? key : `0x${key}`;
@@ -248,6 +250,19 @@ const getVerificationMethod = (
   );
 };
 
+const extractPublicKeyJwk = (vm: VerificationMethod): JWK => {
+  if (vm.publicKeyJwk) {
+    return vm.publicKeyJwk;
+  }
+  if (vm.publicKeyBase58) {
+    return getPublicJWKFromPublicHex(
+      base58.decode(vm.publicKeyBase58).toString("hex")
+    );
+  }
+
+  throw new Error("No public key found!");
+};
+
 const extractPublicKeyBytes = (
   vm: VerificationMethod
 ): string | { x: string; y: string } => {
@@ -280,7 +295,22 @@ function toSignatureObject(signature: string): EcdsaSignature {
 
   return sigObj;
 }
-const verifyES256K = (
+
+const verifyES256K = async (
+  jwt: string,
+  verificationMethod: VerificationMethod
+): Promise<boolean> => {
+  const publicKey = extractPublicKeyJwk(verificationMethod);
+  const result = await jwtVerify(
+    jwt,
+    await parseJwk(publicKey, DidAuthKeyAlgorithm.ES256K)
+  );
+  if (!result || !result.payload)
+    throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
+  return true;
+};
+
+const verifyES256KR = (
   jwt: string,
   verificationMethod: VerificationMethod
 ): boolean => {
@@ -291,7 +321,6 @@ const verifyES256K = (
   const sigObj = toSignatureObject(signature);
   return secp256k1.keyFromPublic(publicKey, "hex").verify(hash, sigObj);
 };
-
 const verifyEDDSA = async (
   jwt: string,
   verificationMethod: VerificationMethod
@@ -317,9 +346,13 @@ const verifySignatureFromVerificationMethod = async (
   verificationMethod: VerificationMethod
 ): Promise<boolean> => {
   const { header } = decodeJWT(jwt);
-  return header.alg === DidAuthKeyAlgorithm.EDDSA
-    ? verifyEDDSA(jwt, verificationMethod)
-    : verifyES256K(jwt, verificationMethod);
+  if (header.alg === DidAuthKeyAlgorithm.EDDSA)
+    return verifyEDDSA(jwt, verificationMethod);
+  if (header.alg === DidAuthKeyAlgorithm.ES256K)
+    return verifyES256K(jwt, verificationMethod);
+  if (header.alg === DidAuthKeyAlgorithm.ES256KR)
+    return verifyES256KR(jwt, verificationMethod);
+  return false;
 };
 
 export {
@@ -339,5 +372,6 @@ export {
   verifySignatureFromVerificationMethod,
   getNetworkFromDid,
   extractPublicKeyBytes,
+  extractPublicKeyJwk,
   resolveDid,
 };
