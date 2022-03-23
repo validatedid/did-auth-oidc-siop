@@ -87,7 +87,7 @@
     "elliptic": "^6.5.4",
     "ethers": "^5.5.1",
     "ethr-did-resolver": "^4.3.3",
-    "jose": "^3.11.6",
+    "jose": "3.11.6",
     "js-base64": "^3.7.2",
     "sha.js": "^2.4.11",
     "uuid": "^8.3.2"
