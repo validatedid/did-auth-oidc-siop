@@ -28,7 +28,9 @@ describe("SIOP DID Auth end to end flow tests should", () => {
   it("create a request externally, verify it internally, create a response internally and verify it externally", async () => {
     expect.assertions(12);
     const WALLET_API_BASE_URL = process.env.WALLET_API_URL;
-    const entityAA = await getLegalEntityTestAuthZToken("COMPANY E2E INC");
+    const entityAA = await getLegalEntityTestAuthZToken(
+      "LEGAL ENTITY TEST 007"
+    );
     const authZToken = entityAA.jwt;
     const entityDid = entityAA.did;
 
@@ -120,7 +122,7 @@ describe("SIOP DID Auth end to end flow tests should", () => {
   it("create an app 2 app flow", async () => {
     expect.assertions(10);
     const WALLET_API_BASE_URL = process.env.WALLET_API_URL;
-    const entityAA = await getLegalEntityAuthZToken("ODYSSEY APP TEST");
+    const entityAA = await getLegalEntityAuthZToken("LEGAL ENTITY TEST 007");
     const authZToken = entityAA.jwt;
     const entityDid = entityAA.did;
     const state = DidAuthUtil.getState();
@@ -176,7 +178,8 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     expect(validationRequestResponse.payload).toBeDefined();
 
     const { hexPrivateKey, did } = await getUserEntityTestAuthZToken();
-    const requestPayload = validationRequestResponse.payload as DidAuthTypes.DidAuthRequestPayload;
+    const requestPayload =
+      validationRequestResponse.payload as DidAuthTypes.DidAuthRequestPayload;
     const stateRequest = requestPayload.state;
     const nonceRequest = requestPayload.nonce;
 

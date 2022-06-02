@@ -12,7 +12,7 @@ import { ethers } from "ethers";
 import jwt_decode from "jwt-decode";
 import base58 from "bs58";
 import { Ed25519KeyPair, keyUtils } from "@transmute/did-key-ed25519";
-import { decodeJWT } from "did-jwt";
+import { decodeJWT, ES256KSigner, createJWT, EdDSASigner } from "did-jwt";
 
 import { DidAuthErrors, JWTClaims, DidAuthUtil, DidAuthTypes } from "../src";
 import { prefixWith0x } from "../src/util/Util";
@@ -143,6 +143,7 @@ export const mockedKeyAndDidKey = async (
   did: string;
   hexPublicKey: string;
   kid: string;
+  privateKeyBuffer: Buffer;
 }> => {
   const key = await Ed25519KeyPair.generate({
     secureRandom: () => {
@@ -160,11 +161,13 @@ export const mockedKeyAndDidKey = async (
     keyPair.publicKeyBase58
   ) as JWK;
   const { kid } = publicKeyJwk;
+
   return {
     hexPrivateKey,
     did: key.controller,
     hexPublicKey,
     kid,
+    privateKeyBuffer: key.privateKeyBuffer,
   };
 };
 
@@ -183,12 +186,18 @@ export const getUserTestAuthNToken = async (): Promise<{
     exp: moment().add(15, "seconds").unix(),
     publicKey: hexPublicKey,
   };
+  const signer = ES256KSigner(hexPrivateKey.replace("0x", ""), true); // Removing 0x from wallet private key as input of ES256KSigner
+  const assertionToken = await createJWT(payload, {
+    issuer: did,
+    alg: "ES256K-R",
+    signer,
+  });
   return {
     hexPrivateKey,
     did,
     jwk,
     hexPublicKey,
-    assertion: Buffer.from(JSON.stringify(payload)).toString("base64"),
+    assertion: assertionToken,
   };
 };
 
@@ -199,7 +208,8 @@ export const getUserTestAuthNTokenDidKey = async (): Promise<{
   assertion: string;
   kid: string;
 }> => {
-  const { hexPrivateKey, did, hexPublicKey, kid } = await mockedKeyAndDidKey();
+  const { hexPrivateKey, did, hexPublicKey, kid, privateKeyBuffer } =
+    await mockedKeyAndDidKey();
   const payload: UserTestAuthNToken = {
     iss: did,
     aud: "vidchain-api",
@@ -207,11 +217,17 @@ export const getUserTestAuthNTokenDidKey = async (): Promise<{
     exp: moment().add(15, "seconds").unix(),
     publicKey: hexPublicKey,
   };
+  const signer = EdDSASigner(Buffer.from(privateKeyBuffer).toString("base64"));
+  const assertionToken = await createJWT(payload, {
+    issuer: did,
+    alg: "EdDSA",
+    signer,
+  });
   return {
     hexPrivateKey,
     did,
     hexPublicKey,
-    assertion: Buffer.from(JSON.stringify(payload)).toString("base64"),
+    assertion: assertionToken,
     kid,
   };
 };
@@ -240,7 +256,7 @@ const mockedEntityAuthNToken = async (
     jwk,
     DidAuthTypes.DidAuthKeyAlgorithm.ES256K
   );
-  const jwt = await new SignJWT((payload as unknown) as JWTPayload)
+  const jwt = await new SignJWT(payload as unknown as JWTPayload)
     .setProtectedHeader({
       alg: "ES256K",
       typ: "JWT",
@@ -250,12 +266,14 @@ const mockedEntityAuthNToken = async (
 };
 
 const testEntityAuthNToken = (enterpiseName?: string): { jwt: string } => {
-  const payload: LegalEntityTestAuthN = {
+  const { ENTITY_TEST_API_KEY } = process.env;
+  const payload: LegalEntityAuthNToken = {
     iss: enterpiseName || "Test Legal Entity",
     aud: "vidchain-api",
     iat: moment().unix(),
     exp: moment().add(15, "minutes").unix(),
     nonce: uuidv4(),
+    apiKey: ENTITY_TEST_API_KEY,
   };
 
   const jwt = Buffer.from(JSON.stringify(payload)).toString("base64");
@@ -278,21 +296,8 @@ interface ApiKeyStruct {
   authenticationKey: string;
 }
 
-const getEntityAuthNToken = async (
-  enterpiseName?: string
-): Promise<{ jwt: string }> => {
-  const WALLET_API_BASE_URL =
-    process.env.WALLET_API_URL || "https://dev.vidchain.net";
-  // get entity API Key
-  const result = await doPostCall(
-    `${WALLET_API_BASE_URL}/api/v1/authentication-keys`,
-    { iss: enterpiseName || "Test Legal Entity" }
-  );
-  if (!result || !result.data)
-    throw new Error("Authentication Keys not generated.");
-  const apiKeyStruct = result.data as ApiKeyStruct;
-  if (!apiKeyStruct.type || !apiKeyStruct.authenticationKey)
-    throw new Error("Authentication Keys not generated.");
+const getEntityAuthNToken = (enterpiseName?: string): { jwt: string } => {
+  const { ENTITY_TEST_API_KEY } = process.env;
 
   const payload: LegalEntityAuthNToken = {
     iss: enterpiseName || "Test Legal Entity",
@@ -300,7 +305,7 @@ const getEntityAuthNToken = async (
     iat: moment().unix(),
     exp: moment().add(15, "minutes").unix(),
     nonce: uuidv4(),
-    apiKey: apiKeyStruct.authenticationKey,
+    apiKey: ENTITY_TEST_API_KEY,
   };
 
   const jwt = Buffer.from(JSON.stringify(payload)).toString("base64");
@@ -313,7 +318,7 @@ export const getLegalEntityAuthZToken = async (
   jwt: string;
   did: string;
 }> => {
-  const auth = await getEntityAuthNToken(enterpiseName);
+  const auth = getEntityAuthNToken(enterpiseName);
   const payload = {
     grantType: "urn:ietf:params:oauth:grant-type:jwt-bearer",
     assertion: auth.jwt,
@@ -344,7 +349,7 @@ export async function getLegalEntityTestAuthZToken(
   const payload = {
     grantType: "urn:ietf:params:oauth:grant-type:jwt-bearer",
     assertion: testAuth.jwt,
-    scope: "vidchain profile test entity",
+    scope: "vidchain profile entity",
   };
   const WALLET_API_BASE_URL =
     process.env.WALLET_API_URL || "https://dev.vidchain.net";
@@ -368,17 +373,12 @@ export async function getUserEntityTestAuthZToken(): Promise<{
   jwk: JWK;
   hexPublicKey: string;
 }> {
-  const {
-    hexPrivateKey,
-    did,
-    jwk,
-    hexPublicKey,
-    assertion,
-  } = await getUserTestAuthNToken();
+  const { hexPrivateKey, did, jwk, hexPublicKey, assertion } =
+    await getUserTestAuthNToken();
   const payload = {
     grantType: "urn:ietf:params:oauth:grant-type:jwt-bearer",
     assertion,
-    scope: "vidchain profile test user",
+    scope: "vidchain profile user",
   };
   const WALLET_API_BASE_URL =
     process.env.WALLET_API_URL || "https://dev.vidchain.net";
@@ -405,17 +405,12 @@ export async function getUserEntityTestAuthZTokenDidKey(): Promise<{
   hexPublicKey: string;
   kid: string;
 }> {
-  const {
-    hexPrivateKey,
-    did,
-    hexPublicKey,
-    kid,
-    assertion,
-  } = await getUserTestAuthNTokenDidKey();
+  const { hexPrivateKey, did, hexPublicKey, kid, assertion } =
+    await getUserTestAuthNTokenDidKey();
   const payload = {
     grantType: "urn:ietf:params:oauth:grant-type:jwt-bearer",
     assertion,
-    scope: "vidchain profile test user",
+    scope: "vidchain profile user",
   };
   const WALLET_API_BASE_URL =
     process.env.WALLET_API_URL || "https://dev.vidchain.net";
@@ -439,16 +434,18 @@ export const getLegalEntityTestSessionTokenDidKey = async (): Promise<{
   jwt: string;
   did: string;
 }> => {
+  const { ENTITY_DID_KEY_TEST_API_KEY } = process.env;
   const legalEntity = {
-    iss: `Entity ${crypto.randomBytes(4).toString("base64")} test SA`,
+    iss: "Did Key Test II",
     aud: "vidchain-api",
     nonce: crypto.randomBytes(16).toString("base64"),
     method: "key",
+    apiKey: ENTITY_DID_KEY_TEST_API_KEY,
   };
   const sessionBody = {
     grantType: "urn:ietf:params:oauth:grant-type:jwt-bearer",
     assertion: Buffer.from(JSON.stringify(legalEntity)).toString("base64"),
-    scope: "vidchain profile test entity",
+    scope: "vidchain profile entity",
   };
 
   // Sessions
@@ -464,7 +461,7 @@ export const getLegalEntityTestSessionTokenDidKey = async (): Promise<{
 
   return {
     jwt: accessToken,
-    did: ((payload as unknown) as IEnterpriseAuthZToken).did,
+    did: (payload as unknown as IEnterpriseAuthZToken).did,
   };
 };
 
@@ -535,13 +532,8 @@ export const mockedIdToken = async (
   header: JWTHeader;
   payload: DidAuthTypes.DidAuthResponsePayload;
 }> => {
-  const {
-    jwt,
-    did,
-    jwk,
-    hexPrivateKey,
-    hexPublicKey,
-  } = await mockedGetEnterpriseAuthToken(inputToken.enterpiseName);
+  const { jwt, did, jwk, hexPrivateKey, hexPublicKey } =
+    await mockedGetEnterpriseAuthToken(inputToken.enterpiseName);
   const state = DidAuthUtil.getState();
   const didAuthResponsePayload: DidAuthTypes.DidAuthResponsePayload = {
     iss: DidAuthTypes.DidAuthResponseIss.SELF_ISSUE,

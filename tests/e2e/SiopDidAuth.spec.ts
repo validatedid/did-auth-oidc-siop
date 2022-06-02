@@ -454,13 +454,12 @@ describe("VidDidAuth tests should", () => {
 
     it("verify externally a DidAuth Response JWT generated internally", async () => {
       expect.assertions(7);
-      const entityAA = await getLegalEntityTestAuthZToken("COMPANY E2E INC");
+      const entityAA = await getLegalEntityTestAuthZToken(
+        "LEGAL ENTITY TEST 007"
+      );
       const authZToken = entityAA.jwt;
-      const {
-        hexPrivateKey,
-        did,
-        hexPublicKey,
-      } = await getUserEntityTestAuthZToken();
+      const { hexPrivateKey, did, hexPublicKey } =
+        await getUserEntityTestAuthZToken();
       const state = DidAuthUtil.getState();
       const nonce = DidAuthUtil.getNonce(state);
       const opts: DidAuthTypes.DidAuthResponseOpts = {
@@ -516,7 +515,9 @@ describe("VidDidAuth tests should", () => {
 
     it("verify externally a DidAuth Response JWT generated externally with a test entity", async () => {
       expect.assertions(7);
-      const entityAA = await getLegalEntityTestAuthZToken("COMPANY E2E INC");
+      const entityAA = await getLegalEntityTestAuthZToken(
+        "LEGAL ENTITY TEST 007"
+      );
       const authZToken = entityAA.jwt;
       const { did } = entityAA;
       const state = DidAuthUtil.getState();
@@ -587,8 +588,7 @@ describe("VidDidAuth using did:key tests should", () => {
           hexPrivateKey:
             "d474ffdb3ea75fbb3f07673e67e52002a3b7eb42767f709f4100acf493c7fc8743017577997b72e7a8b4bce8c32c8e78fd75c1441e95d6aaa888056d1200beb3",
           did: "did:key:z6MkixpejjET5qJK4ebN5m3UcdUPmYV4DPSCs1ALH8x2UCfc",
-          kid:
-            "did:key:z6MkixpejjET5qJK4ebN5m3UcdUPmYV4DPSCs1ALH8x2UCfc#keys-1",
+          kid: "did:key:z6MkixpejjET5qJK4ebN5m3UcdUPmYV4DPSCs1ALH8x2UCfc#keys-1",
         },
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.VALUE,
@@ -626,8 +626,7 @@ describe("VidDidAuth using did:key tests should", () => {
           hexPrivateKey:
             "d474ffdb3ea75fbb3f07673e67e52002a3b7eb42767f709f4100acf493c7fc8743017577997b72e7a8b4bce8c32c8e78fd75c1441e95d6aaa888056d1200beb3",
           did: "did:key:z6MkixpejjET5qJK4ebN5m3UcdUPmYV4DPSCs1ALH8x2UCfc",
-          kid:
-            "did:key:z6MkixpejjET5qJK4ebN5m3UcdUPmYV4DPSCs1ALH8x2UCfc#keys-1",
+          kid: "did:key:z6MkixpejjET5qJK4ebN5m3UcdUPmYV4DPSCs1ALH8x2UCfc#keys-1",
         },
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.VALUE,
@@ -658,9 +657,11 @@ describe("VidDidAuth using did:key tests should", () => {
   describe("verifyDidAuthRequest tests should", () => {
     it("verify externally DidAuth Request JWT", async () => {
       expect.assertions(3);
-      const entityAA = await getLegalEntityTestAuthZToken("COMPANY E2E INC");
+      const entityAA = await getLegalEntityTestAuthZToken(
+        "LEGAL ENTITY TEST 007"
+      );
       const authZToken = entityAA.jwt;
-      const { hexPrivateKey, did } = await getUserEntityTestAuthZTokenDidKey();
+      const { hexPrivateKey, did } = await getUserEntityTestAuthZToken();
       const state = DidAuthUtil.getState();
       const nonce = DidAuthUtil.getNonce(state);
       const opts: DidAuthTypes.DidAuthRequestOpts = {
@@ -671,7 +672,7 @@ describe("VidDidAuth using did:key tests should", () => {
         signatureType: {
           hexPrivateKey,
           did,
-          kid: `#${did.substring(8)}`,
+          kid: `${did}#keys-1`,
         },
         registrationType: {
           type: DidAuthTypes.ObjectPassedBy.VALUE,
@@ -992,7 +993,9 @@ describe("VidDidAuth using did:key tests should", () => {
 
     it("verify externally a DidAuth Response JWT generated internally", async () => {
       expect.assertions(7);
-      const entityAA = await getLegalEntityTestAuthZToken("COMPANY E2E INC");
+      const entityAA = await getLegalEntityTestAuthZToken(
+        "LEGAL ENTITY TEST 007"
+      );
       const authZToken = entityAA.jwt;
       const { hexPrivateKey, did } = await getUserEntityTestAuthZTokenDidKey();
       const state = DidAuthUtil.getState();
@@ -1050,7 +1053,9 @@ describe("VidDidAuth using did:key tests should", () => {
 
     it("verify externally a DidAuth Response JWT generated externally with a test entity", async () => {
       expect.assertions(7);
-      const entityAA = await getLegalEntityTestAuthZToken("COMPANY E2E INC");
+      const entityAA = await getLegalEntityTestAuthZToken(
+        "LEGAL ENTITY TEST 007"
+      );
       const authZToken = entityAA.jwt;
       const { did } = entityAA;
       const state = DidAuthUtil.getState();
@@ -1125,9 +1130,8 @@ describe("VidDidAuth using did:key tests should", () => {
         did,
       };
 
-      const jwt: siopDidAuth.DidAuthTypes.DidAuthResponsePayload = await siopDidAuth.createDidAuthResponseObject(
-        opts
-      );
+      const jwt: siopDidAuth.DidAuthTypes.DidAuthResponsePayload =
+        await siopDidAuth.createDidAuthResponseObject(opts);
       expect(jwt).toBeDefined();
 
       const signedToken = await signDidAuthInternal(

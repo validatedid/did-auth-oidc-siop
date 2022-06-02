@@ -145,9 +145,8 @@ const createDidAuthResponse = async (
   )
     throw new Error(DidAuthErrors.BAD_SIGNATURE_PARAMS);
 
-  const didAuthResponsePayload: DidAuthResponsePayload = await createDidAuthResponsePayload(
-    opts
-  );
+  const didAuthResponsePayload: DidAuthResponsePayload =
+    await createDidAuthResponsePayload(opts);
 
   if (isInternalSignature(opts.signatureType)) {
     return signDidAuthInternal(
@@ -177,9 +176,8 @@ const createDidAuthResponseObject = async (
   )
     throw new Error(DidAuthErrors.BAD_PARAMS);
 
-  const didAuthResponsePayload: DidAuthResponsePayload = await createDidAuthResponsePayloadNoSignature(
-    opts
-  );
+  const didAuthResponsePayload: DidAuthResponsePayload =
+    await createDidAuthResponsePayloadNoSignature(opts);
   return didAuthResponsePayload;
 };
 
@@ -391,9 +389,9 @@ const verifyDidAuthResponse = async (
   // it can be resolved as a regular DID Doc
   // when it is a key thumbprint like "kid": "zcia2OVav6TYlsEqRosUUjFRQwJiLI/qT1dn4zDcaoU="
   // it requires a DID Document request witn jwks key transformation
-  const tranformKeysUrl = !(payload as DidAuthResponsePayload).sub_jwk.kid.includes(
-    "did:"
-  )
+  const tranformKeysUrl = !(
+    payload as DidAuthResponsePayload
+  ).sub_jwk.kid.includes("did:")
     ? ";transform-keys=jwks"
     : "";
   let didDoc: DIDDocument;

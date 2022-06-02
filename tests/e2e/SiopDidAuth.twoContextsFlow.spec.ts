@@ -52,7 +52,6 @@ describe("SIOP DID Auth end to end flow tests should", () => {
       state,
       claims: mockedData.verifiableIdOidcClaim,
     };
-
     const uriRequest = await siopDidAuth.createUriRequest(requestOpts);
     expect(uriRequest).toBeDefined();
     expect(uriRequest).toHaveProperty("urlEncoded");
@@ -74,7 +73,8 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     expect(uriRequest).toHaveProperty("jwt");
     expect(uriRequest.jwt).toBeDefined();
     const decodedPayload = decodeJWT(uriRequest.jwt);
-    const requestPayload = decodedPayload.payload as DidAuthTypes.DidAuthRequestPayload;
+    const requestPayload =
+      decodedPayload.payload as DidAuthTypes.DidAuthRequestPayload;
     expect(requestPayload.response_mode).toBe(
       DidAuthTypes.DidAuthResponseMode.FORM_POST
     );
@@ -114,7 +114,6 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     expect(validationRequestResponse.payload.exp).toStrictEqual(
       validationRequestResponse.payload.iat + 5 * 60
     ); // 5 minutes of expiration time
-
     // CREATE URI RESPONSE
     const { hexPrivateKey, did } = await getUserEntityTestAuthZToken();
     const responseOpts: DidAuthTypes.DidAuthResponseOpts = {
@@ -133,7 +132,6 @@ describe("SIOP DID Auth end to end flow tests should", () => {
       did,
       vp: mockedData.verifiableIdPresentation,
     };
-
     const uriResponse = await siopDidAuth.createUriResponse(responseOpts);
     expect(uriResponse).toBeDefined();
     expect(uriResponse).toHaveProperty("urlEncoded");
@@ -205,8 +203,8 @@ describe("SIOP DID Auth end to end flow tests should", () => {
       state,
       claims: mockedData.verifiableIdOidcClaim,
     };
-
     const uriRequest = await siopDidAuth.createUriRequest(requestOpts);
+
     expect(uriRequest).toBeDefined();
     expect(uriRequest).toHaveProperty("urlEncoded");
     expect(uriRequest).toHaveProperty("encoding");
@@ -227,7 +225,8 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     expect(uriRequest).toHaveProperty("jwt");
     expect(uriRequest.jwt).toBeDefined();
     const decodedPayload = decodeJWT(uriRequest.jwt);
-    const requestPayload = decodedPayload.payload as DidAuthTypes.DidAuthRequestPayload;
+    const requestPayload =
+      decodedPayload.payload as DidAuthTypes.DidAuthRequestPayload;
     expect(requestPayload.response_mode).toBe(
       DidAuthTypes.DidAuthResponseMode.FORM_POST
     );
@@ -267,13 +266,9 @@ describe("SIOP DID Auth end to end flow tests should", () => {
     expect(validationRequestResponse.payload.exp).toStrictEqual(
       validationRequestResponse.payload.iat + 5 * 60
     ); // 5 minutes of expiration time
-
     // CREATE URI RESPONSE
-    const {
-      hexPrivateKey,
-      did,
-      kid,
-    } = await getUserEntityTestAuthZTokenDidKey();
+    const { hexPrivateKey, did, kid } =
+      await getUserEntityTestAuthZTokenDidKey();
     const responseOpts: DidAuthTypes.DidAuthResponseOpts = {
       redirectUri: requestPayload.client_id,
       signatureType: {
