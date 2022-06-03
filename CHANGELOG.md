@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+### [2.10.2](https://github.com/validatedid/did-auth-oidc-siop/compare/v2.10.1...v2.10.2) (2022-06-03)
+
+### 🐛 Bug Fixes
+
+- tests with new api changes ([da63a77](https://github.com/validatedid/did-auth-oidc-siop/commit/da63a77406cd7414075d4f230ff6cea81a1cdf89))
+
 ### [2.10.1](https://github.com/validatedid/did-auth-oidc-siop/compare/v2.3.0...v2.10.1) (2022-03-23)
 
 ### 🐛 Bug Fixes
