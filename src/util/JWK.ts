@@ -1,10 +1,11 @@
 import { keyUtils } from "@transmute/did-key-ed25519";
 import bs58 from "bs58";
 import { ec as EC } from "elliptic";
-import { JWK } from "jose/types";
+import { JWK } from "jose";
 import SHA from "sha.js";
 import { Base64 } from "js-base64";
 import { types } from "../interfaces";
+// eslint-disable-next-line import/no-cycle
 import { base64urlEncodeBuffer } from "./Util";
 
 const getPublicJWKFromPublicHexDidKey = (

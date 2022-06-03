@@ -1,12 +1,11 @@
 import axios, { AxiosResponse } from "axios";
-import { JWK } from "jose/types";
-import jwtVerify from "jose/jwt/verify";
-import { parseJwk } from "jose/jwk/parse";
+import { JWK, jwtVerify, importJWK } from "jose";
 import { verifyJWT, createJWT, ES256KSigner, EdDSASigner } from "did-jwt";
 import { JWTVerifyOptions } from "did-jwt/lib/JWT";
 import { DIDDocument } from "did-resolver";
 import base58 from "bs58";
 import { keyUtils } from "@transmute/did-key-ed25519";
+import { JWKInvalid } from "jose/dist/types/util/errors";
 import { util, utilJwk } from "./util";
 import DidAuthErrors from "./interfaces/Errors";
 import { getNonce, doPostCallWithToken, getState } from "./util/Util";
@@ -408,7 +407,7 @@ const verifyDidAuth = async (
       )
         throw new Error(DidAuthErrors.ERROR_RETRIEVING_DID_DOCUMENT);
 
-      const publicKey = await parseJwk(
+      const publicKey = await importJWK(
         didDocument.verificationMethod[0].publicKeyJwk,
         header.alg
       );

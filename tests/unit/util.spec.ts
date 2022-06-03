@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import fromKeyLike from "jose/jwk/from_key_like";
+import { exportJWK } from "jose";
 import { VerificationMethod } from "did-resolver";
 import { DidAuthKeyCurve } from "../../src/interfaces/DIDAuth.types";
 import {
@@ -50,7 +50,7 @@ describe("unit tests should", () => {
     const key = crypto.generateKeyPairSync("ec", {
       namedCurve: DidAuthKeyCurve.SECP256k1,
     });
-    const privateJwk = await fromKeyLike(key.privateKey);
+    const privateJwk = await exportJWK(key.privateKey);
 
     const did = getDIDFromKey(privateJwk);
     expect(did).toBeDefined();
@@ -85,8 +85,7 @@ describe("unit tests should", () => {
   it("should convert the x and y received in base64 to hex", () => {
     expect.assertions(2);
     const verificationMethodInBase64: VerificationMethod = {
-      id:
-        "did:ethr:0xFE2837BC57b0b59053A99Fc3D268B505D60fCD7F#wB0xotWlUw39tHX7bMNOMA8pbpvfoh/ex4wj9kOGFq4=",
+      id: "did:ethr:0xFE2837BC57b0b59053A99Fc3D268B505D60fCD7F#wB0xotWlUw39tHX7bMNOMA8pbpvfoh/ex4wj9kOGFq4=",
       type: "EcdsaSecp256k1VerificationKey2019",
       controller: "did:ethr:0xFE2837BC57b0b59053A99Fc3D268B505D60fCD7F",
       publicKeyJwk: {
@@ -113,8 +112,7 @@ describe("unit tests should", () => {
   it("should return the x and y received in hex", () => {
     expect.assertions(2);
     const verificationMethodInHex: VerificationMethod = {
-      id:
-        "did:ethr:0xFE2837BC57b0b59053A99Fc3D268B505D60fCD7F#wB0xotWlUw39tHX7bMNOMA8pbpvfoh/ex4wj9kOGFq4=",
+      id: "did:ethr:0xFE2837BC57b0b59053A99Fc3D268B505D60fCD7F#wB0xotWlUw39tHX7bMNOMA8pbpvfoh/ex4wj9kOGFq4=",
       type: "EcdsaSecp256k1VerificationKey2019",
       controller: "did:ethr:0xFE2837BC57b0b59053A99Fc3D268B505D60fCD7F",
       publicKeyJwk: {

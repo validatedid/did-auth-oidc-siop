@@ -1,7 +1,7 @@
 import SHA from "sha.js";
 import base58 from "bs58";
 import { ec as EC } from "elliptic";
-import { JWK } from "jose/types";
+import { JWK, jwtVerify, importJWK } from "jose";
 import base64url from "base64url";
 import EthrDidResolver from "ethr-did-resolver";
 import { resolver as didKeyResolver } from "@transmute/did-key.js";
@@ -16,8 +16,6 @@ import {
 import axios, { AxiosResponse } from "axios";
 import { ethers, utils } from "ethers";
 import { keyUtils } from "@transmute/did-key-ed25519";
-import parseJwk from "jose/jwk/parse";
-import jwtVerify from "jose/jwt/verify";
 
 import { DidAuthErrors } from "../interfaces";
 import {
@@ -303,7 +301,7 @@ const verifyES256K = async (
   const publicKey = extractPublicKeyJwk(verificationMethod);
   const result = await jwtVerify(
     jwt,
-    await parseJwk(publicKey, DidAuthKeyAlgorithm.ES256K)
+    await importJWK(publicKey, DidAuthKeyAlgorithm.ES256K)
   );
   if (!result || !result.payload)
     throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
@@ -334,7 +332,7 @@ const verifyEDDSA = async (
     publicKey = verificationMethod.publicKeyJwk;
   const result = await jwtVerify(
     jwt,
-    await parseJwk(publicKey, DidAuthKeyAlgorithm.EDDSA)
+    await importJWK(publicKey, DidAuthKeyAlgorithm.EDDSA)
   );
   if (!result || !result.payload)
     throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);

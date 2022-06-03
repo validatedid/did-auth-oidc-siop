@@ -1,4 +1,4 @@
-import { JWK } from "jose/webcrypto/types";
+import { JWK } from "jose";
 
 export interface CredentialSubject {
   [x: string]: unknown;

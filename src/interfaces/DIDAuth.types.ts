@@ -1,4 +1,4 @@
-import { JWK } from "jose/types";
+import { JWK } from "jose";
 import { JWTPayload } from "./JWT";
 import { OidcClaim, VerifiablePresentation } from "./oidcSsi";
 
@@ -135,7 +135,7 @@ export interface DidAuthResponseOpts {
 
 export interface ResponseClaims {
   verified_claims?: string;
-  encryption_key?: JsonWebKey;
+  encryption_key?: any;
 }
 
 export interface DidAuthResponseOptsNoSignature {

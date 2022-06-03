@@ -1,8 +1,5 @@
 import crypto from "crypto";
-import { JWK, JWTPayload } from "jose/types";
-import fromKeyLike from "jose/jwk/from_key_like";
-import parseJwk from "jose/jwk/parse";
-import SignJWT from "jose/jwt/sign";
+import { JWK, JWTPayload, importJWK, SignJWT, exportJWK } from "jose";
 import { resolver as didKeyResolver } from "@transmute/did-key.js";
 import { DIDResolutionResult, DIDDocument } from "did-resolver";
 import { v4 as uuidv4 } from "uuid";
@@ -50,7 +47,7 @@ export async function generateTestKey(kty: string): Promise<TESTKEY> {
   const key = crypto.generateKeyPairSync("ec", {
     namedCurve: DidAuthKeyCurve.SECP256k1,
   });
-  const privateJwk = await fromKeyLike(key.privateKey);
+  const privateJwk = await exportJWK(key.privateKey);
 
   const did = DidAuthUtil.getDIDFromKey(privateJwk);
 
@@ -114,7 +111,7 @@ export const mockedKeyAndDid = async (): Promise<{
   const key = crypto.generateKeyPairSync("ec", {
     namedCurve: DidAuthKeyCurve.SECP256k1,
   });
-  const privateJwk = await fromKeyLike(key.privateKey);
+  const privateJwk = await exportJWK(key.privateKey);
   const hexPrivateKey = Buffer.from(privateJwk.d, "base64").toString("hex");
   const wallet: ethers.Wallet = new ethers.Wallet(prefixWith0x(hexPrivateKey));
   const did = `did:ethr:${wallet.address}`;
@@ -252,7 +249,7 @@ const mockedEntityAuthNToken = async (
     nonce: uuidv4(),
   };
 
-  const privateKey = await parseJwk(
+  const privateKey = await importJWK(
     jwk,
     DidAuthTypes.DidAuthKeyAlgorithm.ES256K
   );
@@ -496,7 +493,7 @@ export async function mockedGetEnterpriseAuthToken(
     },
   };
 
-  const privateKey = await parseJwk(
+  const privateKey = await importJWK(
     testAuth.jwk,
     DidAuthTypes.DidAuthKeyAlgorithm.ES256K
   );
@@ -550,7 +547,7 @@ export const mockedIdToken = async (
     kid: `${did}#keys-1`,
   };
 
-  const privateKey = await parseJwk(
+  const privateKey = await importJWK(
     jwk,
     DidAuthTypes.DidAuthKeyAlgorithm.ES256K
   );

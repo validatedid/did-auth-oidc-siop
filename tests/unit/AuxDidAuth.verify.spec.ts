@@ -1,7 +1,6 @@
 import axios from "axios";
 import * as dotenv from "dotenv";
-import parseJwk from "jose/jwk/parse";
-import SignJWT from "jose/jwt/sign";
+import { importJWK, SignJWT } from "jose";
 import { verifyJWT, decodeJWT } from "did-jwt";
 import {
   DidAuthErrors,
@@ -44,7 +43,7 @@ describe("vid DID Auth Request Validation", () => {
         id_token_signed_response_alg: DidAuthTypes.DidAuthKeyAlgorithm.ES256K,
       },
     };
-    const privateKey = await parseJwk(
+    const privateKey = await importJWK(
       entityAA.jwk,
       DidAuthTypes.DidAuthKeyAlgorithm.ES256K
     );
