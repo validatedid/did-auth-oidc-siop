@@ -375,7 +375,11 @@ const verifyDidAuthResponse = async (
     throw new Error(DidAuthErrors.VERIFY_BAD_PARAMETERS);
   // The Client MUST validate that the value of the iss (issuer) Claim is https://self-isued.me.
   const { header, payload } = decodeJWT(id_token);
-  if (payload.iss !== DidAuthResponseIss.SELF_ISSUE)
+  if (
+    !Object.values(DidAuthResponseIss).includes(
+      payload.iss as DidAuthResponseIss
+    )
+  )
     throw new Error(DidAuthErrors.NO_SELFISSUED_ISS);
   // The Client MUST validate that the aud (audience) Claim contains the value of the
   // redirect_uri that the Client sent in the Authentication Request as an audience.

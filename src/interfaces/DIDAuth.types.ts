@@ -60,6 +60,7 @@ export enum DidAuthResponseContext {
 
 export enum DidAuthResponseIss {
   SELF_ISSUE = "https://self-issued.me",
+  SELF_ISSUE_V2 = "https://self-issued.me/v2",
 }
 
 export interface RegistrationJwksUri {

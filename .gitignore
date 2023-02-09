@@ -3,3 +3,4 @@ dist.browser
 node_modules
 coverage
 .env
+.idea/*
