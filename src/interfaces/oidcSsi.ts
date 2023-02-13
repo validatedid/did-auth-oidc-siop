@@ -18,12 +18,17 @@ export interface CredentialStatus {
   type: string;
 }
 
+export interface Issuer {
+  id: string;
+  name: string;
+}
+
 export interface Credential {
   "@context": string[];
   id: string;
   type: string[];
   credentialSubject: CredentialSubject;
-  issuer: string;
+  issuer: string | Issuer;
   issuanceDate?: string;
   expirationDate?: string;
   credentialStatus?: CredentialStatus;
@@ -31,7 +36,6 @@ export interface Credential {
 }
 
 export interface VerifiableCredential extends Credential {
-  issuer: string;
   issuanceDate: string;
   proof: Proof;
 }
