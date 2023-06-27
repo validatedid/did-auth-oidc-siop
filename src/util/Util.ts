@@ -299,12 +299,14 @@ const verifyES256K = async (
   verificationMethod: VerificationMethod
 ): Promise<boolean> => {
   const publicKey = extractPublicKeyJwk(verificationMethod);
+
   const result = await jwtVerify(
     jwt,
     await importJWK(publicKey, DidAuthKeyAlgorithm.ES256K)
   );
   if (!result || !result.payload)
     throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
+
   return true;
 };
 

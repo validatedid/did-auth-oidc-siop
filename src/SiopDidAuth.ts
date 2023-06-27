@@ -393,11 +393,11 @@ const verifyDidAuthResponse = async (
   // it can be resolved as a regular DID Doc
   // when it is a key thumbprint like "kid": "zcia2OVav6TYlsEqRosUUjFRQwJiLI/qT1dn4zDcaoU="
   // it requires a DID Document request witn jwks key transformation
-  const tranformKeysUrl = !(
-    payload as DidAuthResponsePayload
-  ).sub_jwk.kid.includes("did:")
-    ? ";transform-keys=jwks"
-    : "";
+  const tranformKeysUrl =
+    payload.sub_jwk &&
+    !(payload as DidAuthResponsePayload).sub_jwk.kid.includes("did:")
+      ? ";transform-keys=jwks"
+      : "";
   let didDoc: DIDDocument;
   try {
     const response = await axios.get(
@@ -414,32 +414,35 @@ const verifyDidAuthResponse = async (
     );
   }
 
-  // Determine the verification method from the SIOP's DID Document that matches the kid
-  // of the sub_jwk claim in the id_token.
-  if (
-    !(payload as DidAuthResponsePayload).sub_jwk ||
-    !(payload as DidAuthResponsePayload).sub_jwk.kid
-  )
-    throw new Error(DidAuthErrors.SUB_JWK_NOT_FOUND_OR_NOT_KID);
-
-  const verificationMethod = util.getVerificationMethod(
-    (payload as DidAuthResponsePayload).sub_jwk.kid,
-    didDoc
-  );
-  if (!verificationMethod)
-    throw new Error(DidAuthErrors.VERIFICATION_METHOD_NOT_MATCHES);
   // If a nonce value was sent in the Authentication Request, a nonce Claim MUST be present and
   // its value checked to verify that it is the same value as the one that was sent in the Authentication Request.
   if (payload.nonce !== opts.nonce)
     throw Error(DidAuthErrors.ERROR_VALIDATING_NONCE);
-  // The Client MUST validate that the sub Claim value is the base64url encoded representation
-  // of the thumbprint of the key in the sub_jwk Claim.
-  const subClaim =
-    header.alg === DidAuthKeyAlgorithm.EDDSA
-      ? getThumbprintFromJwkDidKey((payload as DidAuthResponsePayload).sub_jwk)
-      : getThumbprintFromJwk((payload as DidAuthResponsePayload).sub_jwk);
-  if (subClaim !== payload.sub)
-    throw new Error(DidAuthErrors.JWK_THUMBPRINT_MISMATCH_SUB);
+
+  const verificationMethod = (payload as DidAuthResponsePayload).sub_jwk
+    ? util.getVerificationMethod(
+        (payload as DidAuthResponsePayload).sub_jwk.kid,
+        didDoc
+      )
+    : didDoc.verificationMethod[0];
+
+  if ((payload as DidAuthResponsePayload).sub_jwk) {
+    // Determine the verification method from the SIOP's DID Document that matches the kid
+    // of the sub_jwk claim in the id_token.
+    if (!verificationMethod)
+      throw new Error(DidAuthErrors.VERIFICATION_METHOD_NOT_MATCHES);
+    // The Client MUST validate that the sub Claim value is the base64url encoded representation
+    // of the thumbprint of the key in the sub_jwk Claim.
+    const subClaim =
+      header.alg === DidAuthKeyAlgorithm.EDDSA
+        ? getThumbprintFromJwkDidKey(
+            (payload as DidAuthResponsePayload).sub_jwk
+          )
+        : getThumbprintFromJwk((payload as DidAuthResponsePayload).sub_jwk);
+    if (subClaim !== payload.sub)
+      throw new Error(DidAuthErrors.JWK_THUMBPRINT_MISMATCH_SUB);
+  }
+
   // The alg value SHOULD be the default of RS256. It MAY also be ES256.
   // In addition to RS256, an SIOP according to this specification MUST support EdDSA and ES256K.
   // --> https://identity.foundation/did-siop/#generate-siop-request
@@ -462,10 +465,10 @@ const verifyDidAuthResponse = async (
   );
   if (!verification) throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
   // Additionally performs a complete token validation via vidVerifyJwt
-  const validationResponse = await verifyDidAuth(id_token, opts);
+  // const validationResponse = await verifyDidAuth(id_token, opts);
 
   return {
-    signatureValidation: validationResponse.signatureValidation,
+    signatureValidation: verification,
     payload: payload as DidAuthResponsePayload,
   };
 };
