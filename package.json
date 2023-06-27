@@ -1,6 +1,6 @@
 {
   "name": "@validatedid/did-auth",
-  "version": "2.10.4",
+  "version": "2.11.0",
   "description": "Validated ID Authentication library that implements an OIDC-SIOP with DIDs",
   "author": "Validated ID",
   "license": "Apache-2.0",

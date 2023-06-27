@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.11.0](https://github.com/validatedid/did-auth-oidc-siop/compare/v2.10.1...v2.11.0) (2023-06-27)
+
+### 🐛 Bug Fixes
+
+- tests with new api changes ([da63a77](https://github.com/validatedid/did-auth-oidc-siop/commit/da63a77406cd7414075d4f230ff6cea81a1cdf89))
+
+### 🚀 Features
+
+- allow external id_token to be validated ([de5fe8d](https://github.com/validatedid/did-auth-oidc-siop/commit/de5fe8dbb14bf8154666efaa3506c7d362e6f946))
+- allow issuer object for vc ([e27869a](https://github.com/validatedid/did-auth-oidc-siop/commit/e27869ac7f8b2acae5efdbe57ab58be22b979e38))
+- update self issued v2 accepted iss ([69448a8](https://github.com/validatedid/did-auth-oidc-siop/commit/69448a8f346446be4fd628527e7bc304de8f8764))
+
 ### [2.10.4](https://github.com/validatedid/did-auth-oidc-siop/compare/v2.10.1...v2.10.4) (2023-02-13)
 
 ### 🐛 Bug Fixes
