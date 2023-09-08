@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.12.0](https://github.com/validatedid/did-auth-oidc-siop/compare/v2.11.0...v2.12.0) (2023-09-08)
+
+### 🚀 Features
+
+- did key support when verify did auth response ([#24](https://github.com/validatedid/did-auth-oidc-siop/issues/24)) ([974bbf9](https://github.com/validatedid/did-auth-oidc-siop/commit/974bbf96aa34caf04c44f9f98bf8087201f89a92))
+
 ## [2.11.0](https://github.com/validatedid/did-auth-oidc-siop/compare/v2.10.1...v2.11.0) (2023-06-27)
 
 ### 🐛 Bug Fixes
