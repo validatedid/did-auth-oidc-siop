@@ -17,6 +17,7 @@ export enum DidAuthKeyAlgorithm {
   ES256K = "ES256K",
   RS256 = "RS256",
   EDDSA = "EdDSA",
+  ES256 = "ES256",
 }
 
 export enum EncSymmetricAlgorithmCode {

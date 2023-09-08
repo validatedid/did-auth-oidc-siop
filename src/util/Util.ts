@@ -1,7 +1,13 @@
 import SHA from "sha.js";
 import base58 from "bs58";
 import { ec as EC } from "elliptic";
-import { JWK, jwtVerify, importJWK } from "jose";
+import {
+  JWK,
+  jwtVerify,
+  importJWK,
+  decodeJwt,
+  decodeProtectedHeader,
+} from "jose";
 import base64url from "base64url";
 import EthrDidResolver from "ethr-did-resolver";
 import { resolver as didKeyResolver } from "@transmute/did-key.js";
@@ -104,7 +110,7 @@ const getAudience = (jwt: string): string | undefined => {
 };
 
 const getIssuerDid = (jwt: string): string => {
-  const { payload } = decodeJWT(jwt);
+  const payload = decodeJwt(jwt);
   if (!payload || !payload.iss) throw new Error(DidAuthErrors.NO_ISS_DID);
   if (payload.iss === DidAuthResponseIss.SELF_ISSUE)
     return (payload as DidAuthResponsePayload).did;
@@ -341,17 +347,35 @@ const verifyEDDSA = async (
   return true;
 };
 
+const verifyES256 = async (
+  jwt: string,
+  verificationMethod: VerificationMethod
+): Promise<boolean> => {
+  const publicKey = extractPublicKeyJwk(verificationMethod);
+
+  const result = await jwtVerify(
+    jwt,
+    await importJWK(publicKey, DidAuthKeyAlgorithm.ES256)
+  );
+  if (!result || !result.payload)
+    throw Error(DidAuthErrors.ERROR_VERIFYING_SIGNATURE);
+
+  return true;
+};
+
 const verifySignatureFromVerificationMethod = async (
   jwt: string,
   verificationMethod: VerificationMethod
 ): Promise<boolean> => {
-  const { header } = decodeJWT(jwt);
+  const header = decodeProtectedHeader(jwt);
   if (header.alg === DidAuthKeyAlgorithm.EDDSA)
     return verifyEDDSA(jwt, verificationMethod);
   if (header.alg === DidAuthKeyAlgorithm.ES256K)
     return verifyES256K(jwt, verificationMethod);
   if (header.alg === DidAuthKeyAlgorithm.ES256KR)
     return verifyES256KR(jwt, verificationMethod);
+  if (header.alg === DidAuthKeyAlgorithm.ES256)
+    return verifyES256(jwt, verificationMethod);
   return false;
 };
 

@@ -1,6 +1,7 @@
-import { decodeJWT } from "did-jwt";
 import { DIDDocument } from "did-resolver";
 import axios from "axios";
+import { decodeJWT } from "did-jwt";
+import { decodeJwt, decodeProtectedHeader } from "jose";
 import {
   DidAuthRequestOpts,
   UriResponse,
@@ -312,6 +313,7 @@ const verifyDidAuthRequest = async (
   opts?: DidAuthVerifyOpts
 ): Promise<DidAuthValidationResponse> => {
   if (!jwt) throw new Error(DidAuthErrors.VERIFY_BAD_PARAMETERS);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   const { header, payload } = decodeJWT(jwt);
   // Resolve the DID Document from the RP's DID specified in the iss request parameter.
   const resolverUrl =
@@ -374,7 +376,10 @@ const verifyDidAuthResponse = async (
   if (!id_token || !opts || !opts.nonce || !opts.redirectUri)
     throw new Error(DidAuthErrors.VERIFY_BAD_PARAMETERS);
   // The Client MUST validate that the value of the iss (issuer) Claim is https://self-isued.me.
-  const { header, payload } = decodeJWT(id_token);
+  const payload = decodeJwt(id_token);
+  const header = decodeProtectedHeader(id_token);
+  // const { header, payload } = decodeJWT(id_token);
+
   if (
     !Object.values(DidAuthResponseIss).includes(
       payload.iss as DidAuthResponseIss
@@ -400,6 +405,7 @@ const verifyDidAuthResponse = async (
       : "";
   let didDoc: DIDDocument;
   try {
+    const url = `${resolverUrl}/${issuerDid}${tranformKeysUrl}`;
     const response = await axios.get(
       `${resolverUrl}/${issuerDid}${tranformKeysUrl}`
     );
@@ -450,7 +456,8 @@ const verifyDidAuthResponse = async (
   if (
     header.alg !== DidAuthKeyAlgorithm.ES256K &&
     header.alg !== DidAuthKeyAlgorithm.ES256KR &&
-    header.alg !== DidAuthKeyAlgorithm.EDDSA
+    header.alg !== DidAuthKeyAlgorithm.EDDSA &&
+    header.alg !== DidAuthKeyAlgorithm.ES256
   )
     throw new Error(DidAuthErrors.NO_ALG_SUPPORTED_YET);
 

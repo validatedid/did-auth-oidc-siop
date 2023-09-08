@@ -44,6 +44,7 @@
     "postpublish": "pinst --enable"
   },
   "devDependencies": {
+    "@cef-ebsi/key-did-resolver": "^1.1.0",
     "@commitlint/cli": "^12.1.1",
     "@commitlint/config-conventional": "^12.1.1",
     "@tsconfig/node12": "^1.0.9",
