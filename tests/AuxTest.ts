@@ -1,5 +1,12 @@
 import crypto from "crypto";
-import { JWK, JWTPayload, importJWK, SignJWT, exportJWK } from "jose";
+import {
+  JWK,
+  JWTPayload,
+  importJWK,
+  SignJWT,
+  exportJWK,
+  generateKeyPair,
+} from "jose";
 import { resolver as didKeyResolver } from "@transmute/did-key.js";
 import { DIDResolutionResult, DIDDocument } from "did-resolver";
 import { v4 as uuidv4 } from "uuid";
@@ -9,11 +16,15 @@ import { ethers } from "ethers";
 import jwt_decode from "jwt-decode";
 import base58 from "bs58";
 import { Ed25519KeyPair, keyUtils } from "@transmute/did-key-ed25519";
+
 import { decodeJWT, ES256KSigner, createJWT, EdDSASigner } from "did-jwt";
 
+import { util } from "@cef-ebsi/key-did-resolver";
+import { Buffer } from "buffer";
 import { DidAuthErrors, JWTClaims, DidAuthUtil, DidAuthTypes } from "../src";
 import { prefixWith0x } from "../src/util/Util";
 import {
+  DidAuthKeyAlgorithm,
   DidAuthKeyCurve,
   DidAuthKeyType,
 } from "../src/interfaces/DIDAuth.types";
@@ -40,6 +51,13 @@ interface AccessTokenResponseBody {
   expiresIn: number; // 15 minutes
   issuedAt: number;
 }
+
+const toHex = (data: string): string =>
+  Buffer.from(data, "base64").toString("hex");
+const getPublicKeyHexFromJWK = (jwk: JWK): string => {
+  const publikKeyHex = `0x04${toHex(jwk.x)}${toHex(jwk.y)}`;
+  return publikKeyHex;
+};
 
 export async function generateTestKey(kty: string): Promise<TESTKEY> {
   if (kty !== DidAuthKeyType.EC)
@@ -168,6 +186,35 @@ export const mockedKeyAndDidKey = async (
   };
 };
 
+export const mockedKeyAndDidKeyES256 = async (
+  seed?: string
+): Promise<{
+  hexPrivateKey: string;
+  did: string;
+  hexPublicKey: string;
+  kid: string;
+  jwkPrivateKey: JWK;
+}> => {
+  const keypair = await generateKeyPair(DidAuthKeyAlgorithm.ES256, {
+    crv: "EC",
+  });
+
+  const jwkPublicKey = await exportJWK(keypair.publicKey);
+  const jwkPrivateKey = await exportJWK(keypair.privateKey);
+  const did = util.createDid(jwkPublicKey);
+
+  const hexPublicKey = getPublicKeyHexFromJWK(jwkPublicKey);
+  const hexPrivateKey = toHex(jwkPrivateKey.d);
+
+  return {
+    hexPrivateKey,
+    did,
+    hexPublicKey,
+    kid: `${did}#${did.split(":")[2]}`,
+    jwkPrivateKey,
+  };
+};
+
 export const getUserTestAuthNToken = async (): Promise<{
   hexPrivateKey: string;
   did: string;
@@ -225,6 +272,48 @@ export const getUserTestAuthNTokenDidKey = async (): Promise<{
     did,
     hexPublicKey,
     assertion: assertionToken,
+    kid,
+  };
+};
+
+export const getUserTestAuthNTokenDidKeyES256 = async (): Promise<{
+  hexPrivateKey: string;
+  did: string;
+  hexPublicKey: string;
+  assertion: string;
+  kid: string;
+}> => {
+  const { hexPrivateKey, did, hexPublicKey, kid, jwkPrivateKey } =
+    await mockedKeyAndDidKeyES256();
+  const payload: UserTestAuthNToken = {
+    iss: did,
+    aud: "vidchain-api",
+    iat: moment().unix(),
+    exp: moment().add(15, "seconds").unix(),
+    publicKey: hexPublicKey,
+  };
+
+  const header: {
+    typ: "JWT";
+    alg: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    [x: string]: any;
+  } = {
+    alg: DidAuthKeyAlgorithm.ES256,
+    typ: "JWT",
+  };
+  const data = Buffer.from(JSON.stringify(payload));
+  const jws = await new SignJWT(JSON.parse(data.toString()) as JWTPayload)
+    .setProtectedHeader(header)
+    .setIssuedAt()
+    .setIssuer(did)
+    .sign(await importJWK(jwkPrivateKey, header.alg));
+
+  return {
+    hexPrivateKey,
+    did,
+    hexPublicKey,
+    assertion: jws,
     kid,
   };
 };
@@ -626,4 +715,8 @@ export const getKidFromDID = async (did: string) => {
     inputVerificationMethod[0].publicKeyBase58
   ) as JWK;
   return publicKeyJwk.kid;
+};
+
+export const getKidFromDIDES256 = (did: string) => {
+  return `${did}#${did.split(":")[2]}`;
 };
